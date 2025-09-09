@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype03" layout:fragment="content">
+		
+			<!-- 스크립트 영역 START -->
+			<script src="./js/sh_car_reg.js"></script>		
+			<!-- 스크립트 영역 END -->
+	
+			<th:block th:replace="~{fragment/location :: location}" ></th:block>
+            <div class="search-conditions con-box">              
+              <div class="setting-grid">
+                
+                <div class="setting-grid-title">차량번호(FULL)</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condCarFullNo" />
+					</div>
+				</div>
+				<div class="setting-grid-title">운송사</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condCarCpCd" />
+					</div>
+				</div>
+				
+				<div class="setting-grid-title">공유여부</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condShareYn">
+							<option value="">전체</option>
+							<option value="R">등록중</option>
+							<option value="A">신청중</option>
+							<option value="S">사용증</option>
+							<option value="E">미등록</option>
+						</select>
+					</div>
+				</div>
+			</div>
+              <div class="search-btn-group">
+                <div class="btn-search btn-green" id="btnSearch"><img>조회</div>
+                <div class="btn-clear btn-white" id="btnClearAll"><img>초기화</div>
+              </div>
+            </div>
+            <div class="list-wrapper">
+              <div class="search-list">
+                <div class="list-top">
+                  <div class="list-title ic-title-mark">차량 기본정보</div>                  
+                </div>
+                <!-- 개발 작업시 그리드 들어갈 부분 -->
+                <div class="list-grid-wrapper con-box">
+                  <div id="sh_car_reg_pqgrid_div"></div>
+                  <div id="sh_car_reg_grid"></div>
+                </div>
+                <!---------------------------------->
+              </div>
+              <div class="search-info">
+		            <div class="edit-btn-wrapper">
+		              <button class="btn-white" id="btnClearEdits"><img class="ic-bt-reset"> 취소</button>
+		              <button class="btn-green" id="btnSave"><img class="ic-bt-save">저장</button>
+		            </div>
+                <div class="info-detail1 con-box" style="height:120px">
+                  <!-- 개발 작업시 그리드 들어갈 부분 -->
+                  <div class="list-grid-wrapper">
+                    <div id="sh_car_reg_pqgrid_sub"></div>
+                    <div id="sh_car_reg_detail_grid"></div>
+                  </div>
+                </div>
+                <div class="info-detail2">
+                  <div class="info-picture con-box">
+                    <div class="list-title ic-title-mark">차량 사진정보</div>
+                    <div class="img-picture"><img src="" alt="" id="carPhotImg"></div>
+                  </div>
+                  <div class="info-edit con-box">
+                    <div class="list-title ic-title-mark">차량 공유정보</div>
+                    <!-- 개발시 입력창 사이 간격은 gap-10,gap-15,gap-20 변경으로 조정  2023.7.18-->             
+                    <div class="setting-grid gap-10"> 
+                      <div class="setting-grid-title ic-title-nece">공유기간구분</div>
+                      <div class="setting-grid-content">  
+                        <div class="input-group">
+                          <select id="shPrdCls">
+                          </select>
+                        </div>                  
+                      </div>
+                      <div class="setting-grid-title ic-title-nece">공유기본기간</div>
+                      <div class="setting-grid-content">  
+                        <div class="input-wrapper">                    
+                          <input type="text" id="shPrd" maxlength="20"/> 
+                        </div>                
+                      </div>                      
+                      <div class="setting-grid-title">야간사용여부</div>
+                      <div class="setting-grid-content">  
+                        <div class="input-group">
+                          <select id="shSqu">
+                          </select>                  
+                        </div>                  
+                      </div>
+                      <div class="setting-grid-title">휴일사용여부</div>
+                      <div class="setting-grid-content">  
+                        <div class="input-group">
+                          <select id="shLkCls">
+                          </select>                  
+                        </div>                     
+                      </div>                     
+                      <div class="setting-grid-title ic-title-nece">공유시작일</div>
+                      <div class="setting-grid-content">  
+                        <div class="input-wrapper">
+                          <input type="date" id="shLtDt"/>                         
+                        </div>                
+                      </div>
+                      <div class="setting-grid-title ic-title-nece">공유여부</div>
+                      <div class="setting-grid-content">
+                        <div class="input-group">
+                          <select id="shUseYn">
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
+	                <!-- 숨김 파라미터 영역 START -->
+<!--	                <input type="text" style="display:none" id="userId"/>-->
+<!--	                <input type="text" style="display:none" id="carId"/>-->
+<!--	                <input type="text" style="display:none" id="shNo"/>-->
+<!--	                <input type="text" style="display:none" id="shUseYn"/>-->
+	                <!-- 숨김 파라미터 영역 END -->
+	                
+                  </div>
+                </div>
+              </div>
+            </div>
+	</div>
+</html>

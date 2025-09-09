@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype01" layout:fragment="content">
+		<!-- 스크립트 영역 START -->
+		<script src="./js/cm_car.js"></script>
+		<!-- 스크립트 영역 END -->
+	
+		<th:block th:replace="~{fragment/location :: location}" ></th:block>
+		<div class="search-conditions con-box">
+			<div class="setting-grid">
+				<div class="setting-grid-title">차량번호</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="cmCarCarFullNo" />
+					</div>
+				</div>
+				<div class="setting-grid-title">운송사</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="cmCarCarCpCd" />
+					</div>
+				</div>
+				<div class="setting-grid-title">사용여부</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="cmCarUseYn">
+							<option value="">전체</option>
+							<option value="Y">사용</option>
+							<option value="N">미사용</option>
+						</select>
+					</div>
+				</div>
+				<div class="setting-grid-title">공유여부</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="cmCarShUseYn">
+							<option value="">전체</option>
+							<option value="R">등록</option>
+							<option value="A">신청</option>
+							<option value="S">승인</option>
+							<option value="E">미등록</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="search-btn-group">
+				<div class="btn-search btn-green" id="cmCarSearchBtn"><img>조회</div>
+				<div class="btn-clear btn-white" id="cmCarClearAllBtn"><img>초기화</div>
+			</div>
+		</div>
+            <div class="list-wrapper">
+			<div class="search-list">
+				<div class="list-top">
+					<div class="list-title ic-title-mark">차량 기본정보</div>
+				</div>
+				<!-- 개발 작업시 그리드 들어갈 부분 -->
+				<div class="list-grid-wrapper con-box">
+					<div id="cmCarPqgridDiv"></div>
+				</div>
+			</div>
+			<div class="search-edit">
+				<div class="edit-btn-wrapper">
+					<ul class="nav nav-tabs">
+						<li class="nav-item">
+							<a class="nav-link active" id="cmCarNav">기본정보</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" id="adCarNav">부가정보</a>
+						</li>
+					</ul>
+					<button class="btn-white" id="cmCarAddRowBtn"><img class="ic-line-plus">추가</button>
+					<button class="btn-white" id="cmCarDelRowBtn"><img class="ic-line-minus">삭제</button>
+					<button class="btn-white" id="cmCarResetBtn"><img class="ic-bt-reset"> 초기화</button>
+					<button class="btn-green" id="cmCarSaveBtn"><img class="ic-bt-save">저장</button>
+				</div>
+				<!-- 개발시 입력창 사이 간격은 gap-10,gap-15,gap-20 변경으로 조정  2023.7.18-->
+				<div class="flex-col flex-1 con-box">
+					<div class="tab-pane fade show active" id="cmCarTabDiv">
+						<div class="setting-grid gap-10">
+							<div class="setting-grid-title ic-title-nece">차량ID</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carId" disabled/>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">공급자명</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="userNm" disabled/>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">차량번호</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carNo" maxlength="4"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">차량번호(FULL)</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carFullNo" maxlength="20"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">사업자등록번호</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="brNo"/>
+								</div>
+							</div>
+							<div class="setting-grid-title">운송사</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type ="text" id="carCpCd">
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">차량구분</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carClsCd">
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">운송구분</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carOprCd">
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">온도구분</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carTempCd">
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">차종구분</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carModCd">
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">차량규격</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carType">
+										<option value="">선택</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">적재CBM</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carLodCbm" maxlength="50" class="car-type"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">적재중량 (kg)</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carLodWgt" maxlength="50"/>
+								</div>
+							</div>
+							<div class="setting-grid-title">적재너비 (mm)</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carLodWdt" maxlength="50"/>
+								</div>
+							</div>
+							<div class="setting-grid-title">적재길이 (mm)</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carLodLen" maxlength="50"/>
+								</div>
+							</div>
+							<div class="setting-grid-title">적재높이 (mm)</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="carLodHgt" maxlength="50"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">주소</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<button class="btn-white" id="btnPostcode" onclick="execPostcode()" style="width: 60px;">찾기</button>
+									<input type="text" id="dtAddr" alt="주소" disabled class="addr"/>
+									<input type="hidden" id="longiNo" alt="경도"/>
+									<input type="hidden" id="latiNo" alt="위도"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ">지역(시도)</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="areaNm1" alt="지역(시도)" disabled  class="addr"/>
+								</div>
+							</div>
+							<div class="setting-grid-title">상세주소</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="dtAddr2" alt="상세주소"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ">지역(시군구)</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="areaNm2" alt="지역(시군구)" disabled  class="addr"/>
+								</div>
+							</div>
+							<div class="setting-grid-title">적재물배상책임보험여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carLodInsrYn">
+										<option value="Y">가입</option>
+										<option value="N" selected>미가입</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">일사용금액</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="cmPrice" maxlength="11"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">사용여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="useYn">
+										<option value="Y" selected>사용</option>
+										<option value="N">미사용</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="tab-pane fade" id="adCarTabDiv" style="display: none;">
+						<div class="setting-grid gap-10">
+							<div class="setting-grid-title">하이패스여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="passYn">
+										<option value="N">없음</option>
+										<option value="Y">있음</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">칸막이여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="diviYn">
+										<option value="N">없음</option>
+										<option value="Y">있음</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">냉동기여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="geraYn">
+										<option value="N">없음</option>
+										<option value="Y">있음</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">에어스포일러여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="airYn">
+										<option value="N">없음</option>
+										<option value="Y">있음</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">차량출고일자</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="date" id="carReleDt"/>
+								</div>
+							</div>
+							<div class="setting-grid-title ">차량연식</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carYear">
+										<option value="">선택</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">온도기록계여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carTempYn">
+										<option value="N">없음</option>
+										<option value="Y">있음</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">GPS여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="carGpsYn">
+										<option value="N">없음</option>
+										<option value="Y">있음</option>
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title">차량사진</div>
+							<div class="setting-grid-content">
+								<div class="add-pic-wrap">
+									<label id="adCarAddCarPhot" class="btn-l-pic-add">
+										<img>차량사진등록
+									</label>
+									<input type="file" id="adCarPhotFile" accept="image/*" style="display:none;"/>
+								</div>
+							</div>
+							<div class="setting-grid-title">자동차등록증</div>
+							<div class="setting-grid-content">
+								<div class="add-pic-wrap">
+									<label id="adCarAddCarCard" class="btn-l-pic-add">
+										<img>자동차등록증<br>등록
+									</label>
+									<input type="file" id="adCarCardFile" accept="image/*" style="display:none;"/>
+									<div class="pic-detail pic-car-card" style="display:none;">
+										<button id="adCarCardDelBtn" class="btn-pic-delete"></button>
+										<img id="adCarCardImage" src="../assets/pic_sample.png" alt="">
+									</div>
+								</div>
+							</div>
+							<div class="setting-grid-title"></div>
+							<div class="setting-grid-content bxslider-div">
+								<ul class="bxslider">
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+        </div>
+	</div>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype04" layout:fragment="content">
+	    <!-- 스크립트 부분 시작 -->
+		<script src="./js/sh_whouse_end.js"></script>	
+		<!-- 스크립트 부분 종료 -->
+		
+		<th:block th:replace="~{fragment/location :: location}" ></th:block>
+	    <div class="search-conditions con-box">              
+        	<div class="setting-grid">
+                <div class="setting-grid-title">창고명</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="schWhNm" />
+				</div>
+			</div>
+			<div class="setting-grid-title">주소</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="schDtAddr" />
+				</div>
+			</div>
+			<div class="setting-grid-title">담당자명</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="schChNm" />
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+             <div class="setting-grid-content">
+                   <div class="input-group">
+                		<select id="schShYn">
+							<option value="">전체</option>
+							<option value="N">미등록</option>
+							<option value="Y">등록</option>
+							<option value="R">신청</option>
+							<option value="S">승인</option>
+							<option value="E">종료</option>
+                		</select>                  
+              		</div>
+             </div>    
+		</div>
+            <div class="search-btn-group">
+            	<div class="btn-search btn-green" id="btnSearch"><img>조회</div>
+            	<div class="btn-clear btn-white" id="btnReset"><img>초기화</div>
+          	</div>
+		</div>
+    	<div class="search-list">
+        	<div class="list-top">
+            	<div class="list-title ic-title-mark">창고 공유정보</div>
+            	<div class="list-btn-group">
+                	<div class="btn-green btn-end" id="btnShEnd">공유종료</div>                  
+                </div>
+            </div>
+      		<!-- 개발 작업시 그리드 들어갈 부분 -->
+        	<div class="list-grid-wrapper con-box">
+        		<div id="sh_whouse_end_pqgrid_div"></div>
+        	 </div>
+        	<!---------------------------------->
+  		</div>
+	</div> 
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents common14" layout:fragment="content">
+		<!-- 스크립트 영역 START -->
+		<script src="./js/sy_account_reg.js"></script>		
+		<script src="./js/sy_mdmccomm.js"></script>	
+		<!-- 스크립트 영역 END -->
+
+        <th:block th:replace="~{fragment/location :: location}" ></th:block>
+		<div class="search-conditions con-box">              
+			<div class="setting-grid">
+				<!--<div class="setting-grid-title">어카운트코드</div>
+				<div class="setting-grid-content">      
+					<div class="input-group">
+		            	<select id="ACTCD">
+		            	</select>                  
+	          	    </div>            
+				</div>  -->
+				<div class="setting-grid-title">업체명</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="CUSTNM" type="text" value="" /> 
+					</div>             
+				</div>  
+				<!--<div class="setting-grid-title">업체코드</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="CUSTCD" type="text" value="" /> 
+					</div>             
+				</div>  -->     
+				<div class="setting-grid-title">사업자등록번호</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="REGNO" type="text" value="" /> 
+					</div>             
+				</div>  
+				<!--<div class="setting-grid-title">어카운트명</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="ACTNM" type="text" value="" /> 
+					</div>             
+				</div> --> 
+				<div class="setting-grid-title">사용여부</div>
+				<div class="setting-grid-content">  
+					<div class="input-group">
+						<select id="ACTYN" >                      
+						</select>                  
+					</div>                
+				</div>                
+			</div>
+			<div class="search-btn-group" style="margin-top:7px;">
+				<div id="btnSearch" class="btn-search btn-green"><img>조회</div>
+				<div id="btnReset" class="btn-clear btn-white"><img>초기화</div>
+			</div>
+		</div>		
+         
+		<div class="search-list con-box">  
+            <div class="list-top">
+              <div class="list-title ic-title-mark">업체 리스트</div>                
+	            <div class="edit-btn-wrapper" style="width:300px">
+	              <button class="btn-white" id="btnAddRow" style="width:100px; padding: 0"><img class="ic-line-plus">행 추가</button>
+	              <button class="btn-white" id="btnDelRow" style="width:100px; padding: 0" action="DELETE"><img class="ic-line-minus">행 삭제</button>
+	              <button class="btn-green" id="btnSave" style="width:100px; padding: 0" action="INSERT"><img class="ic-bt-save">저장</button>
+	            </div>
+            </div>             
+            <!-- 개발 작업시 그리드 들어갈 부분 -->
+            <div class="list-grid-wrapper">
+				<div id="sy_account_reg_pqgrid_div"></div>
+			</div>
+       </div>
+		
+		<div id="modal-background"></div>
+		<div class="popup-search modal-con" style="height:600px">
+			<div class="modal-top">
+				<div class="box-title">업체 조회</div>
+				<button type="button" class="close bt-popup-close"></button>
+			</div>  
+			<div class="modal-body" style="height:600px">
+				<div class="search-conditions con-box">              
+					<div class="setting-grid">
+						<div class="setting-grid-title">업체코드</div>
+						<div class="setting-grid-content">      
+							<div class="input-wrapper">                    
+								<input id="srchCUSTCD" type="text" value="" /> 
+							</div>             
+						</div>       
+						<div class="setting-grid-title">업체명</div>
+						<div class="setting-grid-content">      
+							<div class="input-wrapper">                    
+								<input id="srchCUSTNM" type="text" value="" /> 
+							</div>             
+						</div>     		     
+					</div>
+					<div class="search-btn-group">
+						<div class="btn-search btn-green" onClick="sy_account_reg.fn_SearchCustPopup()"><img>조회</div>
+					</div>
+				</div>
+				<div class="search-list">
+					<div class="list-grid-wrapper">
+						<div id="pqgrid_div_pqgrid_popup_div"></div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-bottom">
+				<button type="button" class="close btn-white">닫기</button>
+			</div>
+		</div>	
+	</div>
+	
+</html>

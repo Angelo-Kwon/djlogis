@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype04" layout:fragment="content">
+		
+		<script src="./js/sy_calculate.js"></script>		
+	
+		<th:block th:replace="~{fragment/location :: location}" ></th:block>
+
+        <!-- 검색 -->
+		<div class="search-conditions con-box master">              
+			<div class="setting-grid">
+				<div class="setting-grid-title">년월</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="month" id="condMonth">
+					</div>
+				</div>
+				<div class="setting-grid-title">업체명</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condCpNm">
+					</div>
+				</div>
+				<div class="setting-grid-title">사업자등록번호</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condBizNo">
+					</div>
+				</div>
+				<div class="setting-grid-title">정산여부</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condContractYn">
+							<option value="" selected="">전체</option>
+							<option value="Y">계약완료</option>
+							<option value="C">정산완료</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="search-btn-group">
+				<div class="btn-search btn-green" id="search"><img>조회</div>
+				<div class="btn-clear btn-white" id="init"><img>초기화</div>
+			</div>
+		</div>
+        <!--// 검색 -->
+        
+        <!-- 검색 -->
+		<div class="search-conditions con-box detail" style="display: none;">              
+			<div class="setting-grid">
+				<div class="setting-grid-title">계약연도</div>
+            	<div class="setting-grid-content">
+              		<div class="input-group">
+	                    <select id="condYear">
+	                    </select>                  
+              		</div>                
+				</div>
+				<div class="setting-grid-title">업체명</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="dtlCondCpNm" disabled>
+					</div>
+				</div>
+				<div class="setting-grid-title">사업자등록번호</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="dtlCondBizNo" disabled>
+					</div>
+				</div>
+				<input type="hidden" id="dtlCondCpCd">
+			</div>
+			<div class="search-btn-group">
+				<div class="btn-search btn-green" id="searchDtl"><img>조회</div>
+				<div class="btn-clear btn-white" id="viewMaster"><img>정산내역</div>
+			</div>
+		</div>
+        <!--// 검색 -->
+        
+        <div class="search-list master">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">정산 내역</div>
+				<div class="list-btn-group">
+					<!--<button class="btn-white">SMS 발송</button>--> <!--상세화면으로 이동-->
+					<button class="btn-green" id="save">사용료 정산</button>
+				</div>
+			</div>
+			
+			<!-- 개발 작업시 그리드 들어갈 부분 -->
+			<div class="list-grid-wrapper con-box">
+				<div id="sy_calculate_pqgrid_div1"></div>
+			</div>
+		</div>
+
+		<div class="list-wrapper detail" style="display: none;">
+			<div class="search-list">
+				<div class="list-top">
+					<div class="list-title ic-title-mark">업체별 정산내역</div>
+				</div>
+				<div class="con-box flex-col flex-1">
+					<!-- 개발 작업시 그리드 들어갈 부분 -->
+					<div class="list-grid-wrapper">
+						<div id="sy_calculate_pqgrid_div2"></div>
+					</div>
+				</div>
+			</div>
+			<div class="search-edit">
+				<div class="list-top"></div>
+				<div class="con-box invoice-wrapper">
+					<div class="invoice-box">
+						<div class="invoice-top" ><d id="invoiceTitle"></d> 청구서(VAT 포함)</div>
+						<div class="invoice-list">
+							<ul class="invoice-details">
+								<li>
+									<div class="title">청구내역</div>
+								</li>
+								<li>
+									<div class="title">클라우드 사용료</div>
+									<div class="amount" id="cloudFee"></div>
+								</li>
+								<li>
+									<div class="title">시스템 사용료</div>
+									<div class="amount" id="systemFee"></div>
+								</li>
+								<li>
+									<div class="title">총 사용료</div>
+									<div class="amount" id="totFee"></div>
+								</li>
+								<li>
+									<div class="title">VAT</div>
+									<div class="amount" id="vat"></div>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="payment-info">
+						<div class="payment-top">납부정보</div>
+						<div class="payment-list">
+							<div class="payment-title ic-dot">업체정보</div>
+							<div class="payment-detial" id="cpNm"></div>
+							<div class="payment-title ic-dot">사업자번호</div>
+							<div class="payment-detial" id="bizNo"></div>
+							<div class="payment-title ic-dot">납부기한</div>
+							<div class="payment-detial" id="payDeadlineDt"></div>
+							<div class="payment-title ic-dot">이메일</div>
+							<div class="payment-detial" id="calcuEmail"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</html>

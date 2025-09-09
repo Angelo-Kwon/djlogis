@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<meta charset="UTF-8">
+    <meta name="description" content="Directing Template">
+    <meta name="keywords" content="Directing, unica, creative, html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>스마트물류플랫폼</title>
+    <th:block layout:fragment="css" ></th:block>
+    <th:block layout:fragment="script" ></th:block>
+    <th:block th:replace="~{fragment/config::ConfigFragment}" ></th:block>
+    
+    <!-- 공통 Layout Setting 모달창 -->
+    <div id="modalsyu10"></div>
+    <script>
+			$("#modalsyu10").load('/com/modal/syu10.html');
+		</script>
+    
+    <div class="wrapper" >
+	    <button class="btn-sidebar show" style="left: 230px;"><img></button>
+	    <th:block th:replace="~{fragment/left :: leftFragment}" ></th:block>
+	    <div class="main-wrapper" style="width: calc(100% - 240px);">
+	    <th:block th:replace="~{fragment/header :: commonHeader}" ></th:block>
+    		<main id="content" class="main-content" >
+				<div class="content-wrapper">
+				    <th:block layout:fragment="content" ></th:block>
+				</div>
+				<th:block th:replace="~{fragment/tab :: tab}" ></th:block>
+		    </main>
+		</div>
+	</div>
+</html>

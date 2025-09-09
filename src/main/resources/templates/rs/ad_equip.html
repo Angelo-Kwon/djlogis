@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+
+<head>
+	<style>
+		.bxslider-div .bx-wrapper { height:600px;}
+	</style>
+</head>
+
+<div class="tab-contents Ptype01" layout:fragment="content">	<!-- 스크립트 영역 START -->
+	<script src="./js/ad_equip.js"></script>
+	<!-- 스크립트 영역 END -->
+
+	<th:block th:replace="~{fragment/location :: location}"></th:block>
+	
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">기자재 구분</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="adEquipEquipCd">
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">기자재업체</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="adEquipCpcd">
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">사용여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="adEquipUseYn">
+						<option value="">전체</option>
+						<option value="Y">사용</option>
+						<option value="N">미사용</option>
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="adEquipShUseYn">
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="search-btn-group">
+			<div class="btn-search btn-green" id="adEquipSearchBtn"><img>조회</div>
+			<div class="btn-clear btn-white" id="adEquipSearchResetBtn"><img>초기화</div>
+		</div>
+	</div>
+
+	<div class="list-wrapper">
+		<div class="search-list">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">기자재 부가정보</div>
+			</div>
+			<div class="list-grid-wrapper con-box">
+				<div id="adEquipPqgridDiv"></div>
+			</div>
+		</div>
+		<div class="search-edit">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">기자재 사진정보</div>
+				<div class="edit-btn-wrapper">
+					<button id="adEquipImageSaveBtn" class="btn-green">사진 등록</button>
+<!--					<button class="btn-white" id="adEquipImageDeleteBtn"><img class="ic-line-minus">사진 삭제</button>-->
+					<button id="adEquipSaveBtn" class="btn-green"><img class="ic-bt-save">저장</button>
+					<input type="hidden" id="equipId" value="">
+				</div>
+			</div>
+			<div class="flex-col flex-1 con-box">
+				<div class="bxslider-div" style="width:800px; height: 600px; ">
+					<ul class="bxslider">
+					</ul>
+					<input type="file" id="adEquipPhotoFile" accept="image/*" style="display: none;" />
+				</div>
+			</div>
+<!--			<div class="flex-col flex-1 con-box">-->
+<!--				<div class="pic-wrapper">-->
+<!--					<div id="imageContainer" style="width:800px; height: 600px; ">-->
+<!--						<img id="adEquipImage" src="#" style="width: 100%; height: 100%; object-fit: contain; display:none;" />-->
+<!--					</div>-->
+<!--					<button id="removeImageButton" style="display: none">X</button>-->
+<!--					<p id="noImageText" style="display: none;">이미지가 없습니다.</p>-->
+<!--					<input type="file" id="adEquipImageFile" accept="image/*" style="display: none;" />-->
+<!--				</div>-->
+<!--			</div>-->
+		</div>
+	</div>
+</div>
+
+</html>

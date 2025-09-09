@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype04" layout:fragment="content">
+		
+		<script src="./js/apv_match.js"></script>		
+		
+		<th:block th:replace="~{fragment/location :: location}" ></th:block>
+	    
+		<div class="search-conditions con-box">
+			<div class="setting-grid">
+				<div class="setting-grid-title">매칭요청일자</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="date" id="condMatReqDt">
+					</div>
+				</div>
+				<div class="setting-grid-title">공급자ID</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condSupId" disabled>
+					</div>
+				</div>
+				<div class="setting-grid-title">공급자명</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condSupNm" disabled>
+					</div>
+				</div>
+				<div class="setting-grid-title">수요자ID</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condConId">
+						</select>
+					</div>
+				</div>
+				<div class="setting-grid-title">공유구분</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condMatCd">
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="search-btn-group">
+				<div class="btn-search btn-green" id="search"><img>조회</div>
+				<div class="btn-clear btn-white" id="init"><img>초기화</div>
+			</div>
+			
+			<div hidden id="prcpUserNm" sec:authentication="principal.username"></div>
+			<div hidden id="prcpNickNm" sec:authentication="principal.nickname"></div>
+		</div>
+		
+		<div class="search-list">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">사용승인 요청 정보</div>
+				<div class="list-btn-group">
+					<div class="btn-green btn-end" id="save">사용승인</div>
+				</div>
+			</div>
+			<!-- 개발 작업시 그리드 들어갈 부분 -->
+			<div class="list-grid-wrapper con-box">
+				<div class="pqgrid_div" id="pqgrid_div_W">
+				</div>
+				<div class="pqgrid_div" id="pqgrid_div_C">
+				</div>
+				<div class="pqgrid_div" id="pqgrid_div_E">
+				</div>
+				<div class="pqgrid_div" id="pqgrid_div_M">
+				</div>
+			</div>
+		</div>
+  </div>   
+</html>

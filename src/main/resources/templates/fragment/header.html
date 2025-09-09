@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div class="header" th:fragment="commonHeader">
+		<div class="location">    
+          <div class="nav-home" id="homeImg"><img class="ic-home"></div>
+          <div class="nav-menu">
+			  <button class="btn-nav-menu">
+				  <span id="menuInfo_SYSTEM_NM" th:text = "${menuInfo?.SYSTEM_NM}" /><img class="ic-input-down">
+			  </button>
+	          <ul id="menuInfo_system_ul" class="menu-list con-box" style="display: none;">
+	          </ul>
+          </div>
+          <div class="nav-menu">
+			  <button class="btn-nav-menu">
+				  <span id="menuInfo_MENU_PNM" th:text = "${menuInfo?.MENU_PNM}" /><img class="ic-input-down">
+			  </button>
+	          <ul id="menuInfo_menup_ul" class="menu-list con-box" style="display: none;">
+	          </ul>
+          </div>
+          <div class="nav-menu">
+			  <button class="btn-nav-menu">
+				  <span id="menuInfo_MENU_NM" th:text = "${menuInfo?.MENU_NM}" /><img class="ic-input-down">
+			  </button>
+	          <ul id="menuInfo_menu_ul" class="menu-list con-box" style="display: none;">
+	          </ul>
+          </div>
+		  <input type="hidden" id="menuInfo_MENU_ID" th:value="${menuInfo?.MENU_ID}" />
+        </div>
+        <div class="nav-favorite">          
+          <button class="btn-favorite"><img class="ic-bookmark on">즐겨찾기 <img class="ic-input-down"></button>
+          <ul class="fa-list con-box">
+          </ul>          
+        </div>
+    <script th:inline="javascript">
+		$(function() {
+			var sys = /*[[${menuInfo?.MENU_NM}]]*/ "";
+			
+			$('#homeImg').on('click', function() {
+				location.href = '/sy/dashboard';
+			});
+		});
+	</script>
+    </div>
+</html>

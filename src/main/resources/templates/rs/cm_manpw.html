@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+<div class="tab-contents Ptype01" layout:fragment="content">
+	<script src="./js/cm_manpw.js"></script>
+	<th:block th:replace="~{fragment/location :: location}"></th:block>
+	<!-- 검색 -->
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">인력구분</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="cmManpwdWrkCd">
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">근무형태</div>
+			<div class="setting-grid-content">
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="cmManpwWrkTyp">
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="setting-grid-title">인력이름</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="cmManpwManpwNm" />
+				</div>
+			</div>
+			<div class="setting-grid-title">사용여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="cmManpwUseYn">
+						<option value="">전체</option>
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="cmManpwShUseYn">
+						<option value="">전체</option>
+						<option value="R">등록중</option>
+						<option value="A">신청중</option>
+						<option value="S">사용중</option>
+						<option value="E">미등록</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="search-btn-group">
+			<div class="btn-search btn-green" id="cmManpwSearchBtn">
+				<img>조회
+			</div>
+			<div class="btn-clear btn-white" id="cmManpwSeacrhClearBtn">
+				<img>초기화
+			</div>
+		</div>
+	</div>
+	<!--// 검색 -->
+	<div class="list-wrapper">
+		<div class="search-list">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">인력 기본정보</div>
+			</div>
+			<!-- 그리드 -->
+			<div class="list-grid-wrapper con-box">
+				<div id="cmManpwPqgridDiv"></div>
+			</div>
+			<!--// 그리드 -->
+		</div>
+		<!-- 상세 -->
+		<div class="search-edit">
+			<!-- 버튼 -->
+			<div class="edit-btn-wrapper">
+				<ul class="nav nav-tabs">
+					<li class="nav-item"><a class="nav-link active"
+						id="cmManpwNav">기본정보</a></li>
+					<li class="nav-item"><a class="nav-link" id="adManpwNav">부가정보</a></li>
+				</ul>
+				<button class="btn-white" id="addRowBtn">
+					<img class="ic-line-plus">추가
+				</button>
+				<button class="btn-white" id="delRowBtn">
+					<img class="ic-line-minus">삭제
+				</button>
+				<button class="btn-white" id="clearEditsBtn">
+					<img class="ic-bt-reset"> 취소
+				</button>
+				<button class="btn-green" id="saveBtn">
+					<img class="ic-bt-save">저장
+				</button>
+			</div>
+			<!--// 버튼 -->
+			<div class="flex-col flex-1 con-box">
+				<div class="tab-pane fade show active" id="cmManpwTabDiv">
+					<div class="setting-grid gap-10">
+						<div class="setting-grid-title ic-title-nece">인력구분</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="wrkCd">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">
+							사업자등록번호<br>(주민등록번호)
+						</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="brNo" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">인력업체</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="cpCd">
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">인력이름</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="manpwNm" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">근무형태</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="wrkTyp">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">근무시간</div>
+						<div class="setting-grid-content">
+							<div class="input-time-group">
+								<input type="time" id="wrkTime1"> <span>~</span> <input
+									type="time" id="wrkTime2">
+							</div>
+						</div>
+						<div class="setting-grid-title">직종</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="wrkGrp">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">야간근무여부</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="ngtYn">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title ">자격증유무</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="licnYn">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">희망근무지</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="wrkArea">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">희망근무월수</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="wrkReqMon" />
+							</div>
+						</div>
+						<div class="setting-grid-title ">일사용금액</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="cmPrice">
+							</div>
+						</div>
+						<div class="setting-grid-title">사용여부</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="useYn">
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="tab-pane fade" id="adManpwTabDiv" style="display: none;">
+					<div class="setting-grid gap-10">
+						<div class="setting-grid-title">직종중분류</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="WRK_GRP1">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">직종소분류</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="WRK_GRP2">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">자격증등록</div>
+						<div class="setting-grid-content">
+							<div class="add-pic-wrap">
+								<label id="adManpwLicn" class="btn-l-pic-add"> <img>자격증등록
+								</label> <input type="file" id="adManpwLicnFile" accept="image/*"
+									style="display: none;" />
+							</div>
+						</div>
+						<div class="setting-grid-title">인력사진등록</div>
+						<div class="setting-grid-content">
+							<div class="add-pic-wrap">
+								<label id="adManpwphoto" class="btn-l-pic-add"> <img>인력사진<br>등록
+								</label> <input type="file" id="adManpwphotoFile" accept="image/*"
+									style="display: none;" />
+								<div class="pic-detail pic-car-card" style="display: none;">
+									<button id="adManpwphotoDelBtn" class="btn-pic-delete"></button>
+									<img id="adManpwphotoImage" src="../assets/pic_sample.png"
+										alt="">
+								</div>
+							</div>
+						</div>
+						<div class="setting-grid-title"></div>
+						<div class="setting-grid-content bxslider-div">
+							<ul class="bxslider">
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype04" layout:fragment="content">
+		
+		<script src="./js/sup_match.js"></script>		
+		
+		<th:block th:replace="~{fragment/location :: location}" ></th:block>
+		
+		<div class="search-conditions con-box">              
+	    	<div class="setting-grid">      
+				<div class="setting-grid-title">매칭구분</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condMatCd">
+						</select>
+					</div>
+				</div>
+				<div class="setting-grid-title">공급자ID</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condSupId" disabled>
+					</div>
+				</div>
+				<div class="setting-grid-title">공급자명</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condSupNm" disabled>
+					</div>
+				</div>
+				<div class="setting-grid-title">조회기간</div>
+				<div class="setting-grid-content">
+					<div class="input-date-group">
+						<input type="date" id="condMatConDtSt">
+						<span>~</span>
+						<input type="date" id="condMatConDtEnd">
+					</div>
+				</div>
+				<div class="setting-grid-title">수요자ID</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="group">
+					</div>
+				</div>
+				<div class="setting-grid-title">수요자명</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="condConNm">
+					</div>
+				</div>
+			</div>
+				
+			<div class="search-btn-group">
+				<div class="btn-search btn-green" id="search"><img>조회</div>
+				<div class="btn-clear btn-white" id="init"><img>초기화</div>
+			</div>
+			
+			<div hidden id="prcpUserNm" sec:authentication="principal.username"></div>
+			<div hidden id="prcpNickNm" sec:authentication="principal.nickname"></div>
+		</div>
+		
+	    <div class="search-list">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">공급자 매칭 내역</div>
+				<div class="list-btn-group">
+					<div class="btn-green btn-end" id="save">매칭종료</div>
+				</div>
+			</div>
+			<!-- 개발 작업시 그리드 들어갈 부분 -->
+			<div class="list-grid-wrapper con-box">
+				<div class="pqgrid_div" id="sup_match_pqgrid_div_W">
+				</div>
+				<div class="pqgrid_div" id="sup_match_pqgrid_div_C">
+				</div>
+				<div class="pqgrid_div" id="sup_match_pqgrid_div_E">
+				</div>
+				<div class="pqgrid_div" id="sup_match_pqgrid_div_M">
+				</div>
+			</div>
+		</div>
+	</div>
+</html>

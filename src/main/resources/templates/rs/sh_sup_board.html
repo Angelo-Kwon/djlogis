@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype01" layout:fragment="content">
+		<!-- 스크립트 부분 시작 -->
+		<script src="./js/sh_sup_board.js"></script>
+		<!-- 스크립트 부분 종료 -->
+		
+		<th:block th:replace="~{fragment/location :: location}" ></th:block>
+	    <div class="search-conditions con-box">              
+        	<div class="setting-grid">
+            	<div class="setting-grid-title">조회기간</div>
+                <div class="setting-grid-content">      
+                  <div class="input-date-group">
+                    <input type="date" id="schFromDate"/>
+                    <span>~</span>
+                    <input type="date" id="schToDate"/>
+                  </div>           
+                </div>  
+            	<div class="setting-grid-title">수요자ID</div>
+        		<div class="setting-grid-content">  
+          			<div class="input-wrapper">                    
+            			<input type="text" id="schConId" /> 
+          			</div>                     
+        		</div>
+            	<div class="setting-grid-title">수요자명</div>
+            	<div class="setting-grid-content">   
+              		<div class="input-wrapper">                    
+                		<input type="text" id="schConNm" /> 
+              		</div>  
+            	</div>
+          	</div>
+          	<div class="search-btn-group">
+            	<div class="btn-search btn-green" id="btnSearch"><img>조회</div>
+            	<div class="btn-clear btn-white" id="btnReset"><img>초기화</div>
+          	</div>
+        </div>
+        <div class="list-wrapper">
+          	<div class="search-list">
+            	<div class="list-top">
+              		<div class="list-title ic-title-mark">소통 내역</div>                  
+            	</div>
+            	<!-- 개발 작업시 그리드 들어갈 부분 -->
+            	<div class="list-grid-wrapper con-box">
+              		<div id="pqgrid_div"></div>
+            	</div>
+            	<!---------------------------------->
+          	</div>
+          	<div class="search-edit">
+          		<input type="hidden" id="com_no"/> 
+	          	<div class="list-top">
+	            	<div class="list-title">
+		              	 <div class="list-title ic-title-mark">소통 신청 내역</div>                  
+	            	</div>
+			    </div>	
+			     <div class="gap-20 h-45 con-box" style="height: 45%"> 
+		           <div class="h-100 setting-grid-content">   
+	                	<textarea id="edit_req_mark" disabled="disabled"></textarea> 
+		           </div> 
+		    	</div>	
+		    	<div class="" style="display: flex; justify-content: space-between;">
+			    	<div class="list-title ic-title-mark">소통 답변 내역</div>          
+			    	<div class="edit-btn-wrapper">
+			          	<button class="btn-green" id="btnSave"><img class="ic-bt-save">저장</button>
+			        </div>
+		    	</div>	
+		    	 <div class="gap-20 h-45 con-box" style="height: 45%"> 
+		             <div class="h-100 setting-grid-content">   
+	                	<textarea id="edit_res_mark" alt="소통 답변 내역"></textarea> 
+		           </div> 
+		    	</div>	     
+	        </div>
+	   	</div>
+    </div>
+</html>

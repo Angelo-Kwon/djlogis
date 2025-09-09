@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+<div class="tab-contents Ptype03" layout:fragment="content">
+	<script src="./js/sh_manpw_reg.js"></script>
+
+	<th:block th:replace="~{fragment/location :: location}"></th:block>
+
+	<style>
+.info-detail2 .list-title {
+	margin-top: 25px;
+}
+</style>
+
+	<!-- 검색 -->
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">인력구분</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="condWrkCd">
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">근무형태</div>
+			<div class="setting-grid-content">
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condWrkTyp">
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="setting-grid-title">인력이름</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="condManpwNm" />
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="condShYn">
+						<option value="">전체</option>
+							<option value="R">등록중</option>
+							<option value="A">신청중</option>
+							<option value="S">사용중</option>
+							<option value="E">미등록</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="search-btn-group">
+			<div class="btn-search btn-green" id="search">
+				<img>조회
+			</div>
+			<div class="btn-clear btn-white" id="init">
+				<img>초기화
+			</div>
+		</div>
+	</div>
+	<!--// 검색 -->
+
+	<div class="list-wrapper">
+		<div class="search-list">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">인력 기본정보</div>
+			</div>
+
+			<!-- 그리드 -->
+			<div class="list-grid-wrapper con-box">
+				<div id="sh_manpw_reg_pqgrid_div1"></div>
+			</div>
+			<!--// 그리드 -->
+		</div>
+
+		<!-- 상세 -->
+		<div class="search-info">
+			<!-- 버튼 -->
+			<div class="edit-btn-wrapper">
+				<button class="btn-white" id="detailInit">
+					<img class="ic-bt-reset"> 취소
+				</button>
+				<!--<button class="btn-white" id="del"><img class="ic-line-minus">삭제</button>-->
+				<button class="btn-green" id="save">
+					<img class="ic-bt-save">저장
+				</button>
+
+				<!-- <button class="btn-white" id="addRow"><img class="ic-line-plus">행 추가</button> -->
+				<!--<button class="btn-white"><img class="ic-edit">수정</button>-->
+				<!--<button class="btn-white"><img class="ic-register">등록</button>-->
+			</div>
+			<!--// 버튼 -->
+			<div class="info-detail1 ">
+				<div class="list-grid-wrapper con-box">
+					<div id="sh_manpw_reg_pqgrid_div2"></div>
+				</div>
+			</div>
+			<div class="info-detail2">
+				<div class="info-picture ">
+					<div class="list-title ic-title-mark">인력 사진정보</div>
+					<div class="img-picture con-box flex-1">
+						<img id="wrkPhto" src="" alt="">
+					</div>
+				</div>
+				<div class="info-edit">
+					<div class="list-title ic-title-mark">인력 공유정보</div>
+					<div class="flex-col flex-1 con-box">
+						<div class="setting-grid gap-10">
+							<div class="setting-grid-title ic-title-nece">공유기간구분</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="shPrdCls" must="true" title="공유기간구분">
+									</select>
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">공유기본기간</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="text" id="shPrd" must="true" title="공유기본기간">
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">공유시작일</div>
+							<div class="setting-grid-content">
+								<div class="input-wrapper">
+									<input type="date" id="shLtDt" must="true" title="공유시작일">
+								</div>
+							</div>
+							<div class="setting-grid-title ic-title-nece">공유여부</div>
+							<div class="setting-grid-content">
+								<div class="input-group">
+									<select id="shUseYn" alt="공유여부">
+									</select>
+								</div>
+							</div>
+							<input style="display: none;" type="text" id="shNo" /> <input
+								style="display: none;" type="text" id="manpwNo" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</html>

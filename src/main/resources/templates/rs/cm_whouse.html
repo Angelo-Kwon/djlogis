@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+<div class="tab-contents Ptype01" layout:fragment="content">
+	<!-- 스크립트 부분 시작 -->
+	<script src="./js/cm_whouse.js"></script>
+	<!-- 스크립트 부분 종료 -->
+	<th:block th:replace="~{fragment/location :: location}"></th:block>
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">창고명</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="schWhNm" />
+				</div>
+			</div>
+			<div class="setting-grid-title">주소</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="schDtAddr" />
+				</div>
+			</div>
+			<div class="setting-grid-title">담당자명</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="schChNm" />
+				</div>
+			</div>
+			<div class="setting-grid-title">사용여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="schUseYn">
+						<option value="">전체</option>
+						<option value="Y">사용</option>
+						<option value="N">미사용</option>
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="schShYn">
+						<option value="">전체</option>
+						<option value="R">등록중</option>
+						<option value="A">신청중</option>
+						<option value="S">사용중</option>
+						<option value="E">미등록</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="search-btn-group">
+			<div class="btn-search btn-green" id="btnSearch">
+				<img>조회
+			</div>
+			<div class="btn-clear btn-white" id="btnReset">
+				<img>초기화
+			</div>
+		</div>
+	</div>
+	<div class="list-wrapper">
+		<div class="search-list">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">창고 기본정보</div>
+			</div>
+			<!-- 개발 작업시 그리드 들어갈 부분 -->
+			<div class="list-grid-wrapper con-box">
+				<div id="cmWhousePqgridDiv"></div>
+			</div>
+			<!---------------------------------->
+		</div>
+		<div class="search-edit">
+			<div class="edit-btn-wrapper">
+				<ul class="nav nav-tabs">
+					<li class="nav-item"><a class="nav-link active"
+						id="cmWhouseNav">기본정보</a></li>
+					<li class="nav-item"><a class="nav-link" id="adWhouseNav">부가정보</a>
+					</li>
+				</ul>
+				<button class="btn-white" id="btnAddRow">
+					<img class="ic-line-plus">추가
+				</button>
+				<button class="btn-white" id="btnDelRow">
+					<img class="ic-line-minus">삭제
+				</button>
+				<button class="btn-white" id="btnWhouseReset">
+					<img class="ic-bt-reset"> 초기화
+				</button>
+				<button class="btn-green" id="btnSave">
+					<img class="ic-bt-save">저장
+				</button>
+			</div>
+			<div class="flex-col flex-1 con-box">
+				<div class="tab-pane fade show active" id="cmWhouseTabDiv">
+					<div class="setting-grid gap-10">
+						<div class="setting-grid-title ic-title-nece">창고ID</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="whId" disabled />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">공급자명</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="userNm" disabled />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">창고명</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="whNm" alt="창고명" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">사업자등록번호</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="brNo" alt="사업자등록번호" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">대표자명</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="ceoNm" alt="대표자명" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">담당자명</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="chNm" alt="담당자명" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">전화번호</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="telNo" alt="전화번호" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">이메일</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="mailAddr" alt="이메일" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">주소</div>
+						<div class="setting-grid-content span-3">
+							<div class="input-wrapper">
+								<button class="btn-white" id="btnPostcode"
+									onclick="execPostcode()" style="width: 60px;">찾기</button>
+								<input type="text" id="dtAddr" alt="주소" disabled
+									class="addr" /> <input type="hidden" id="longiNo"
+									alt="경도" /> <input type="hidden" id="latiNo" alt="위도" />
+							</div>
+						</div>
+						<div class="setting-grid-title ">지역(시도)</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="areaNm1" alt="지역(시도)" disabled />
+							</div>
+						</div>
+						<div class="setting-grid-title">지역(시군구)</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="areaNm2" alt="지역(시군구)" disabled />
+							</div>
+						</div>
+						<div class="setting-grid-title">상세주소</div>
+						<div class="setting-grid-content span-3">
+							<div class="input-wrapper">
+								<input type="text" id="dtAddr2" alt="상세주소" />
+							</div>
+						</div>
+						<div class="setting-grid-title">전체층수</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="tlFlNum" alt="전체층수" />
+							</div>
+						</div>
+						<div class="setting-grid-title">지하층수</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="udFlNum" alt="지하층수" />
+							</div>
+						</div>
+						<div class="setting-grid-title">대지면적 (평)</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="lotArea" alt="대지면적" />
+							</div>
+						</div>
+						<div class="setting-grid-title">연면적 (평)</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="tlArea" alt="연면적" />
+							</div>
+						</div>
+						<div class="setting-grid-title">창고종류</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="whKnCd" alt="창고종류">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">차량진입정보</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="carEntCd" alt="차량진입정보">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title">사용여부</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="useYn" alt="사용여부">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title ">일 사용금액</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="cmPrice" alt="일 사용금액" />
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="tab-pane fade" id="adWhouseTabDiv" style="display: none;">
+					<div class="setting-grid grid-check-line gap-10">
+						<div class="setting-grid-title">취급품목</div>
+						<div class="setting-grid-content">
+							<div class="input-check-group">
+								<div class="check-box">
+									<input type="checkbox" id="farmYn" >농산물
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="fishYn">수산물
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="meatYn">축산물
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="foodYn">음식료품
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="fashionYn">의류 및 섬유제품
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="machYn">기계/장비
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="mediYn">의료용품
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="furnYn">가구목재
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="elecYn">전자제품
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="metalYn">금속가공제품
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="etcYn">기타
+								</div>
+							</div>
+						</div>
+						<div class="setting-grid-title">인증현황</div>
+						<div class="setting-grid-content">
+							<div class="input-check-group">
+								<div class="check-box">
+									<input type="checkbox" id="isoYn">ISO
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="aeoYn">AEO
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="kgspYn">KGSP
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="tapaYn">TAPA
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="logiYn">종합물류기업인증
+								</div>
+							</div>
+						</div>
+						<div class="setting-grid-title">보험가입여부</div>
+						<div class="setting-grid-content">
+							<div class="input-check-group">
+								<div class="check-box">
+									<input type="checkbox" id="fireInsuYn">화재보험가입
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="saleInsuYn">영업배상보험가입
+								</div>
+							</div>
+						</div>
+						<div class="setting-grid-title">창고시설</div>
+						<div class="setting-grid-content">
+							<div class="input-check-group">
+								<div class="check-box">
+									<input type="checkbox" id="dockYn">도크
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="canopyYn">캐노피
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="cargoYn">화물승강기
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="platYn">파레트랙
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="autoYn">자동화창고
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="rackYn">선반랙
+								</div>
+								<div class="check-box">
+									<input type="checkbox" id="verticalYn">수직반송기
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="setting-etc">
+						<div class="setting-etc-property">
+							<div class="etc-title">창고사진</div>
+							<div class="add-pic-wrap">
+									<label id="adWhouseAddPhoto" class="btn-l-pic-add">
+										<img>창고사진등록
+									</label>
+									<input type="file" id="adWhousePhotoFile" accept="image/*" style="display:none;"/>
+								</div>
+						</div>
+						<div class="setting-etc-property">
+							<div class="etc-title">기타사항</div>
+							<div class="etc-text-box">
+								<textarea id="memo"></textarea>
+							</div>
+						</div>
+					</div>
+					<div class="setting-grid-title"></div>
+					<div class="setting-grid-content bxslider-div" style="width:300px !important">
+<!--					<div class="setting-grid-content" style="width: 300px; height: 400px;">-->
+						<ul class="bxslider">
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</html> 

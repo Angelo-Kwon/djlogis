@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+<div class="tab-contents-outer Ptype01" layout:fragment="content">
+	<style>
+		.overlaybox div,
+		ul {
+			overflow: hidden;
+		}
+
+		.overlaybox ul {
+			width: 240px;
+			background: rgba(255, 255, 255, 0.8);
+		}
+
+		.overlaybox li {
+			list-style: none;
+		}
+
+		.overlaybox li {
+			position: relative;
+			margin-bottom: 2px;
+			padding: 5px 10px;
+			line-height: 1;
+		}
+
+		.overlaybox li span {
+			display: inline-block;
+			white-space: normal;
+			word-break: break-all;
+			color: rgb(69, 69, 69);
+			font-size: 15px;
+			font-weight: normal;
+		}
+
+		
+	</style>
+
+	<!-- 스크립트 부분 시작 -->
+	<script src="./js/dashboard.js"></script>
+	<!-- 스크립트 부분 종료 -->
+
+	<div class="tab-contents dashboard">
+		<div class="board-1col con-box area_inout">
+			<div class="col-top">
+				<div class="col-title">입출고 현황</div>
+				<!-- <div class="input-group">
+					<select id="compkey">
+						<option value="100" selected>THE 광성물류</option>
+					</select>
+				</div> -->
+			</div>
+			<div class="col-content">
+				<div class="flex-1 flex-col">
+					<div class="box-title ic-title-mark">오늘 입고</div>
+					<div class="box-content">
+						<!--<img src="../assets/dashboard1.png" alt="" width="100%" height="176">-->
+						<canvas id="s_BStockChart" width="300" height="200"></canvas>
+						<canvas id="s_DStockChart" width="400" height="200"></canvas>
+					</div>
+				</div>
+				<div class="v-line"></div>
+				<div class="flex-1 flex-col">
+					<div class="box-title ic-title-mark">오늘 출고</div>
+					<div class="box-content">
+						<!--<img src="../assets/dashboard2.png" alt="" width="100%" height="176">-->
+						<canvas id="s_BDeliveryChart" width="400" height="200"></canvas>
+						<canvas id="s_DDeliveryChart" width="400" height="200"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="board-1col con-box area_logis">
+			<div class="col-top">운송 현황</div>
+			<div class="col-content h-200">
+				<div class="flex-1 flex-col">
+					<div class="box-content" style="width: 450px;">
+							<div class="flex-1 flex-col">
+								<div class="box-content">
+									<ul class="sr-list" id="logis-list">
+									</ul>
+								</div>
+							</div>
+					</div>
+				</div>
+				<div class="v-line"></div>
+				<div class="map-box" style="width: 80%;">
+					<div id="dashboard_ship_map" style="width:100%;height:100%;"></div>
+				</div>
+				<div class="flex-1">
+					<div class="box-content">
+						<div class="grid-wrapper">
+							<div id="transit_pqgrid_div2"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="board-1col con-box area_share">
+			<div class="col-top">
+				<div class="col-title">물류공유</div>
+			</div>
+			<div class="col-content">
+				<div class="flex-1 flex-col">
+					<div class="box-title ic-title-mark">공유자원</div>
+					<div class="box-content">
+						<ul class="sr-list" id="sr-list">
+						</ul>
+					</div>
+				</div>
+				<div class="flex-1 flex-col">
+					<div class="box-title ic-title-mark">사용신청/승인</div>
+					<div class="box-content">
+						<ul class="sign-list">
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>	
+		<div class="board-1col con-box area_rs">
+			<div class="col-top">
+				<div class="col-title">안전관리</div>
+			</div>
+			<div class="col-content">
+				<div class="flex-1 flex-col">
+					<div class="box-title ic-title-mark">작업자/지게차</div>
+					<div class="box-content">
+						<canvas id="s_DWorkerChart" width="400" height="200"></canvas>
+						<canvas id="s_BWorkerChart" width="400" height="200"></canvas>
+					</div>
+				</div>
+				<div class="flex-1 flex-col">
+					<div class="box-title ic-title-mark">안전 센서</div>
+					<div class="box-content flex-row flex-1">
+						<div class="sensor-box">
+							<img class="img-sensor">
+							<div class="sensor-count">
+								<div class="cnt-box">
+									<div class="sensor-cl blue"></div>
+									<div class="cnt-txt">1개</div>
+								</div>
+								<div class="cnt-box">
+									<div class="sensor-cl red"></div>
+									<div class="cnt-txt">0개</div>
+								</div>
+							</div>
+						</div>
+						<div class="sensor-box">
+							<img class="img-sensor">
+							<div class="sensor-count">
+								<div class="cnt-box">
+									<div class="sensor-cl blue"></div>
+									<div class="cnt-txt">1개</div>
+								</div>
+								<div class="cnt-box">
+									<div class="sensor-cl red"></div>
+									<div class="cnt-txt">0개</div>
+								</div>
+							</div>
+						</div>
+						<div class="sensor-box">
+							<img class="img-sensor">
+							<div class="sensor-count">
+								<div class="cnt-box">
+									<div class="sensor-cl blue"></div>
+									<div class="cnt-txt">1개</div>
+								</div>
+								<div class="cnt-box">
+									<div class="sensor-cl red"></div>
+									<div class="cnt-txt">0개</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</html>

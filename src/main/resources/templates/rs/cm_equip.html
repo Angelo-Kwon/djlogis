@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layout/default_layout}">
+<div class="tab-contents Ptype01" layout:fragment="content">
+
+	<!-- 스크립트 영역 START -->
+	<script src="./js/cm_equip.js"></script>
+	<!-- 스크립트 영역 END -->
+
+	<th:block th:replace="~{fragment/location :: location}"></th:block>
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">기자재 구분</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="cmEquipEquipCd" name="cmEquipEquipCd"></select>
+				</div>
+			</div>
+			<div class="setting-grid-title">기자재업체</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="cmEquipCpcd" name="cmEquipCpcd"/>
+				</div>
+			</div>
+			<div class="setting-grid-title">사용여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="cmEquipUseYn" name="cmEquipUseYn">
+						<option value="">전체</option>
+						<option value="Y">사용</option>
+						<option value="N">미사용</option>
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="cmEquipShUseYn" name="cmEquipShUseYn">
+						<option value="">전체</option>
+						<option value="R">등록중</option>
+						<option value="A">신청중</option>
+						<option value="S">사용중</option>
+						<option value="E">미등록</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="search-btn-group">
+			<div class="btn-search btn-green" id="cmEquipSearchBtn"><img>조회</div>
+			<div class="btn-clear btn-white" id="cmEquipResetBtn"><img>초기화</div>
+		</div>
+	</div>
+
+	<div class="list-wrapper">
+		<div class="search-list">
+			<div class="list-top">
+				<div class="list-title ic-title-mark">기자재 기본 정보</div>
+			</div>
+			<!-- 개발 작업시 그리드 들어갈 부분 -->
+			<div class="list-grid-wrapper con-box">
+				<div id="cmEquipPqgridDiv"></div>
+			</div>
+		</div>
+		<!-- :::::  selectF  start   ::::: -->
+		<div class="search-edit">
+			<div class="edit-btn-wrapper">
+				<ul class="nav nav-tabs">
+					<li class="nav-item">
+						<a class="nav-link active" id="cmEquipNav">기본정보</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" id="adEquipNav">부가정보</a>
+					</li>
+				</ul>
+				<button id="adEquipAddImageBtn" class="btn-green">사진 등록</button>
+				<button class="btn-white" id="cmEquipAddRowBtn">
+					<img class="ic-line-plus">추가
+				</button>
+				<button class="btn-white" id="cmEquipDelRowBtn">
+					<img class="ic-line-minus">삭제
+				</button>
+				<button class="btn-white" id="cmEquipCancelBtn">
+					<img class="ic-bt-reset">취소
+				</button>
+				<button class="btn-green" id="cmEquipSaveBtn">
+					<img class="ic-bt-save">저장
+				</button>
+			</div>
+			<div class="flex-col flex-1 con-box">
+				<div class="tab-pane fade show active" id="cmEquipTabDiv">
+					<div class="setting-grid">
+						<div class="setting-grid-title">기자재구분</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="equipCdNm" name="equipCdNm" class="cm-equip-readonly" disabled />
+								<input type="hidden" id="equipCd" name="equipCd"/>
+							</div>
+						</div>
+						<div class="setting-grid-title">사업자등록번호</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="brNo" name="brNo" data-field-name="사업자등록번호"/>
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">기자재명</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="equipNm" name="equipNm"/>
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">기자재업체</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="cpCd" name="cpCd" data-field-name="기자재업체">
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">제조사</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="makeCpNm" name="makeCpNm" data-field-name="제조사"/>
+							</div>
+						</div>
+						<div class="setting-grid-title">제조년도</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="makeYear" name="makeYear" data-field-name="제조년도"/>
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece">주소</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<button class="btn-white" id="cmEquipPostCodeBtn" style="width: 60px;">찾기</button>
+								<input type="text" id="dtAddr" alt="주소" class="cm-equip-readonly" disabled/>
+								<input type="hidden" id="longiNo" alt="경도"/>
+								<input type="hidden" id="latiNo" alt="위도"/>
+							</div>
+						</div>
+						<div class="setting-grid-title ">지역(시도)</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="areaNm1" alt="지역(시도)" class="cm-equip-readonly" disabled/>
+							</div>
+						</div>
+						<div class="setting-grid-title">상세주소</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="dtAddr2" alt="상세주소"/>
+							</div>
+						</div>
+						<div class="setting-grid-title ">지역(시군구)</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="areaNm2" alt="지역(시군구)" class="cm-equip-readonly" disabled/>
+							</div>
+						</div>
+						<div class="setting-grid-title">일사용금액</div>
+						<div class="setting-grid-content">
+							<div class="input-wrapper">
+								<input type="text" id="cmPrice" name="cmPrice" data-field-name="일사용금액"/>
+							</div>
+						</div>
+
+						<!-- 지게차 start -->
+						<div class="setting-grid-title ic-title-nece equipTypeF">차량형식</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-group">
+								<select id="fkliftCd" name="fkliftCd" data-field-name="차량형식">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeF">총 중량(톤)</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-wrapper">
+								<input type="text" id="fkliftWgt" data-field-name="총 중량" name="fkliftWgt" />
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece equipTypeF">마스트(단)</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-group">
+								<select id="fkliftMst" name="fkliftMst" data-field-name="마스트">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeF">최대올림 높이(mm)</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-wrapper">
+								<input type="text" id="fkliftHgt" name="fkliftHgt" data-field-name="최대올림 높이"/>
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece equipTypeF">모델명</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-wrapper">
+								<input type="text" id="fkliftModel" name="fkliftModel" data-field-name="모델명"/>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeF">시리얼번호</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-wrapper">
+								<input type="text" id="fkliftSerialNo" name="fkliftSerialNo" data-field-name="시리얼번호"/>
+							</div>
+						</div>
+
+						<div class="setting-grid-title equipTypeF">충전기포함여부</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-group">
+								<select id="chgrYn" name="chgrYn" data-field-name="충전기포함여부">
+									<option selected>선택</option>
+									<option value="Y">포함</option>
+									<option value="N">미포함</option>
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeF">기사포함여부</div>
+						<div class="setting-grid-content equipTypeF">
+							<div class="input-group">
+								<select id="driverYn" name="driverYn" data-field-name="기사포함여부">
+									<option selected>선택</option>
+									<option value="Y">포함</option>
+									<option value="N">미포함</option>
+								</select>
+							</div>
+						</div>
+						<!-- 지게차 end -->
+
+						<!-- 대차 start -->
+						<div class="setting-grid-title ic-title-nece equipTypeK">대차종류</div>
+						<div class="setting-grid-content equipTypeK">
+							<div class="input-group">
+								<select id="kartCd" name="kartCd" data-field-name="대차종류">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeK">대차타입</div>
+						<div class="setting-grid-content equipTypeK">
+							<div class="input-group">
+								<select id="kartTyp" name="kartTyp" data-field-name="대차타입">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece equipTypeK">적재중량(kg)</div>
+						<div class="setting-grid-content equipTypeK">
+							<div class="input-wrapper">
+								<input type="text" id="kartWgt" name="kartWgt" data-field-name="적재중량"/>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeK">대차규격(mm)</div>
+						<div class="setting-grid-content equipTypeK">
+							<div class="input-wrapper">
+								<input type="text" id="kartStd" name="kartStd" data-field-name="대차규격"/>
+							</div>
+						</div>
+						<!-- 대차 end -->
+
+						<!-- 파레트 start -->
+						<div class="setting-grid-title ic-title-nece equipTypeP">파레트구분</div>
+						<div class="setting-grid-content equipTypeP">
+							<div class="input-group">
+								<select id="pltCd" name="pltCd" data-field-name="파레트구분">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title ic-title-nece equipTypeP">파레트타입</div>
+						<div class="setting-grid-content equipTypeP">
+							<div class="input-group">
+								<select id="pltTypCd" name="pltTypCd" data-field-name="파레트타입">
+								</select>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeP">파레트중량(kg)</div>
+						<div class="setting-grid-content equipTypeP">
+							<div class="input-wrapper">
+								<input type="text" id="pltWgt" name="pltWgt" data-field-name="파레트중량" disabled/>
+							</div>
+						</div>
+						<div class="setting-grid-title equipTypeP">파레트 규격</div>
+						<div class="setting-grid-content equipTypeP">
+							<div class="input-group">
+								<select id="pltStd" name="pltStd" data-field-name="파레트규격">
+								</select>
+							</div>
+						</div>
+						<!-- 파레트 end -->
+
+						<div class="setting-grid-title">사용여부</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="useYn" name="useYn" data-field-name="사용여부">
+									<option value="Y">사용</option>
+									<option value="N">미사용</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="tab-pane fade" id="adEquipTabDiv" style="display: none;">
+					<div class="bxslider-div" style="width:800px; height: 600px; ">
+						<ul class="bxslider"></ul>
+						<input type="file" id="adEquipPhotoFile" accept="image/*" style="display: none;" />
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</html>

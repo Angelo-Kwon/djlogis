@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents common14" layout:fragment="content">
+		<!-- 스크립트 영역 START -->
+		<script src="./js/sy_system.js"></script>		
+		<!-- 스크립트 영역 END -->
+
+        <th:block th:replace="~{fragment/location :: location}" ></th:block>
+        <div class="search-conditions con-box">              
+        	<div class="setting-grid">
+				<div class="setting-grid-title">시스템코드</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="schSystemId" />
+					</div>
+				</div>
+				<div class="setting-grid-title">시스템명</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="schSystemNm" />
+					</div>
+				</div>
+				<div class="setting-grid-title">담당자</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="schSystemMng" />
+					</div>
+				</div>
+				<div class="setting-grid-title">사용여부</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="schUseYn">
+							<option value="">전체</option>
+							<option value="Y">사용</option>
+							<option value="N">미사용</option>
+						</select>
+					</div>
+				</div>
+			</div>
+          <div class="search-btn-group">
+            <div class="btn-search btn-green" id="btnSearch"><img>조회</div>
+            <div class="btn-clear btn-white" id="btnReset"><img>초기화</div>
+          </div>
+        </div>
+        <div class="search-list">
+        	<div class="list-top">
+            	<div class="list-title ic-title-mark">시스템 정보</div>
+            	<div class="list-btn-group">
+                	<button class="btn-white" id="btnRowAdd"><img class="ic-line-plus">행 추가</button>                	
+                    <button class="btn-green" id="btnSave"><img class="ic-bt-save">저장</button>                  
+                </div>
+            </div>
+            <!-- 개발 작업시 그리드 들어갈 부분 -->
+            <div class="list-grid-wrapper con-box">
+            	<div id="pqgrid_div"></div>
+            </div>
+            <!---------------------------------->
+        </div>
+	</div>
+</html>

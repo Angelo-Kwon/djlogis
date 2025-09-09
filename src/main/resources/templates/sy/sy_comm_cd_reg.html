@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents common14" layout:fragment="content">
+		<!-- 스크립트 영역 START -->
+		<script src="./js/sy_comm_cd_reg.js"></script>		
+		<script src="./js/sy_mdmccomm.js"></script>		
+		<!-- 스크립트 영역 END -->
+
+        <th:block th:replace="~{fragment/location :: location}" ></th:block>
+		<div class="search-conditions con-box">              
+			<div class="setting-grid">
+		        <div class="setting-grid-title">공통그룹코드</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="CMGRPCD" type="text" value="" /> 
+					</div>             
+				</div>     
+				<div class="setting-grid-title">공통코드</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="CMCD" type="text" value="" /> 
+					</div>             
+				</div>   
+				 <!-- 빈공간처리 --> 
+				<div class="setting-grid-title"> </div>
+				<div>							
+				</div> 
+				<div class="setting-grid-title">공통그룹코드명</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="CMGRPNM" type="text" value="" /> 
+					</div>             
+				</div> 
+				<div class="setting-grid-title">공통코드명</div>
+				<div class="setting-grid-content">      
+					<div class="input-wrapper">                    
+						<input id="CMNM" type="text" value="" /> 
+					</div>             
+				</div>
+				<div class="setting-grid-title">사용여부</div>
+				<div class="setting-grid-content">  
+					<div class="input-group">
+						<select id="ACTYN" >                      
+						</select>                  
+					</div>                
+				</div>     	               
+			</div>
+			<div class="search-btn-group">
+				<div id="btnSearch" class="btn-search btn-green"><img>조회</div>
+				<div id="btnClearAll" class="btn-clear btn-white"><img>초기화</div>
+			</div>
+		</div>	
+		<div class="flex-row flex-1">
+          <div class="search-list con-box" style="width:40%">  
+            <div class="list-top">
+              <div class="list-title ic-title-mark">공통그룹코드 리스트</div>    
+            </div>             
+            <!-- 개발 작업시 그리드 들어갈 부분 -->
+            <div class="list-grid-wrapper" style="overflow: hidden;">
+				<div id="pqgrid_div1"></div>
+            </div>
+          </div>
+          <div class="search-list con-box" style="width:60%">  
+            <div class="list-top">
+              <div class="list-title ic-title-mark">공통코드 리스트</div>                
+	            <div class="edit-btn-wrapper" style="width:300px">
+	              <button class="btn-white" id="btnAddRow" style="width:100px; padding: 0"><img class="ic-line-plus">행 추가</button>
+	              <button class="btn-white" id="btnDelRow" style="width:100px; padding: 0" action="DELETE"><img class="ic-line-minus">행 삭제</button>
+	              <button class="btn-green" id="btnSave" style="width:100px; padding: 0" action="INSERT"><img class="ic-bt-save">저장</button>
+	            </div>
+            </div>             
+            <!-- 개발 작업시 그리드 들어갈 부분 -->
+            <div class="list-grid-wrapper">
+				<div id="pqgrid_div2"></div>
+            </div>
+          </div>
+        </div>
+	</div>
+	
+</html>

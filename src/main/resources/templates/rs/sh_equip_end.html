@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+<div class="tab-contents Ptype04" layout:fragment="content">
+
+	<!-- 스크립트 영역 START -->
+	<script src="./js/sh_equip_end.js"></script>
+	<!-- 스크립트 영역 END -->
+
+	<th:block th:replace="~{fragment/location :: location}"></th:block>
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">기자재 구분</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="equipCdS" name="equipCdS">
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">기자재 업체</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" name="equipCpCodeS" id="equipCpCodeS" value="" />
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select name="shareUseYnS" id="shareUseYnS">
+					</select>
+				</div>
+			</div>
+
+		</div>
+		<div class="search-btn-group">
+			<div class="btn-search btn-green" id="searchButton"><img>조회</div>
+			<div class="btn-clear btn-white" id="clearButton"><img>초기화</div>
+		</div>
+	</div>
+	<div class="search-list">
+		<div class="list-top">
+			<div class="list-title ic-title-mark">기자재 공유정보</div>
+			<div class="list-btn-group">
+				<div class="btn-green btn-end" id="btnShareEnd">공유종료</div>
+			</div>
+		</div>
+		<!-- 개발 작업시 그리드 들어갈 부분 -->
+		<div class="list-grid-wrapper con-box">
+			<div id="pqgrid_div"></div>
+		</div>
+		<!---------------------------------->
+	</div>
+</div>
+</div>

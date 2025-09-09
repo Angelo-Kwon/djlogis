@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents common14" layout:fragment="content">
+		<!-- 스크립트 영역 START -->
+		<script src="./js/sy_noticeBoard.js"></script>		
+		<!-- 스크립트 영역 END -->
+
+        <th:block th:replace="~{fragment/location :: location}" ></th:block>
+        <div class="search-conditions con-box notice-list">              
+        	<div class="setting-grid">
+					<div class="setting-grid-title">작성자명</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="schUserNm" />
+						</div>
+					</div>
+					<div class="setting-grid-title">제목</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="schTitle" />
+						</div>
+					</div>
+					<div class="setting-grid-title">공지여부</div>
+					<div class="setting-grid-content">
+						<div class="input-group">
+							<select id="schNoticsYn">
+							</select>
+						</div>
+					</div>
+				</div>
+	          <div class="search-btn-group">
+	            <div class="btn-search btn-green" id="btnSearch"><img>조회</div>
+	          </div>
+        </div>
+        <div class="search-list notice-list">
+        	<div class="list-top">
+            	<div class="list-title ic-title-mark">공지사항</div>
+            	<div class="edit-btn-wrapper">
+                	<button class="btn-white" id="btnAdd"><img class="ic-line-plus">추가</button>  
+                	<button class="btn-white" id="btnDel"><img class="ic-line-minus">삭제</button>              	
+                    <button class="btn-green" id="btnSave"><img class="ic-bt-save">저장</button>                  
+                </div>
+            </div>
+            <!-- 개발 작업시 그리드 들어갈 부분 -->
+            <div class="list-grid-wrapper con-box">
+            	<div id="sy_notice_pqgrid_div"></div>
+            </div>
+            <!---------------------------------->
+        </div>
+        
+        <input type="hidden" id="search" class="notice-list" th:value="${param.date}" />
+	        <input type="hidden" id="detail" class="notice-list" th:value="${param.BOARD_SEQ}" />
+
+			<!-- 공지사항 detail -->
+	        <div class="list-title con-box notice-detail" style="height: 100%; display: block;">              
+			  	<table class="table table-sm">
+    				<tr align ="center">
+					<tbody>
+						<tr>
+							<th scope="row" class="w_100">제목</th>
+							<td style="width: 800px;"><span id="schTitle_d"></span></td>
+							<th scope="row" class="w_100">작성자명</th>
+							<td colspan="3"><span id="schUserNm_d"></span></tdcolspan="2">
+						</tr>
+						<tr>
+							<th scope="row" class="w_100">작성일시</th>
+							<td><span id="schCreDt_d"></span></td>
+							<th scope="row" class="w_100">조회</th>
+							<td><span id="schHitCnt_d"></span></td>
+						</tr>
+						<tr>
+							<th scope="row" class="w_100">첨부파일</th>
+							<td colspan="5" id="fileInfo">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="10">
+								<!-- 개발 작업시 TOAST UI EDITOR 들어갈 부분 -->
+				            	<div id="viewer" style="overflow:auto; height:533px;"></div>
+							</td>
+						</tr>
+					</tbody>
+				</table>    
+				<div class="list-btn-group" style="width: 165px; display: flex; justify-content: space-between; margin: 0 auto;">                    
+	                <button id="btnEdit" class="btn-green" style="width: 79px;">수정</button>
+	                <button id="btnGoToList" class="btn-white" style="width: 79px;">취소</button>                    
+	          	</div>  
+	        </div>
+
+	        <!-- 공지사항 edit -->
+	        <div class="list-title con-box notice-edit" style="height: 100%; display: block;">      
+				<table class="table table-sm">
+    				<tr align ="center">
+					<tbody>
+						<tr>
+							<th scope="row" class="w_100">제목</th>
+							<td style="width: 1000px;"><input type="text" id="schTitle_e" style="width: 100%;" /></td>
+							<th scope="row" class="w_100">작성자명</th>
+							<td><input type="text" id="schUserNm_e" readonly /></td>
+						</tr>
+						<tr>
+							<th scope="row" class="w_100">작성일시</th>
+							<td><input style="width: 200px;" type="text" id="schCreDt_e" readonly /></td>
+							<th scope="row" class="w_100">공지여부</th>
+							<td><select id="schNoticsYn_e" style="width:70px;"></select></td>
+						</tr>
+						<tr>
+							<th scope="row" class="w_100">첨부파일</th>
+							<td colspan="3">
+								 <div class="file_list" id="fileList">
+					                <div id="file_upload" style="display:block;">
+					                  	<div style="display:flex;">
+											<div style="display:block;" hidden>
+												<a href="" download="" id="file_url1" class="file-info"></a>
+							                </div>  
+											<div class="file_input">
+						                        <input type="text" id="file1_input" style="border: solid 1px #c2c5c8; width: 180px;" readonly />
+					                            <input id="file1" type="file" name="files" th:attr="data-idx=1" class="file open-file" style="display: none;"/>
+						                        <label for="file1">찾아보기</label>
+						                    </div>
+						                    <button type="button" class="btn-white add-file" style="padding: 5px;"><img class="ic-line-plus"></button>
+					                	</div>
+					            	</div>
+				             	</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="10">
+								<!-- 개발 작업시 TOAST UI EDITOR 들어갈 부분 -->
+				            	<div id="editor"></div>
+							</td>
+						</tr>
+					</tbody>
+					</tr>
+				</table>
+				
+				<div class="list-btn-group" style="width: 165px; display: flex; justify-content: space-between; margin: 0 auto;"> 
+					<button class="btn-green" id="btnSave_e" style="width: 79px;"><img>작성</button>
+		            <button id="btnGoToList_e" class="btn-white" style="width: 79px;"><img>취소</button>
+	            </div>
+	</div>
+</html>

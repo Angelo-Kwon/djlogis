@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="ConfigFragment">
+    <head>
+        <!--Common Head-->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta name="viewport"
+              content="width=device-width, maximum-scale=1.0, minimum-scale=1, user-scalable=yes,initial-scale=1.0"/>
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta name="naver-site-verification" content="eb9c3afed10c0f0902d3c4fab9be9cf0b8e1a16f" />
+        <title>스마트물류플랫폼</title>
+        
+		<!-- CSS : Bootstrap (CSH변경) -->
+		<link rel="stylesheet" href="/vender/bootstrap/bootstrap-4.1.3/css/bootstrap.css">
+        
+        <!-- 공통 css -->
+		<link rel="stylesheet" href="/css/main.css"/>
+		<link rel="stylesheet" href="/css/rms.css"/>
+		<link rel="stylesheet" href="/css/jquery-ui.min.css"/>   
+		<link rel="stylesheet" href="/css/ds.css"/>
+		
+        <!-- Js Plugins -->
+        <script src="/vender/jquery/jquery-2.2.4_rms.min.js"></script>
+        <script src="/vender/jqueryui/jquery-ui-1.12.1/jquery-ui.min.js"></script>   
+		<script src="/vender/jquery/jquery-bxslider/jquery.bxslider.js"></script>		
+
+        <!--<script src="js파일 경로"></script>-->
+        <script src="/js/comm/common.js"></script><!-- 공통JS -->
+        <script src="/js/comm/script.js" defer></script><!-- JS from 퍼블누나 -->
+        
+		<!-- JavaScript : jsZip for zip and xlsx import/export -->
+		<script src="/vender/pggrid/jsZip-2.5.0/jszip.min.js"></script>
+		
+		<!-- JavaScript : pggrid -->
+		<script src="/vender/paramquery-pro 8.6/pqgrid.min2.js"></script>
+		<script src="/vender/paramquery-pro 8.6/pqTouch/pqtouch.min.js"></script><!--for touch devices-->
+		<!--<script src="/vender/paramquery-pro 8.6/pqSelect/pqselect.min.js"></script>-->
+		<script src="/vender/pggrid/pqselect.min.js"></script>
+		<script src="/js/n-pqgrid.js"></script><!-- US_DW 프레임워크 복사 : 오른마우스클릭 레이아웃 팝업용 -->
+		
+		<link rel="stylesheet" href="/vender/paramquery-pro 8.6/themes/bootstrap/pqgrid.css">
+		<link rel="stylesheet" href="/vender/paramquery-pro 8.6/pqgrid.min2.css">
+		<link rel="stylesheet" href="/vender/paramquery-pro 8.6/pqgrid.ui.min.css">
+		<link rel="stylesheet" href="/vender/paramquery-pro 8.6/pqSelect/pqselect.min.css">
+	
+		<!-- JavaScript : 클라이언트 측에서 파일을 저장하는 라이브러리 -->
+		<script src="/vender/pggrid/FileSaver.js"></script>
+		
+		<!-- JavaScript : 날짜 라이브러리 -->
+		<script src="/vender/daterangepicker/moment.js"></script>
+		
+		<!-- Boot Strap (CSH변경) -->
+		<script type="text/javascript" src="/vender/bootstrap/bootstrap-4.1.3/js/bootstrap.bundle.js"></script>
+		
+		<!-- JavaScript : 카카오 우편번호 -->
+		<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+		
+		<!-- JavaScript : 카카오 지도 -->
+		<script th:src="@{'//dapi.kakao.com/v2/maps/sdk.js?'+'appkey='+${@environment.getProperty('kakao.map.appkey')+'&libraries=services,clusterer,drawing'}}"></script>
+		
+		<!-- toast ui editor -->
+		<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+		<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+		
+		<!-- JavaScript : Chart.js  -->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+		<script src-"https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.umd.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+		<!--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+
+		<!-- DS 공통 유틸 -->
+		<script src="/js/ds-util.js"></script>
+
+		<style>
+		</style>
+		
+    </head>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents common14" layout:fragment="content">
+		<!-- 스크립트 영역 START -->
+		<script src="./js/sy_log.js"></script>		
+		<!-- 스크립트 영역 END -->
+
+        <th:block th:replace="~{fragment/location :: location}" ></th:block>
+        <div class="search-conditions con-box">              
+        	<div class="setting-grid">
+				<div class="setting-grid-title">로그구분</div>
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="schLogDiv">
+							<option value="">전체</option>
+							<option value="LOGIN">LOGIN</option>
+							<option value="PAGE">PAGE</option>
+						</select>
+					</div>
+				</div>
+				<div class="setting-grid-title">로그인ID</div>
+				<div class="setting-grid-content">
+					<div class="input-wrapper">
+						<input type="text" id="schCreUserId" />
+					</div>
+				</div>
+			</div>
+          <div class="search-btn-group">
+            <div class="btn-search btn-green" id="btnSearch"><img>조회</div>
+          </div>
+        </div>
+        <div class="search-list">
+        	<div class="list-top">
+            	<div class="list-title ic-title-mark">로그 관리</div>
+            	<div class="list-btn-group" id="paging" style="align-items: center; display: none;">
+					<div class="setting-grid-title">페이지</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="page" style="width: 30px; text-align:center;" readonly/>
+						</div>
+					</div>
+                	<button class="btn-white" id="btnPrev">이전</button>                	
+                    <button class="btn-white" id="btnNext">다음</button>        
+                </div>
+            </div>
+            <!-- 개발 작업시 그리드 들어갈 부분 -->
+            <div class="list-grid-wrapper con-box">
+            	<div id="pqgrid_div"></div>
+            </div>
+            <!---------------------------------->
+        </div>
+	</div>
+</html>

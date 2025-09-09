@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" >
+<!-- sidebar menu -->
+  <div class="sidebar-container show" style="width: 240px;" th:fragment="leftFragment">
+  <!-- 스크립트 부분 시작 -->
+		<script src="./js/sy_help.js"></script>	
+		<!-- 스크립트 부분 종료 -->
+    <div class="sidebar-header-logo" style="background-color: #e74c3c">
+        <img src="/assets/img_logo@3x.png" alt="" width="26" height="26">
+        <div class="logo-txt">광주첨단<br>스마트물류플랫폼</div>        
+    </div>
+    <div class="sidebar-menu-wrapper" style="background-color: #e74c3c">
+		<div class="sidebar-main-menu">
+		</div>
+    	<ul class="sidebar-bottom">
+          <!-- <li><img class="ic-left-help"> 도움말 </li> -->
+          <li><img class="ic-left-help"><button id="btnHelp">도움말</button></li>
+          <li><img class="ic-left-user"><a th:href="@{/sy/userEdit}"><span sec:authentication="principal.nickname"></span></a></li>
+          <li><img class="ic-left-logout"><button class="btn-logout" onclick="logout()">로그아웃</button></li>
+        </ul>
+    </div>
+    <input type="hidden" id="loginId" th:value="${#authentication.principal.userName}" />
+    <input type="hidden" id="rgroupId" th:value="${#authentication.principal.rgroupId}" />
+    
+    <div id="modal-background"></div>
+    
+    <div class="popup-reg-user modal-con" id="pophelp" style="top:10%; width:950px;">
+		    <div class="modal-top">
+		    	<div class="box-title">도움말</div>
+		      	<button type="button" class="close bt-popup-close" id="btnPopCloseTop"></button>
+		    </div>
+		    <div class="modal-body search-edit">  
+		    	<div class="list-btn-group" style="display: flex; justify-content: center; margin: 7px 8px;">
+		        
+		        	<div class="setting-grid-title" >
+		        		<button type="button" id="share" onclick="share()" class="btn-white" style="margin-right: 20px;">물류공유</button>	
+		        	</div>
+		        	
+		        	<div class="setting-grid-title" >
+		        		<button type="button" id="trans" onclick="trans()" class="btn-white" style="margin-right: 20px;">물류운송</button> 	
+		        	</div>
+		        	
+		        	<div class="setting-grid-title" >	       	              		
+		              	<button type="button" id="order" onclick="order()" class="btn-white" style="margin-right: 20px;">물류주문</button>	              	
+		        	</div>
+		        	
+		        	<div class="setting-grid-title" >	                 		
+		              	<button type="button" id="whouse" onclick="whouse()" class="btn-white" style="margin-right: 20px;">물류창고</button>     	
+		        	</div>
+		        	<div class="setting-grid-title">   		
+		              	<button type="button" id="oper" onclick="oper()" class="btn-white" style="margin-right: 20px;">통합운영</button>      	   
+		        	</div>
+		      	</div>
+		      	
+		      	<div class="list" style="height:0px; display: flex; justify-content: center;">
+		      		<div class="manualpop" >
+		      		</div>
+		      	</div>
+		    </div>
+		 
+			<div class="modal-bottom">
+		      	<!-- <button type="button" class="close btn-white" id="btnPopCloseBottom">닫기</button> -->
+		    </div>
+	</div>
+		
+    <script>
+
+		var system = [];
+		var menu = [];
+		var curr_menu = {};
+		var bookmark = [];
+		$(function() {
+			getMenu();
+			
+			window.addEventListener('popstate', function(event) {
+				// 뒤로가기 또는 앞으로가기를 했을 때의 처리 로직
+				// 적절한 URL에 따라 화면 전환을 수행
+				if(location.pathname.startsWith('/dw/')){ // iframe 처리 
+					addTabWContent(location.pathname + decodeURI(location.search));
+				}else{
+					addTabWContent(location.pathname);	
+				}
+			});
+			// 초기 페이지 로드 시에도 popstate 이벤트가 발생할 수 있도록 호출
+			//window.dispatchEvent(new Event('popstate'));
+			
+			var id = $("#rgroupId").val();
+			subscibeSse("role", id, checkRole); // 권한 관련 SSE
+		});
+		
+		function getMenu() {
+			$.ajax({
+				url: '/sy/menu/getMainMenuList',
+				type: 'POST',
+				contentType: 'application/json',
+				data: JSON.stringify({
+				}),
+				success: function (data) {
+					menu = data.menu;
+					system = data.system.dataList;
+					bookmark = data.bookmark;
+					showMenu();
+					// 즐겨찾기
+					$(".fa-list").empty();
+					bookmark.forEach(function(bm) {
+						$(".fa-list").append("<li><button type=\"button\" refid=\""+bm.MENU_ID+"\">"+bm.MENU_NM+"</button></li>");
+					});
+					setBookmarkClickEvent();
+					
+					if(location.pathname.startsWith('/dw/')){ // iframe 새로고침 처리
+						$('li.tab-menu').remove(); // 탭 초기화
+						var id = getMenuIdFromUrlParam(location.pathname + decodeURI(location.search));
+						addTabWContent(id);
+					} 
+				}
+			});
+		}
+		
+		function showMenu() {
+			$(".sidebar-main-menu").empty();
+			
+			system.forEach((sy, index) => {
+				var data = menu.filter(el => el.SYSTEM_ID == sy.SYSTEM_ID);
+				if(data.length < 1) {
+					return;
+				}
+				$("#menuInfo_system_ul").append("<li><button type=\"button\" refid=\""+sy.SYSTEM_ID+"\">"+sy.SYSTEM_NM+"</button></li>");
+				var $details1 = $("<details class=\"depth1\">");
+				var $summary1 = $("<summary>");
+				$summary1.append("<div class=\"menu-title\"><img class=\"ic_left_0"+(index+1)+"\">"+sy.SYSTEM_NM+"</div>");
+				$summary1.append("<img class=\"ic-submenu-open\">");
+				$details1.append($summary1);
+				
+				var depth1 = data.filter(el => el.MENU_LEVEL == '1');
+				var createMenuHtml = "";
+				
+				depth1.forEach(d1 => {
+				  	$("#menuInfo_menup_ul").append("<li><button type=\"button\">"+d1.MENU_NM+"</button></li>");
+				  	var $details = $("<details class=\"depth2\">");
+				  	var $summary = $("<summary>");
+				  	var $submenuTitle = $("<div>").addClass("submenu-title");
+				  	$submenuTitle.append(d1.MENU_NM);
+				  	$summary.append($submenuTitle);
+				  	$summary.append("<img class=\"ic-submenu-open\">");
+				  	$details.append($summary);
+				  
+				  	var depth2 = data.filter(el => el.MENU_LEVEL == '2' && d1.MENU_ID == el.MENU_PID);
+				  	var $ul = $("<ul>").addClass("details-submenu");
+				
+				  	depth2.forEach(d2 => {
+						$("#menuInfo_menu_ul").append("<li><button type=\"button\">"+d2.MENU_NM+"</button></li>");
+				    	var $li = $("<li>");
+						$li.attr("id", d2.MENU_ID);
+						$li.attr("onclick", "addTabWContent(this.id)");
+				    	if (d2.PRGM_URL != "") {
+				      		$li.attr("data-url", d2.PRGM_URL);
+				    	} else {
+				      		$li.attr("data-url", "");
+				    	}
+				    	$li.append("<a>" + d2.MENU_NM + "</a>");
+				    	$ul.append($li);
+				  	});
+				
+				  	$details.append($ul);
+				  	createMenuHtml += "<li>"+$details.prop('outerHTML')+"</li>";
+				});
+				
+				$details1.append("<ul>"+createMenuHtml+"</ul>");
+				
+				$(".sidebar-main-menu").append($details1);
+			
+			});
+			
+			
+			//첫 로딩시 탭에 추가
+			if($("#menuInfo_MENU_ID").val()) {
+				setMenuActive($("#"+$("#menuInfo_MENU_ID").val()));
+				if($(".tab-container ul.tab li").length < 1) {
+					const bmon = bookmark.find(bm => bm.MENU_ID === $("#menuInfo_MENU_ID").val()) ? "on" : "";
+					$(".tab-container ul.tab").append("<li class=\"tab-menu on\" id=\"tab_"+$("#menuInfo_MENU_ID").val()+"\"><img class=\"ic-bookmark " + bmon + "\">"+$("#menuInfo_MENU_NM").text()+"<img class=\"ic-tab-close\"></li>");
+					setTabClickEvent();
+					$(".tab-contents").addClass(location.pathname.substr(location.pathname.lastIndexOf("/")+1));
+				}
+			}else if(location.pathname == "/sy/userEdit") {
+				$(".tab-contents").addClass(location.pathname.substr(location.pathname.lastIndexOf("/")+1));				
+			}
+		}
+				
+		function addTabWContent(id) {
+			$(".tab-contents.userEdit").remove();
+			var isUrl = false;
+			if(id.indexOf("/") > -1) {
+				if(location.pathname.startsWith('/dw/')){ // iframe 처리 
+					id = getMenuIdFromUrlParam(location.pathname + decodeURI(location.search))
+				}else{
+					id = getMenuIdFromUrl(location.pathname);
+				}
+				isUrl = true;
+			}
+			
+			setMenuActive($("#"+id));
+			
+			const mn = getMenuInfo(id); 
+			const port = mn.SVC_PORT;
+			const url = mn.PRGM_URL;
+			const txt = mn.MENU_NM;
+			if(!isUrl) { 
+				history.pushState(null, null, url);
+			}
+			
+			setLastUrl(url);
+			
+			//이미 탭에 존재하는지 확인
+			var tabids = [];
+			$('li.tab-menu').each(function() {
+				var tabid = $(this).attr('id');
+				tabids.push(tabid);
+			});
+			var tabidx = tabids.indexOf("tab_" + id);
+			if(tabidx > -1) {
+				$(".tab li").removeClass("on");
+                $(".tab li").eq(tabidx).addClass("on");
+                
+                //setMenuActive(mn);
+				//loadContent(port, url);
+				$(".tab-contents").hide();
+				$(".tab-contents").eq(tabidx).show();
+				
+				return;
+			}
+			
+			$(".tab-container ul.tab li").removeClass("on");
+			const bmon = bookmark.find(bm => bm.MENU_ID === id) ? "on" : "";
+			$(".tab-container ul.tab").prepend("<li class=\"tab-menu on\" id=\"tab_"+id+"\"><img class=\"ic-bookmark " + bmon + "\">"+txt+"<img class=\"ic-tab-close\"></li>");
+			
+			setTabClickEvent();
+			loadContent(port, url);
+        }
+        
+        function loadContent(port, url) {
+			if(url == null || url == "") {
+				//$(".content-wrapper .tab-contents").replaceWith("<div class=\"tab-contents\">url없음</div>");
+				$(".tab-contents").hide();
+				$(".content-wrapper").prepend("<div class=\"tab-contents\">url없음</div>");
+			} else {
+				// IFRAME DW 로직 추가
+				if(url.startsWith('/dw/')){
+					url = port + url;
+					let iframeHtml = '<div class="tab-contents">'
+					iframeHtml += `<iframe src="${url}" style="display:block; height: 100%"></iframe>`;
+					iframeHtml += '</div>';
+					//console.log(iframeHtml);
+					//$(".content-wrapper .tab-contents").replaceWith(iframeHtml);
+					//$(".content-wrapper .tab-contents").load(url);
+					$(".tab-contents").hide();
+					$(".content-wrapper").prepend(iframeHtml);
+					return;
+				} 
+				fetch(url)
+					.then(response => response.text())
+					.then(data => {
+						var targetElement = $(data).find('.tab-contents:eq(0)');
+						if(targetElement.length > 0) {
+							$(".tab-contents").hide();
+							targetElement.addClass(url.substr(url.lastIndexOf("/")+1));
+							$(".content-wrapper").prepend(targetElement);
+						} else {
+							$(".tab-contents").hide();
+							$(".content-wrapper").prepend("<div class=\"tab-contents\">tab-contents 없음</div>");
+						}
+					})
+					.catch(error => {
+						console.error('데이터 가져오기 실패:', error);
+						$(".tab-contents").hide();
+						$(".content-wrapper").prepend("<div class=\"tab-contents\">데이터 가져오기 실패</div>");
+					});
+			}
+        }
+        
+        function setMenuActive(_elm) {
+			//depth1
+			$(".menu-title").removeClass("active");
+			$(".menu-title").find("img").removeClass("active");
+			_elm.parent().parent().parent().parent().parent().attr("open", true);
+			_elm.parent().parent().parent().parent().parent().find(".menu-title").addClass("active");
+			_elm.parent().parent().parent().parent().parent().find(".menu-title").find("img").addClass("active");
+			//depth2
+			$(".depth2 ").removeClass("active");
+			_elm.parent().parent().attr("open", true);
+			_elm.parent().parent().addClass("active");
+			//depth3
+			$(".details-submenu li").attr("class","");
+			_elm.attr("class","active");
+			
+			curr_menu = getMenuInfo(_elm.attr("id"));
+			$("#menuInfo_SYSTEM_NM").text(curr_menu.SYSTEM_NM);
+			$("#menuInfo_MENU_PNM").text(curr_menu.MENU_PNM);
+			$("#menuInfo_MENU_NM").text(curr_menu.MENU_NM);
+			
+			var data = menu.filter(el => el.SYSTEM_ID == curr_menu.SYSTEM_ID);
+			var depth1 = data.filter(el => el.MENU_LEVEL == '1');
+			$("#menuInfo_menup_ul").html("");
+			depth1.forEach(d1 => {
+			  $("#menuInfo_menup_ul").append("<li><button type=\"button\" refid=\""+d1.MENU_ID+"\">"+d1.MENU_NM+"</button></li>");
+		    });
+		    
+		    var depth2 = data.filter(el => el.MENU_LEVEL == '2' && curr_menu.MENU_PID == el.MENU_PID);
+		    $("#menuInfo_menu_ul").html("");
+		    depth2.forEach(d2 => {
+			  $("#menuInfo_menu_ul").append("<li><button type=\"button\" refid=\""+d2.MENU_ID+"\">"+d2.MENU_NM+"</button></li>");
+		    });
+		    menulist_click_event();
+		}
+		
+		function menulist_click_event(){
+			$("ul.menu-list li").off("click");
+		    $("ul#menuInfo_system_ul li").on("click", function(e){
+				$(this).parent().prev().html("<span id=\"menuInfo_SYSTEM_NM\">" + $(this).text() + '</span><img class="ic-input-down">');
+				navMenuAllClose();
+				var data = menu.filter(el => el.SYSTEM_ID == $(this).find("button").attr("refid"));
+				var depth1 = data.filter(el => el.MENU_LEVEL == '1');
+				$("#menuInfo_menup_ul").html("");
+				$("#menuInfo_menu_ul").html("");
+				$("#menuInfo_MENU_PNM").text("");
+				$("#menuInfo_MENU_NM").text("");
+				depth1.forEach(d1 => {
+				  $("#menuInfo_menup_ul").append("<li><button type=\"button\" refid=\""+d1.MENU_ID+"\">"+d1.MENU_NM+"</button></li>");
+			    });
+			    menulist_click_event();
+  			});
+
+		    $("ul#menuInfo_menup_ul li").on("click", function(e){
+				$(this).parent().prev().html("<span id=\"menuInfo_MENU_PNM\">" + $(this).text() + '</span><img class="ic-input-down">');
+				navMenuAllClose();
+				var data = menu.filter(el => el.MENU_PID == $(this).find("button").attr("refid"));
+				var depth2 = data.filter(el => el.MENU_LEVEL == '2');
+			    $("#menuInfo_menu_ul").html("");
+			    $("#menuInfo_MENU_NM").text("");
+			    depth2.forEach(d2 => {
+				  $("#menuInfo_menu_ul").append("<li><button type=\"button\" refid=\""+d2.MENU_ID+"\">"+d2.MENU_NM+"</button></li>");
+			    });
+				menulist_click_event();
+  			});
+  			
+		    $("ul#menuInfo_menu_ul li").on("click", function(e){
+				$(this).parent().prev().html("<span id=\"menuInfo_MENU_NM\">" + $(this).text() + '</span><img class="ic-input-down">');
+				navMenuAllClose();
+				let refid = $(this).find("button").attr("refid");
+				$("#"+refid).trigger("click");
+				menulist_click_event();
+  			});
+
+		}
+		
+        function getMenuInfo(id) {
+			var data = menu.filter(el => el.MENU_ID == id);
+			return data[0];
+		}
+        function getMenuIdFromUrl(url) {
+			var data = menu.filter(el => el.PRGM_URL == url);
+			return data[0].MENU_ID;
+		}
+		function getMenuIdFromUrlParam(urlParam) {  // iframe 처리
+			var data = menu.filter(el => el.PRGM_URL == urlParam);
+			return data[0].MENU_ID;
+		}
+		
+		function setTabClickEvent() {
+			$(".tab li").off("click"); // 이전 이벤트 핸들러를 제거합니다.
+            $(".tab li").on("click", function () {
+                const index = $(this).index();
+                $(".tab li").removeClass("on");
+                $(this).addClass("on");
+			    
+			    var left = $('.tab .tab-menu.on').offset().left;  
+			    var tabLeft = $('.tab .tab-menu.on').position().left;  
+			    var curLeft = $('.tab').scrollLeft();
+			    var menuWidth = $('.tab .tab-menu.on').width();    
+			    var right = left + menuWidth;
+			    var maxRight = $('.tab-container').width();
+			    var scrMove = curLeft;
+			
+			    if (right > maxRight) { // 보이는 마지막 탭을 클릭했을때 클릭한 항목 모두 보이게 왼쪽으로 스크롤 
+			      scrMove = curLeft + menuWidth;
+			    } else if (tabLeft < 0) { // 보이는 첫번째 탭을 클릭했을때 클릭한 항목 모두 보이게 오른쪽으로 스크롤
+			      scrMove = curLeft + tabLeft;
+			    }
+			
+			    $('.tab').animate({scrollLeft : scrMove}, 400);    
+			
+			    setTabArrowBtn(Math.floor(scrMove));
+				
+			    const tmn = getMenuInfo($(this).attr("id").replace("tab_", "")); 
+			    const turl = tmn.PRGM_URL;
+			    
+			    setMenuActive($(".details-submenu li#" + tmn.MENU_ID));
+				history.pushState(null, null, turl);
+			    //loadContent(turl);
+			    setLastUrl(turl)
+                $(".content-wrapper .tab-contents").hide();
+                $(".content-wrapper .tab-contents").eq(index).show();
+            });
+            
+            $(".tab .ic-bookmark").off("click"); // 이전 이벤트 핸들러를 제거합니다.
+			$(".tab .ic-bookmark").on("click", function(e) {
+				e.stopPropagation();
+				if($(this).hasClass("on")) {
+					$(this).removeClass("on");
+					setBookmark($(this).parent("li").attr("id"), "N");
+				} else {
+					$(this).addClass("on");
+					setBookmark($(this).parent("li").attr("id"), "Y");
+				}
+			});
+			
+			$(".ic-tab-close").off("click"); // 이전 이벤트 핸들러를 제거합니다.
+			$(".ic-tab-close").on("click", function(e) {
+				e.stopPropagation();
+				const index = $(this).parent("li").index();
+				$(".content-wrapper .tab-contents").eq(index).remove();
+				if($(this).parent("li").hasClass("on")) {
+					$(this).parent("li").remove();
+					if($(".tab li").length > 0) {
+						$(".tab li:last-child").trigger("click"); //마지막 탭 선택
+					} else {
+						
+					}
+				} else {
+					$(this).parent("li").remove();
+				}
+			});
+		}
+		
+		function setBookmarkClickEvent() {
+			$(".fa-list li").off("click"); // 이전 이벤트 핸들러를 제거합니다.
+            $(".fa-list li").on("click", function () {
+				let refid = $(this).find("button").attr("refid");
+				$("#"+refid).trigger("click");
+			});
+		}
+		
+		function setBookmark(menuId, isOn) {
+			menuId = menuId.replaceAll("tab_", "");
+			$.ajax({
+				url: '/sy/menu/updBookmark',
+				type: 'POST',
+				dataType: "json",
+				data: {
+					menuId: menuId,
+					isOn: isOn
+				},
+				success: function (data) {
+					if(isOn == "Y") {
+						$(".fa-list").append("<li><button type=\"button\" refid=\""+menuId+"\">"+$(".tab-menu#tab_"+menuId).text()+"</button></li>");
+						setBookmarkClickEvent();
+					} else if(isOn == "N") {
+						$(".fa-list").find("li button[refid="+menuId+"]").parent().remove();
+					}
+				},
+				error : function (data) {
+					console.error(data);
+				}
+			});
+		}
+		
+		function setLastUrl(url) {
+			//console.log(url);
+			$.ajax({
+				url: '/updLastUrl',
+				type: 'POST',
+				dataType: "json",
+				data: {
+					url: url
+				},
+				success: function (data) {
+					//console.info(data);
+				},
+				error : function (data) {
+					//console.error(data);
+				}
+			});
+		}
+		
+		function logout(){
+	        var data = {
+	            //username: $('#username').val()
+	            cre_dt: localStorage.getItem("loginDt")
+	        };
+	        
+			$.ajax({
+				type: 'POST',
+				url: '/api/logout',
+	            data: JSON.stringify(data),
+				contentType: 'application/json',
+				//dataType: 'json',
+				success: function (response) {						        		
+					// 서버로부터 응답이 성공적으로 돌아왔을 때 실행할 코드
+					localStorage.removeItem('rgroupId');
+					localStorage.removeItem('token');
+					location.href = "/com/login";
+				},
+				error: function (error) {	        		
+					// 서버로부터 응답이 실패로 돌아왔을 때 실행할 코드
+					console.log('Error occurred:', error);
+				}
+			});
+	    }
+	    
+	    // connect SSE
+		function subscibeSse(name, id, callback) {
+			if (!!window.EventSource) {
+				const sse = new EventSource("/sse/" + name + "/" + id);
+				sse.addEventListener(name, callback);
+			}
+		}
+		
+		// role SSE callback
+		function checkRole(e) {
+			if(e.data == "role_changed"){
+				getMenu();
+			}
+		}
+	</script>
+  </div>
+  </html>
+  <!-- //sidebar menu -->

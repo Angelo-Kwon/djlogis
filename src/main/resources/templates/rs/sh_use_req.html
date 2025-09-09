@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<div class="tab-contents Ptype04" layout:fragment="content">
+
+    <!-- 스크립트 영역 START -->
+    <script src="./js/sh_use_req.js"></script>
+    <!-- 스크립트 영역 END -->
+
+    <th:block th:replace="~{fragment/location :: location}"></th:block>
+
+    <div class="map_wrap">
+        <div class="sub_search">
+            <input type="text" id="shUseReqAreaNm" placeholder="지역명 입력">
+            <a class="s_btn" id="shUseReqSearchBtn">검색</a>
+            <a class="f_btn" id="shUseReqSearchFilterBtn"><span>조건필터</span></a>
+        </div>
+        <div id="shUseReqMapFilterDiv" class="map_filter" style="display: none; z-index: 3;">
+            <a class="map_list_btn02 map-search-close" href="javascript:">목록 닫기</a>
+            <div class="filter_btn">
+                <a class="filter map-search-close" href="javascript:">필터 닫기</a>
+                <a id="filterResetBtn" class="reset" href="javascript:">검색조건 초기화</a>
+            </div>
+            <div class="area_list menu_tab0" style="display: block; height: calc(100% - 107px); opacity: 1;">
+                <div class="area_list_inner">
+                    <!-- 창고 -->
+                    <h3 class="use-req-search-form use-req-whouse">창고명</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-whouse">
+                        <div class="area-list-div">
+                            <input type="text" id="whNm"/>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-whouse">창고종류</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-whouse">
+                        <div class="area-list-div">
+                            <select id="whKnCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-whouse">공유평수</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-whouse">
+                        <div class="area-list-div">
+                            <div class="input-time-group">
+                                <input type="text" id="minShSqu" maxlength="14">
+                                <span>~</span>
+                                <input type="text" id="maxShSqu" maxlength="14">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 차량 -->
+                    <h3 class="use-req-search-form use-req-car">차량구분</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-car">
+                        <div class="area-list-div">
+                            <select id="carClsCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-car">운송구분</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-car">
+                        <div class="area-list-div">
+                            <select id="carOprCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-car">차종구분</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-car">
+                        <div class="area-list-div">
+                            <select id="carModCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-car">온도구분</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-car">
+                        <div class="area-list-div">
+                            <select id="carTempCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-car">적재중량</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-car">
+                        <div class="area-list-div">
+                            <div class="input-time-group">
+                                <input type="text" maxlength="14" id="minCarLodWgt">
+                                <span>~</span>
+                                <input type="text" maxlength="14" id="maxCarLodWgt">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 기자재-공통 -->
+                    <h3 class="use-req-search-form use-req-equip">기자재 구분</h3>
+<!--                    <div class="area_list_view02 use-req-search-form use-req-equip">-->
+<!--                        <div class="area-list-div">-->
+<!--                            <select id="equipCd">-->
+<!--                            </select>-->
+<!--                        </div>-->
+<!--                    </div>-->
+                    <h3 class="use-req-search-form use-req-equip">기자재명</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip">
+                        <div class="area-list-div">
+                            <input type="text" id="equipNm">
+                        </div>
+                    </div>
+
+                    <!-- 기자재-지게차 F -->
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-f">차량형식</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-f">
+                        <div class="area-list-div">
+                            <select id="fkliftCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-f">총 중량</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-f">
+                        <div class="area-list-div">
+                            <div class="input-time-group">
+                                <input type="text" maxlength="14" id="minFkliftWgt">
+                                <span>~</span>
+                                <input type="text" maxlength="14" id="maxFkliftWgt">
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-f">마스트(단)</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-f">
+                        <div class="area-list-div">
+                            <select id="fkliftMst">
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 기자재-대차 K -->
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-k">대차종류</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-k">
+                        <div class="area-list-div">
+                            <select id="kartCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-k">대차타입</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-k">
+                        <div class="area-list-div">
+                            <select id="kartTyp">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-k">공유기본수량</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-k">
+                        <div class="area-list-div">
+                            <div class="input-time-group">
+                                <input type="text" maxlength="14" id="minKartShQty">
+                                <span>~</span>
+                                <input type="text" maxlength="14" id="maxKartShQty">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 기자재-파렛트 P -->
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-p">파레트구분</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-p">
+                        <div class="area-list-div">
+                            <select id="pltCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-p">파레트타입</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-p">
+                        <div class="area-list-div">
+                            <select id="pltTypCd">
+                            </select>
+                        </div>
+                    </div>
+                    <h3 class="use-req-search-form use-req-equip use-req-equip-p">공유기본수량</h3>
+                    <div class="area_list_view02 use-req-search-form use-req-equip use-req-equip-p">
+                        <div class="area-list-div">
+                            <div class="input-time-group">
+                                <input type="text" maxlength="14" id="minPltShQty">
+                                <span>~</span>
+                                <input type="text" maxlength="14" id="maxPltShQty">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 공통항목 -->
+                    <h3>공유기간구분</h3>
+                    <div class="area_list_view02">
+                        <div class="area-list-div search-filter-common">
+                            <select id="shPrdCls">
+                            </select>
+                        </div>
+                    </div>
+                    <h3>공유기본기간</h3>
+                    <div class="area_list_view02">
+                        <div class="area-list-div">
+                            <div class="input-time-group">
+                                <input type="text" maxlength="14" id="minShPrd">
+                                <span>~</span>
+                                <input type="text" maxlength="14" id="maxShPrd">
+                            </div>
+                        </div>
+                    </div>
+                    <h3>공유금액</h3>
+                    <div class="area_list_view02">
+                        <div class="area-list-div">
+                            <div class="input-time-group">
+                                <input type="text" maxlength="14" id="minShPrc">
+                                <span>~</span>
+                                <input type="text" maxlength="14" id="maxShPrc">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="area_list_view02">
+                        <div class="button-wrap">
+                            <a id="shUseReqFilterBtn" class="map-search-btn">검 색</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="map_pane">
+            <div id="shUseReqMap" style="width: 100%; height: 100%; position: relative; overflow: hidden;"></div>
+            <div class="map_legend">
+                <div class="map_legend_in">
+                    <ul class="legend_list">
+                        <li class="use-req-search-type use-req-search-whouse legend-type-selected">
+                            <a href="javascript:" class="col col1">창고</a>
+                        </li>
+                        <li class="use-req-search-type use-req-search-car">
+                            <a href="javascript:" class="col col2 off">차량</a>
+                        </li>
+                        <li class="use-req-search-type use-req-search-f">
+                            <a href="javascript:" class="col col3 off">지게차</a>
+                        </li>
+                        <li class="use-req-search-type use-req-search-k">
+                            <a href="javascript:" class="col col4 off">대차</a>
+                        </li>
+                        <li class="use-req-search-type use-req-search-p">
+                            <a href="javascript:" class="col col5 off">파렛트</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="shUseReqMapList" class="map_list" style="display:block;">
+            <a id="shUseReqMapListCloseBtn" class="map_list_btn" href="javascript:">목록 닫기</a>
+            <div id="shUseReqMapTitleDiv" class="title_txt">
+            </div>
+            <div class="img_list_wrap">
+                <div class="img_list_innre">
+                    <ul class="img_list">
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="mapListDetail" class="map_list02" style="display: none; visibility: visible;">
+            <a class="map_list_btn">목록 닫기</a>
+            <div id="detailTitleTxt" class="title_txt">
+            </div>
+            <div class="img_list_wrap">
+                <div class="img_list_innre">
+                    <ul class="bxslider">
+                    </ul>
+                    <ul class='view_inner'>
+                        <li class="view_inner_btn_group" style="margin-top: 40px;">
+                            <button class="btn-white" id="deatilShBoardBtn">소통신청</button>
+                            <button class="btn-green" id="deatilShUseApplyBtn">사용신청</button>
+                        </li>
+                    </ul>
+                    <div class='view_wrap view-wrap-whouse'>
+                        <h3>상세정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>창고종류</strong>
+                                <span id="detailWhouseWhKnCdNm"></span>
+                            </li>
+                            <li>
+                                <strong>대지면적(평)</strong>
+                                <span id="detailWhouseLotArea"></span>
+                            </li>
+                            <li>
+                                <strong>전체층수</strong>
+                                <span id="detailWhouseTlFlNum"></span>
+                            </li>
+                            <li>
+                                <strong>담당자명</strong>
+                                <span id="detailWhouseChNm"></span>
+                            </li>
+                            <li>
+                                <strong>전화번호</strong>
+                                <span id="detailWhouseTelNo"></span>
+                            </li>
+                            <li>
+                                <strong>이메일</strong>
+                                <span id="detailWhouseMailAddr"></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class='view_wrap view-wrap-whouse'>
+                        <h3>공유정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>공유범위구분</strong>
+                                <span id="detailWhouseShRngCls"></span>
+                            </li>
+                            <li>
+                                <strong>공유평수</strong>
+                                <span id="detailWhouseShSqu"></span>
+                            </li>
+                            <li>
+                                <strong>공유층수</strong>
+                                <span id="detailWhouseShFlr"></span>
+                            </li>
+                            <li>
+                                <strong>공유시작일</strong>
+                                <span id="detailWhouseShLtDt"></span>
+                            </li>
+                            <li>
+                                <strong>차량진입정보</strong>
+                                <span id="detailWhouseCarEntCd"></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class='view_wrap view-wrap-whouse'>
+                        <h3>시설</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <p id="detailWhouseFacility"></p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class='view_wrap view-wrap-car'>
+                        <h3>상세정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>운송사명</strong>
+                                <span id="detailCarCpNm"></span>
+                            </li>
+                            <li>
+                                <strong>차량규격</strong>
+                                <span id="detailCarType"></span>
+                            </li>
+                            <li>
+                                <strong>차량구분</strong>
+                                <span id="detailCarClsCdNm"></span>
+                            </li>
+                            <li>
+                                <strong>온도구분</strong>
+                                <span id="detailCarTempCdNm"></span>
+                            </li>
+                            <li>
+                                <strong>연락처</strong>
+                                <span id="detailCarTelNo"></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class='view_wrap view-wrap-car'>
+                        <h3>공유 정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>공유기간구분</strong>
+                                <span id="detailCarShClsNm"></span>
+                            </li>
+                            <li>
+                                <strong>공유기본기간</strong>
+                                <span id="detailCarShPrd"></span>
+                            </li>
+                            <li>
+                                <strong>공유시작일</strong>
+                                <span id="detailCarShLtDt"></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 기자재 -->
+                    <div class='view_wrap view-wrap-equip equip-f'>
+                        <h3>상세정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>차량형식</strong>
+                                <span id="detailEquipFkliftCdNm"></span>
+                            </li>
+                            <li>
+                                <strong>총중량</strong>
+                                <span id="detailEquipFkliftWgt"></span>
+                            </li>
+                            <li>
+                                <strong>마스트</strong>
+                                <span id="detailEquipFkliftMstNm"></span>
+                            </li>
+                            <li>
+                                <strong>최대올림높이</strong>
+                                <span id="detailEquipFkliftHgt"></span>
+                            </li>
+                            <li>
+                                <strong>제조년도</strong>
+                                <span id="detailEquipFkliftMakeYear"></span>
+                            </li>
+                            <li>
+                                <strong>연락처</strong>
+                                <span id="detailEquipFkliftTelNo"></span>
+                            </li>
+                            <li>
+                                <strong>충전기포함여부</strong>
+                                <span id="detailEquipChgrYnNm"></span>
+                            </li>
+                            <li>
+                                <strong>기사포함여부</strong>
+                                <span id="detailEquipDriverYnNm"></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 기자재 -->
+                    <div class='view_wrap view-wrap-equip equip-k'>
+                        <h3>상세정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>대차종류</strong>
+                                <span id="detailEquipKartCpNm"></span>
+                            </li>
+                            <li>
+                                <strong>대차타입</strong>
+                                <span id="detailEquipKartTypNm"></span>
+                            </li>
+                            <li>
+                                <strong>적재중량</strong>
+                                <span id="detailEquipKartWgt"></span>
+                            </li>
+                            <li>
+                                <strong>대차규격</strong>
+                                <span id="detailEquipKartStd"></span>
+                            </li>
+                            <li>
+                                <strong>제조년도</strong>
+                                <span id="detailEquipKartMakeYear"></span>
+                            </li>
+                            <li>
+                                <strong>연락처</strong>
+                                <span id="detailEquipKartTelNo"></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class='view_wrap view-wrap-equip equip-p'>
+                        <h3>상세정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>파레트구분</strong>
+                                <span id="detailEquipPltCdNm"></span>
+                            </li>
+                            <li>
+                                <strong>파레트타입</strong>
+                                <span id="detailEquipPltTypNm"></span>
+                            </li>
+                            <li>
+                                <strong>파레트규격</strong>
+                                <span id="detailEquipPltStdNm"></span>
+                            </li>
+                            <li>
+                                <strong>파레트중량</strong>
+                                <span id="detailEquipPltWgt"></span>
+                            </li>
+                            <li>
+                                <strong>제조년도</strong>
+                                <span id="detailEquipPltMakeYear"></span>
+                            </li>
+                            <li>
+                                <strong>연락처</strong>
+                                <span id="detailEquipPltTelNo"></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class='view_wrap view-wrap-equip'>
+                        <h3>공유 정보</h3>
+                        <ul class='view_inner'>
+                            <li>
+                                <strong>공유기간구분</strong>
+                                <span id="detailEquipShPrdClsNm"></span>
+                            </li>
+                            <li>
+                                <strong>공유기본기간</strong>
+                                <span id="detailEquipShPrd"></span>
+                            </li>
+                            <li>
+                                <strong>공유시작일</strong>
+                                <span id="detailEquipShLtDt"></span>
+                            </li>
+                        </ul>
+                    </div>
+
+
+                    <div class="view_wrap view-wrap-map">
+                        <h3>위치</h3>
+                        <p id="detailDtAddr"></p>
+                        <p id="detailDtAddr2"></p>
+                        <div id="datailViewMap" class="map_s_view"></div>
+                    </div>
+
+                    <div class="view_wrap view-wrap-recommend">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a id="shUseReqMapListOpenBtn" class="map_list_btn_on" href="javascript:">목록 열기</a>
+    </div>
+</div>
+</html>

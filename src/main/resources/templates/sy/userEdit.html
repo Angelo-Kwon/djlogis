@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype08" layout:fragment="content">
+		<!-- 스크립트 영역 START -->
+		<script src="./js/userEdit.js"></script>		
+		<!-- 스크립트 영역 END -->
+		<div class="info-box-wrapper">
+			<div class="info-box">
+				<div class="box-title ic-title-mark">회원 정보</div>
+				<div class="setting-grid gap-10 con-box">
+					<div class="setting-grid-title ic-title-nece">아이디</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<label for="loginId" class="label-hidden">아이디</label>
+							<input type="text" class="required" id="loginId" name="loginId" placeholder="영문,숫자 5-16자리"
+								th:value="${#authentication.principal.userName}" disabled>
+							<input type="hidden" id="hLoginId" th:value="${#authentication.principal.userName}" />
+						</div>
+					</div>
+					<div class="setting-grid-title ic-title-nece">비밀번호</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<label for="loginPwd" class="label-hidden">비밀번호</label>
+							<input type="password" class="required" id="loginPwd" name="loginPwd"
+								placeholder="영문,숫자,특수문자 포함 8-20자리">
+						</div>
+					</div>
+					<div class="setting-grid-title ic-title-nece">비밀번호 확인</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<label for="passwordConfirm" class="label-hidden">비밀번호 확인</label>
+							<input type="password" class="required" id="passwordConfirm" name="passwordConfirm">
+							<div class="edit-btn-wrapper"><button class="btn-white" id="resetPw">초기화</button></div>
+						</div>
+					</div>
+					<div class="setting-grid-title ic-title-nece">이름</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<label for="userNm" class="label-hidden">이름</label>
+							<input type="text" class="required" id="userNm" name="userNm">
+						</div>
+					</div>
+					<div class="setting-grid-title ic-title-nece">연락처</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<label class="label-hidden" for="userPhone">연락처</label>
+							<input type="text" class="required" id="userPhone" name="userPhone">
+						</div>
+					</div>
+					<div class="setting-grid-title ic-title-nece">공유유형</div>
+					<div class="setting-grid-content">
+						<div class="input-group">
+							<label class="label-hidden" for="rsType">공유유형</label>
+							<select class="required" id="rsType" name="rsType"></select>
+						</div>
+					</div>
+					<div class="setting-grid-title">이메일</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<label class="label-hidden" for="userEmail">이메일</label>
+							<input type="text" id="userEmail" name="userEmail">
+						</div>
+					</div>
+					<div class="sms-email-check span-2">
+						<div class="check-box">SMS 수신
+							<label class="label-hidden">SMS 수신</label>
+							<input type="checkbox" id="smsYn" name="smsYn">
+						</div>
+						<div class="check-box">이메일 수신
+							<label class="label-hidden">이메일 수신</label>
+							<input type="checkbox" id="emailYn" name="emailYn">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="info-box">
+				<div class="box-title ic-title-mark">부가 정보</div>
+				<div class="setting-grid gap-10 con-box">
+					<div class="setting-grid-title">회사명</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="company" name="company">
+						</div>
+					</div>
+					<div class="setting-grid-title">부서명</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="dept" name="dept">
+						</div>
+					</div>
+					<div class="setting-grid-title">사업자번호</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="bizNo" name="bizNo">
+						</div>
+					</div>
+					<div class="setting-grid-title">업종</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="bizCond" name="bizCond">
+						</div>
+					</div>
+					<div class="setting-grid-title">업태</div>
+					<div class="setting-grid-content">
+						<div class="input-wrapper">
+							<input type="text" id="bizType" name="bizType">
+						</div>
+					</div>
+					<div class="setting-grid-title"></div>
+					<div class="setting-grid-content">
+						<div class="check-box">
+							<input type="checkbox" id="polGpsYn" name="polGpsYn">
+							<div class="btn-terms underline"><span class="c-gray">[선택]</span> 위치정보 수집 동의</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+			</div>
+			<div class="edit-btn-wrapper">
+				<button class="btn-green btn-save" id="modBtn">저장</button>
+				<button class="btn-white" onclick="goBack()">취소</button>				
+			</div>
+		
+
+	<div id="modal-background"></div>
+	<div class="popup-terms modal-con">
+		<div class="modal-top">
+			<div class="box-title">위치정보 수집 이용 동의</div>
+			<button type="button" onclick="closePopup()" class="close bt-popup-close"></button>
+		</div>
+		<div class="modal-body">
+			<div class="terms-box">
+				<div class="terms-title"></div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제1조 목적</div>
+					<div class="terms-sub-txt">본 약관은 회원(서비스 약관에 동의한 자로, 이하 “회원”)이 광주첨단산단 스마트물류플랫폼(이하 “물류플랫폼”)이 제공하는 서비스(이하 “서비스”) 이용과 관련하여 본인의 위치정보를 수집·이용하는데 동의하고 
+						물류플랫폼과 회원의  권리·의무 및 책임사항을 규정함을 목적으로 합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제2조 약관 외 준칙</div>
+					<div class="terms-sub-txt">본 약관은 신의성실의 원칙에 따라 공정하게 적용하며, 약관에 명시되지 않은 사항 및 용어의 정의는 위치정보의 보호 및 이용 등에 관한 법률, 정보통신망 이용촉진 및 정보보호 등에 관한 법률, 전기통신사업법 
+						등 관계 법령과 물류플랫폼의 서비스의 이용을 위한 서비스 이용약관, 개인정보처리방침 또는 상관례에 따릅니다. </div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제3조 약관의 효력 및 변경</div>
+					<div class="terms-sub-txt">1. 본 약관은 개인위치정보주체가 본 약관에 동의함으로써 효력이 발생합니다.</div>
+					<div class="terms-sub-txt">2. 회원이 온라인에서 본 약관에 대한 동의 표시를 입력하였을 경우 본 약관의 내용을 모두 읽고 이를 충분히 이해하였으며, 그 적용에 동의한 것으로 봅니다.</div>
+					<div class="terms-sub-txt">3. 물류플랫폼은 법률이나 위치기반서비스의 변경사항을 반영하기 위한 목적 등으로 관계 법령을 위배하지 않는 범위에서 본 약관을 개정할 수 있습니다.</div>
+					<div class="terms-sub-txt">4. 물류플랫폼이 약관을 개정할 경우에는 개정약관의 적용일자 14일 전부터 플랫폼 사이트, 전자우편, 휴대폰 문자메시지 등을 이용하는 것 중 한가지 혹은 복수의 방법으로 회원에게 고지합니다.</div>
+					<div class="terms-sub-txt">5. 물류플랫폼이 전항에 따라 회원에게 고지하면서 개정약관 시행일까지 거부의사를 표시하지 아니하면 개정약관에 승인한 것으로 봅니다. 회원이 개정약관에 동의하지 않을 경우 회원은 서비스 계약을 해지할 수 있습니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제4조 위치정보 수집 및 이용 방법</div>
+					<div class="terms-sub-txt">1. 물류플랫폼은 차량에 장착되어 있는 GPS를 통해 통해 개인위치정보주체 또는 차량의 위치 정보를 검색하고 수집합니다.</div>
+					<div class="terms-sub-txt">2. 물류플랫폼은 제1항에 따라 수집한 차량의 위치정보 및 개인위치정보주체가 사용하는 스마트폰 등 단말장치의 OS 사업자로부터 제공받는 단말장치의 위치정보를 이용하여 서비스를 제공합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제5조 위치기반서비스의 내용 및 이용요금</div>
+					<div class="terms-sub-txt">1. 물류플랫폼은 직접 위치정보를 수집하거나 위치정보사업자로부터 위치정보를 전달받아 아래와 같은 위치기반서비스를 제공합니다.</div>
+					<div class="terms-sub-txt">① 물류 배차 서비스</div>
+					<div class="terms-sub-txt">② 물류 추적 서비스</div>
+					<div class="terms-sub-txt">③ 이용자에게 편의를 제공할 목적으로 차량의 위치정보 및 이용자 단말기기의 위치정보를 활용하여 개발∙제공하는 기타 위치기반서비스 </div>
+					<div class="terms-sub-txt">2. 제1항 위치기반서비스 이용 요금은 원칙적으로 무료입니다. 만약 별도의 유료 서비스의 경우 해당 서비스에 관련 내용을 명시합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제6조 서비스의 변경 및 중지</div>
+					<div class="terms-sub-txt">1. 물류플랫폼은 위치정보사업자의 정책변경 등과 같이 물류플랫폼의 제반 사정 또는 법률상의 이유로 서비스를 유지할 수 없는 경우, 서비스의 전부 또는 일부를 제한, 변경 또는 중지할 수 있습니다.</div>
+					<div class="terms-sub-txt">2. 제1항에 의한 서비스 중단의 경우 물류플랫폼은 사전에 물류플랫폼 사이트 등을 통해 공지하거나 회원의 등록된 정보를 토대로 문자메시지, 전자우편을 통하여 회원에게 통지합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제7조 개인 위치정보의 제공</div>
+					<div class="terms-sub-txt">물류플랫폼은 회원의 개인위치정보를 회원이 지정하는 제3자에게 제공하는 경우에는 개인위치정보를 수집한 당해 통신 단말장치로 매회 회원에게 제공받는 자, 제공일시 및 제공목적을 즉시 통보합니다. 
+						단, 다음에 해당하는 경우에는 회원이 미리 특정하여 지정한 연락처 및 이메일 주소로 통보합니다. </div>
+					<div class="terms-sub-txt">(1) 개인위치정보를 수집한 당해 통신단말장치가 문자, 음성 또는 영상의 수신기능을 갖추지 아니한 경우</div>
+					<div class="terms-sub-txt">(2) 회원이 온라인 게시 등의 방법으로 통보할 것을 미리 요청한 경우</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제8조 회원의 개인위치정보 보호</div>
+					<div class="terms-sub-txt">물류플랫폼은 관계 법령이 정하는 바에 따라서 회원의 개인위치정보를 보호하기 위하여 노력합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제9조 위치정보 수집·이용·제공사실 확인자료의 보유</div>
+					<div class="terms-sub-txt">1. 물류플랫폼은 위치정보의 보호 및 이용 등에 관한 법률 제16조 제2항에 근거하여 회원에 대한 위치정보의 수집‧이용‧제공 사실 확인자료를 위치정보시스템에 자동으로 기록하며, 
+						관련 자료는 위치정보서비스 제공을 위해 회원의 서비스 가입 시점부터 서비스 해지 시점까지 보유합니다.</div>
+					<div class="terms-sub-txt">2. 물류플랫폼은 위치정보의 보호 및 이용 등에 관한 법률 제24조 제4항의 규정에 의하여 회원이 동의의 전부 또는 일부를 철회한 경우에는 지체 없이 수집된 개인위치정보 및 위치정보의 수집·이용·제공사실 확인자료
+						(동의의 일부를 철회하는 경우에는 철회하는 부분의 개인위치정보 및 위치정보 이용·제공사실 확인자료에 한함)를 지체없이 파기합니다. 다만, 회원이 별도로 동의하거나 회원의 불만/분쟁 처리 또는 국세기본법, 법인세법, 
+						부가가치세법 기타 관계 법령의 규정에 의하여 보존할 필요성이 있는 경우에는 관계 법령에 따라 보존합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제10조 개인위치정보의 보유 및 이용기간</div>
+					<div class="terms-sub-txt">물류플랫폼은 회원의 개인위치정보의 이용 또는 제공 목적을 달성하거나, 개인위치정보의 이용 또는 제공 목적을 달성하거나, 회원이 개인위치정보의 이용에 대한 동의의 전부 또는 일부에 대하여 철회한 때에는 
+						당해 개인위치정보를 지체 없이 파기합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제11조 법정대리인의 권리</div>
+					<div class="terms-sub-txt">1. 물류플랫폼은 14세 미만의 아동으로부터 위치정보의 보호 및 이용 등에 관한 법률 제18조 제1항, 제19조 제1항‧제2항 또는 제21조의 규정에 의하여 개인위치정보를 수집‧이용 또는 제공하고자 하는 
+						경우에는 아동 본인 및 그 법정대리인의 동의를 얻어야 합니다.</div>
+					<div class="terms-sub-txt">2. 본 약관 제14조(회원의 권리)의 규정은 위치정보의 보호 및 이용 등에 관한 법률 제25조 제2항의 규정에 의하여 법정대리인이 동의를 하는 경우에 이를 준용합니다. 이 경우, '회원'은 '법정대리인'으로 봅니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제12조 물류플랫폼의 의무</div>
+					<div class="terms-sub-txt">1. 물류플랫폼은 회원의 개인위치정보 이용·제공과 관련한 회원의 불만사항이 접수되는 경우 이를 신속하게 처리하여야 하며, 신속한 처리가 곤란한 경우 그 사유와 처리 일정을 회원에게 통지합니다.</div>
+					<div class="terms-sub-txt">2. 물류플랫폼은 위치정보의보호및이용등에관한법률, 정보통신망이용촉진및보호등에관한법률 등 회원의 개인위치정보 이용·제공과 관련이 있는 법규를 준수합니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제13조 회원의 권리</div>
+					<div class="terms-sub-txt">1. 회원은 물류플랫폼의 회원 개인위치정보 수집에 대한 동의의 전부 또는 일부에 대하여 철회할 수 있습니다.</div>
+					<div class="terms-sub-txt">2. 회원은 물류플랫폼의 회원 개인위치정보 수집의 일시적인 중지를 요구할 수 있습니다.</div>
+					<div class="terms-sub-txt">3. 회원은 제1항 및 제2항에 의한 개인위치정보 수집에 대한 동의 철회 및 중지를 전화, 우편 등등 통해 요청할 수 있습니다.</div>
+					<div class="terms-sub-txt">4. 회원이 제1항 또는 제2항에 따라 개인위치정보 수집에 대한 동의를 철회 또는 중지하는 경우 회원에 대한 물류플랫폼의 각종 서비스의 제공이 불가능하게 될 수 있습니다.</div>
+					<div class="terms-sub-txt">5. 회원은 물류플랫폼에 다음과 같은 자료 등의 열람 또는 고지를 요구할 수 있고 당해 자료 등에 오류가 있는 경우에는 그 정정을 요구할 수 있습니다. </div>
+					<div class="terms-sub-txt">(1) 회원에 대한 위치정보 수집·이용·제공 사실 확인 자료</div>
+					<div class="terms-sub-txt">(2) 회원의 개인위치정보가 위치정보의 보호 및 이용 등에 관한 법률 또는 다른 법률의 규정에 의하여 제3자에게 제공된 이유 및 내용</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제14조 회원의 의무</div>
+					<div class="terms-sub-txt">1. 회원은 서비스의 제공을 위하여 물류플랫폼이 개인위치정보를 수집하는데 필요한 제반 정보를 제공, 등록할 경우 현재의 사실과 일치하는 완전한 정보를 제공·등록하여야 하며, 
+						변경사항이 발생할 경우 즉시 갱신하여야 합니다.</div>
+					<div class="terms-sub-txt">2. 회원은 물류플랫폼이 위치정보를 수집하여 제공하는 서비스를 원활하게 이용하기 위하여 운행 정보 수집 장치 등 위치정보수집 단말장치(이하 '대상 단말기')가 정상 동작을 유지하도록 관리하여야 하며, 대상 단말기의 정상 동작이 유지되지 않아 물류플랫폼의 
+						개인위치정보 수집에 지장이 발생한 경우에는 해당 대상 단말기의 보수, 교환 등의 처리를 하여 물류플랫폼의 서비스 제공을 위한 위치정보 수집이 정상적으로 이루어지도록 합니다.</div>
+					<div class="terms-sub-txt">3. 회원은 다음 각 호의 어느 하나에 해당하는 행위를 하여서는 안 됩니다.</div>
+					<div class="terms-sub-txt">(1) 개인위치정보 수집과 관련된 설비의 오동작이나 정보 등의 파괴 및 혼란을 유발시키는 컴퓨터 바이러스 감염 자료를 등록 또는 유포하는 행위</div>
+					<div class="terms-sub-txt">(2) 타인으로 가장하는 행위 및 타인과의 관계를 허위로 명시하는 행위</div>
+					<div class="terms-sub-txt">(3) 자기 또는 타인에게 재산상의 이익을 주거나 손해를 가할 목적으로 허위의 정보를 유통시키는 행위</div>
+					<div class="terms-sub-txt">(4) 타인의 개인위치정보를 무단으로 유용 또는 유출하는 행위</div>
+					<div class="terms-sub-txt">(5) 기타 불법적이거나 부당한 행위 </div>
+					<div class="terms-sub-txt">4. 회원은 관계 법령, 이 약관의 규정, 이용안내 및 서비스상에 공지한 주의사항, 물류플랫폼이 통지하는 사항 등을 준수하여야 하며, 기타 물류플랫폼의 업무에 방해되는 행위를 하여서는 아니 됩니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제15조 물류플랫폼의 연락처</div>
+					<div class="terms-sub-txt">물류플랫폼의 상호, 주소, 전화번호 그 밖의 연락처는 다음과 같습니다. </div>
+					<div class="terms-sub-txt">1. 상호 : ㈜아세테크</div>
+					<div class="terms-sub-txt">2. 주소 : 광주광역시 광산구 평동산단7번로 21</div>
+					<div class="terms-sub-txt">3. 대표전화 : 062-266-2700</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제16조 위치정보 관리책임자</div>
+					<div class="terms-sub-txt">물류플랫폼의 위치정보관리책임자는 다음과 같습니다. </div>
+					<div class="terms-sub-txt">1. 직위(책) : 팀장</div>
+					<div class="terms-sub-txt">2. 성명 : 박제은</div>
+					<div class="terms-sub-txt">3. 연락처 : 062-266-2700, jeeun1008@daum.net</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제17조 손해배상</div>
+					<div class="terms-sub-txt">1. 회원 또는 위치기반서비스사업자가 고의나 과실에 의해 이 약관의 규정을 위반함으로 인하여 물류플랫폼에 손해가 발생하게 되는 경우, 이 약관을 위반한 당사자는 물류플랫폼에 발생한 손해를 배상하여야 합니다.</div>
+					<div class="terms-sub-txt">2. 회원의 불법 행위나 약관 위반행위로 인하여 물류플랫폼이 제3자로부터 손해배상청구 또는 소송을 비롯한 각종 이의제기를 받는 경우 당해 불법행위 또는 약관 위반행위를 한 자는 자신의 책임과 비용으로 회사를 면책시켜야 하며, 
+						물류플랫폼이 면책되지 못한 경우 그로 인하여 물류플랫폼에 발생한 손해를 배상하여야 합니다.</div>
+					<div class="terms-sub-txt">3. 물류플랫폼이 위치정보의보호및이용등에관한법률 제15조 내지 제26조의 규정을 위반하여 회원에게 손해가 발생한 경우 물류플랫폼이 고의 또는 과실이 없음을 입증하지 아니하면 회원의 손해에 대해 책임을 집니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제18조 면책사항</div>
+					<div class="terms-sub-txt">1. 물류플랫폼은 천재지변 또는 이에 준하는 불가항력으로 인하여 개인위치정보를 수집할 수 없는 경우 이에 관한 책임이 면제됩니다.</div>
+					<div class="terms-sub-txt">2. 물류플랫폼은 회원의 귀책사유로 인하여 물류플랫폼이 개인위치정보를 수집하지 못하거나 잘못 수집하여 발생하는 서비스의 이용 장애에 대하여 책임을 지지 않습니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">제19조 분쟁의 해결</div>
+					<div class="terms-sub-txt">1. 개인위치정보의 수집과 관련하여 회사와 회원 사이에 분쟁이 발생한 경우, 회사와 회원은 분쟁의 해결을 위해 성실히 협의합니다.</div>
+					<div class="terms-sub-txt">2. 제1항의 협의에도 불구하고 회사와 회원간 분쟁이 해결되지 않을 경우 양 당사자는 개인정보보호법 제43조의 규정에 의한 개인정보분쟁조정위원회에 조정을 신청할 수 있습니다.</div>
+				</div>
+				<div class="terms-sub-box">
+					<div class="terms-sub-title">[부 칙] </div>
+					<div class="terms-sub-txt">1. 본 약관은 2024년 2월 1일부터 시행합니다.</div>
+					<div class="terms-sub-txt">2. 위 약관을 모두 숙지하였으며 위치정보제공에 동의합니다.</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="popup-msg line1 modal-con">
+		<div class="msg-box">
+			<div class="msg-txt" id="checkMsg"></div>
+		</div>
+		<div class="edit-btn-wrapper">
+			<button type="button" id="closeModal" class="close btn-green">확인</button>
+		</div>
+	</div>
+
+</div>
+
+	<script>
+		
+		$(".btn-save222").on('click', function () {
+			$("#modal-background").fadeIn(300);
+			$(".popup-msg").css("display", "flex").hide().fadeIn();
+			$("body").css("overflow", "hidden");
+		});       
+		
+	</script>
+</body>
+
+</html>

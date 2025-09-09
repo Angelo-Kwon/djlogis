@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype11" layout:fragment="content">
+		
+			<!-- 스크립트 영역 START -->
+			<script src="./js/sy_contract_reg.js"></script>		
+			<!-- 스크립트 영역 END -->
+	
+			<th:block th:replace="~{fragment/location :: location}" ></th:block>
+
+            <div class="search-conditions con-box">              
+              <div class="setting-grid">
+                <div class="setting-grid-title">업체코드</div>
+                <div class="setting-grid-content">  
+                  <div class="input-wrapper">                    
+                    <input type="text" id="condCustCd" maxlength="7" /> 
+                  </div>                                 
+                </div>
+                <div class="setting-grid-title">업체명</div>
+                <div class="setting-grid-content">  
+                  <div class="input-wrapper">                    
+                    <input type="text" id="condCustNm" /> 
+                  </div>                                 
+                </div>
+                <div class="setting-grid-title">사업자등록번호</div>
+                <div class="setting-grid-content">  
+                  <div class="input-wrapper">                    
+                    <input type="text" id="condRegNo" maxlength="12" /> 
+                  </div>                                 
+                </div>
+                <div class="setting-grid-title">계약여부</div>
+                <div class="setting-grid-content">   
+                  <div class="input-group">                    
+                    <select id="condContractYn">
+										</select>
+                  </div>  
+                </div>
+                <div class="setting-grid-title">업체연락처</div>
+                <div class="setting-grid-content">  
+                  <div class="input-wrapper">                    
+                    <input type="text" id="condPhNm" maxlength="15" /> 
+                  </div>                                 
+                </div>                
+              </div>
+              <div class="search-btn-group">
+                <div class="btn-search btn-green" id="btnSearch"><img>조회</div>
+                <div class="btn-clear btn-white" id="btnClearAll"><img>초기화</div>
+              </div>
+            </div>            
+            <div class="list-wrapper">
+              <div class="search-list">
+                <div class="list-top">
+                  <div class="list-title ic-title-mark">업체 정보</div>    
+                  <div class="edit-btn-wrapper" style="width:300px; margin-right: 6px;">
+		              <button class="btn-white" id="btnAddRow" style="width:85px; padding: 0"><img class="ic-line-plus">행 추가</button>
+		              <button class="btn-green" id="btnCustSave" style="width:85px; padding: 0" action="INSERT"><img class="ic-bt-save">저장</button>
+		            </div>              
+                </div>
+                <!-- 개발 작업시 그리드 들어갈 부분 -->
+                <div class="list-grid-wrapper con-box">
+                  <div id="sy_contract_reg_pqgrid_div"></div>
+                </div>
+                <!---------------------------------->
+                
+              </div>
+              <div class="search-edit">    
+                <div class="list-top">
+                  <div class="list-title ic-title-mark">계약 정보</div>      
+                  <div class="edit-btn-wrapper">                                      
+                    <button class="btn-white" id="btnAdd">신규계약등록</button>
+                    <button class="btn-green" id="btnSave"><img class="ic-bt-save">저장</button>                    
+                  </div>            
+                </div>   
+                <div class="con-box">
+                  <!-- 개발 작업시 그리드 들어갈 부분 -->
+                  <div class="list-grid-wrapper">
+                    <div id="sy_contract_reg_pqgrid_sub"></div>
+                  </div>
+                  <!---------------------------------->
+                  <!-- 개발시 입력창 사이 간격은 gap-10,gap-15,gap-20 변경으로 조정  2023.7.18-->             
+                  <div class="setting-grid gap-10 mt-30"> 
+                    <div class="setting-grid-title ic-title-nece">업체 관리자 ID</div>
+                    <div class="setting-grid-content">  
+                      <div class="input-wrapper">                    
+                        <input type="text" value="" id="loginId" placeholder="관리자 아이디로 사용"/> 
+                        <div class="edit-btn-wrapper"><button class="btn-white" id="btnCheckIdDup">중복확인</button></div>              
+                      </div>                
+                    </div> 
+                    <div class="grid-blank"></div>                 
+                    <div class="setting-grid-title ic-title-nece">계약기간</div>
+                    <div class="setting-grid-content">  
+                      <div class="input-date-group">
+                        <input type="month" id="contractStartTerm"/>
+                        <span>~</span>
+                        <input type="month" id="contractEndTerm"/>
+                      </div>               
+                    </div>
+                    <div class="grid-blank"></div>                 
+                    <div class="setting-grid-title">시스템 사용료</div>
+                    <div class="setting-grid-content">  
+                      <div class="input-check-group" id="systemList">
+                      </div>                   
+                    </div>
+                    <div class="grid-blank"></div>                 
+                    <div class="setting-grid-title"></div>
+                    <div class="setting-grid-content">  
+                      <div class="input-wrapper w-140">                    
+                        <input type="text" value="0" id="totalSystemFee" style="text-align:right;">
+                        <span>원/월</span>                         
+                      </div>                
+                    </div>
+                    <div class="grid-blank"></div>                 
+                    <div class="setting-grid-title">클라우드 사용료</div>
+                    <div class="setting-grid-content">  
+                      <div class="radio-group">
+                        <input type="radio" id="cloudFee0" name="cloudFee" value="0"><label for="cloudFee0">무료</label>
+                        <input type="radio" id="cloudFee1" name="cloudFee" value="100000"><label for="cloudFee1">기본형(10만/월)</label>
+                        <input type="radio" id="cloudFee2" name="cloudFee" value="200000"><label for="cloudFee2">고급형(20만/월)</label>                        
+                      </div>                 
+                    </div>
+                    <div class="grid-blank"></div>                 
+                    <div class="setting-grid-title">담당자 이름</div>
+                    <div class="setting-grid-content">     
+                      <div class="input-wrapper">                    
+                        <input type="text" id="mngNm"/> 
+                      </div>                    
+                    </div>
+                    <div class="grid-blank"></div>                 
+                    <div class="setting-grid-title">담당자 연락처</div>
+                    <div class="setting-grid-content">     
+                      <div class="input-wrapper">                    
+                        <input type="text" id="mngTel"/> 
+                      </div>                       
+                    </div>
+                    <div class="grid-blank"></div>                 
+                    <div class="setting-grid-title">담당자 이메일</div>
+                    <div class="setting-grid-content">     
+                      <div class="input-wrapper">                    
+                        <input type="text" id="mngEmail"/> 
+                      </div>                       
+                    </div>
+                    <div class="grid-blank"></div>                                     
+                  </div>
+                </div>                
+              </div>
+            </div>
+
+	</div>
+</html>

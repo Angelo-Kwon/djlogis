@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/default_layout}">
+<div class="tab-contents Ptype04" layout:fragment="content">
+	<script src="./js/sh_manpw_end.js"></script>
+
+	<th:block th:replace="~{fragment/location :: location}"></th:block>
+
+	<!-- 검색 -->
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">인력구분</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="condWrkCd">
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">근무형태</div>
+			<div class="setting-grid-content">
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condWrkTyp">
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="setting-grid-title">인력이름</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="condManpwNm" />
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="condShYn">
+						<option value="">전체</option>
+						<option value="R">등록</option>
+						<option value="A">신청</option>
+						<option value="S">승인</option>
+						<option value="N">종료</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="search-btn-group">
+			<div class="btn-search btn-green" id="search">
+				<img>조회
+			</div>
+			<div class="btn-clear btn-white" id="init">
+				<img>초기화
+			</div>
+		</div>
+	</div>
+	<!--// 검색 -->
+	<div class="search-list">
+		<div class="list-top">
+			<div class="list-title ic-title-mark">인력 공유정보</div>
+			<div class="list-btn-group">
+				<div class="btn-green btn-end" id="save">공유종료</div>
+			</div>
+		</div>
+		<!-- 개발 작업시 그리드 들어갈 부분 -->
+		<div class="list-grid-wrapper con-box">
+			<div id="sh_manpw_end_pqgrid_div"></div>
+		</div>
+	</div>
+</div>
+</html>

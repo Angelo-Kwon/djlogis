@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+	<div class="tab-contents Ptype01" layout:fragment="content">
+		<script src="./js/ad_manpw.js"></script>
+		
+		<th:block th:replace="~{fragment/location :: location}" ></th:block>
+
+		<!-- 검색 -->
+	<div class="search-conditions con-box">
+		<div class="setting-grid">
+			<div class="setting-grid-title">인력구분</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="condWrkCd">
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">근무형태</div>
+			<div class="setting-grid-content">
+				<div class="setting-grid-content">
+					<div class="input-group">
+						<select id="condWrkTyp">
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="setting-grid-title">인력이름</div>
+			<div class="setting-grid-content">
+				<div class="input-wrapper">
+					<input type="text" id="condManpwNm" />
+				</div>
+			</div>
+
+			<div class="setting-grid-title">사용여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="condUseYn">
+					<option value="">전체</option>
+					</select>
+				</div>
+			</div>
+			<div class="setting-grid-title">공유여부</div>
+			<div class="setting-grid-content">
+				<div class="input-group">
+					<select id="condShYn">
+					<option value="">전체</option>
+							<option value="R">등록중</option>
+							<option value="A">신청중</option>
+							<option value="S">사용중</option>
+							<option value="E">미등록</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- <div class="setting-grid-title">사업자등록번호</div>
+            	<div class="setting-grid-content">   
+                  	<div class="input-wrapper">                    
+                    	<input type="text" id="condBrNo"/> 
+                  	</div>  
+            	</div>        -->
+		</div>
+			<div class="search-btn-group">
+				<div class="btn-search btn-green" id="search"><img>조회</div>
+            	<div class="btn-clear btn-white" id="init"><img>초기화</div>
+			</div>
+		</div>
+        <!--// 검색 -->
+        
+        <div class="list-wrapper">
+			<div class="search-list">
+				<div class="list-top">
+					<div class="list-title ic-title-mark">인력 부가정보</div>                  
+            	</div>
+            	
+            	<!-- 그리드 -->
+                <div class="list-grid-wrapper con-box">
+                	<div id="pqgrid_div"></div>
+                </div>
+                <!--// 그리드 -->
+          	</div>
+          	
+          	<!-- 상세 -->
+          	<div class="search-edit">
+				<!-- 버튼 -->
+		        <div class="edit-btn-wrapper">
+					<button class="btn-white" id="detailInit"><img class="ic-bt-reset"> 초기화</button>
+					<button class="btn-green" id="save"><img class="ic-bt-save">저장</button>
+		
+					<!-- <button class="btn-white" id="addRow"><img class="ic-line-plus">행 추가</button> -->
+					<!--<button class="btn-white"><img class="ic-edit">수정</button>-->
+					<!--<button class="btn-white"><img class="ic-register">등록</button>-->
+		        </div>
+		        <!--// 버튼 -->
+				<div class="flex-col flex-1 con-box">
+					<div class="setting-grid gap-10">
+						<div class="setting-grid-title">직종중분류</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="wrkGrp1">
+								</select>
+							</div>
+						</div>
+						
+						<div class="setting-grid-title">직종소분류</div>
+						<div class="setting-grid-content">
+							<div class="input-group">
+								<select id="wrkGrp2">
+								</select>
+							</div>
+						</div>
+						
+						<div class="setting-grid-title">인력사진</div>
+						<div class="setting-grid-content">
+							<div class="add-pic-wrap">
+								<div class="btn-l-pic-add imgRegBtn" fileId="wrkPhtoFile">
+									<img>인력사진등록
+								</div>
+								<div class="pic-detail" style="display:none;" id="wrkPhtoView" fileId="wrkPhtoFile">
+									<div class="btn-pic-delete" inputId="wrkPhto"></div>
+									<img class="wrk-img" src="" alt="">
+									<div class="pic-name"></div>
+								</div>
+							</div>
+						</div>
+						
+						<div class="setting-grid-title" id="wrkLicnTitle">자격증</div>
+						<div class="setting-grid-content">
+							<div class="add-pic-wrap">
+								<div class="btn-l-pic-add imgRegBtn" fileId="wrkLicnFile">
+									<img>자격증<br>등록
+								</div>
+								<div class="pic-detail" style="display:none;" id="wrkLicnView" fileId="wrkLicnFile">
+									<div class="btn-pic-delete" inputId="wrkLicn"></div>
+									<img class="wrkImg" src="" alt="">
+									<div class="pic-name"></div>
+								</div>
+							</div>
+						</div>
+						
+						<input style="display:none;" type="text" class="hidden" id="adManpwNo"/>
+						<input style="display:none;" type="text" class="hidden" id="manpwNo"/>
+						
+						<input style="display:none;" type="file" class="hidden imgFile" id="wrkPhtoFile" viewId="wrkPhtoView" inputId="wrkPhto" name="files"/>
+	                	<input style="display:none;" type="file" class="hidden imgFile" id="wrkLicnFile" viewId="wrkLicnView" inputId="wrkLicn" name="files"/>
+	                	
+	                	<input style="display:none;" type="text" class="hidden imgValue" id="wrkPhto" title="인력사진" must="true"/>
+	                	<input style="display:none;" type="text" class="hidden imgValue" id="wrkLicn" title="자격증"/><!--must="true"-->
+					</div>
+				</div>
+          	</div>
+		</div>
+	</div>
+</html>
