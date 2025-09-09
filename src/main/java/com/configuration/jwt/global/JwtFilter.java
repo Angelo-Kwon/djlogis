@@ -1,0 +1,85 @@
+package com.configuration.jwt.global;
+
+import java.io.IOException;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+public class JwtFilter extends OncePerRequestFilter {
+
+	private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
+	public static final String AUTHORIZATION_HEADER = "Authorization";
+	private TokenProvider tokenProvider;
+
+	public JwtFilter(TokenProvider tokenProvider) {
+		this.tokenProvider = tokenProvider;
+	}
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+		HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+		
+		String jwt = "";
+		String userAgent = request.getHeader("User-Agent").toUpperCase();
+		
+//		if (userAgent.indexOf("MOBI") > -1) {
+//			System.out.println("MOBILE");
+//			jwt = resolveToken(httpServletRequest);
+//		}
+//		else {
+			System.out.println("PC");
+			String value = null;
+			javax.servlet.http.Cookie[] cookie = httpServletRequest.getCookies();
+			
+			if (cookie != null) {
+				for (int i = 0; i < cookie.length; i++) {
+					if (("token").equals(cookie[i].getName())) {
+						value = java.net.URLDecoder.decode(cookie[i].getValue(), "UTF-8");
+						break;
+					}
+				}
+			}
+			jwt = value;
+//		}
+		
+		String requestURI = httpServletRequest.getRequestURI();
+
+		try {		
+			if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+				Authentication authentication = tokenProvider.getAuthentication(jwt);
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+				
+				logger.debug("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}", authentication.getName(), requestURI);
+			} else {
+				logger.debug("유효한 JWT 토큰이 없습니다, uri: {}", requestURI);
+			}
+		} catch(Exception e) {
+			logger.debug("인증이 실패했습니다., uri: {}", requestURI);
+		}
+		
+		filterChain.doFilter(request, response);
+		
+	}
+	
+	 private String resolveToken(HttpServletRequest request) {
+      String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+      System.out.println("Authorization: " + bearerToken);
+      
+      if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+         return bearerToken.substring(7);
+      }
+
+      return null;
+	}
+	
+}
