@@ -1,0 +1,808 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rs.mapper.SupMatchMapper">
+	
+	<select id="getConId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getConId */
+		SELECT
+			 A.CON_ID AS CODE 
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = A.CON_ID) AS VALUE
+		FROM GJ_DS.SH_MATCH A
+		WHERE SUP_ID = #{userId}
+		  AND MAT_CD = #{condMatCd}
+		  AND MAT_YN IN ('S', 'E')
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		  <choose>
+		  	<when test='condMatCd == "W"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_WHOUSE WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "C"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_CAR WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "E"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_EQUIP WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "M"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_MANPW WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  </choose>
+		GROUP BY CON_ID
+	</select>
+	
+	<select id="getConNm" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getConNm */
+		SELECT
+			 A.CON_ID AS CODE 
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = A.CON_ID) AS VALUE
+		FROM GJ_DS.SH_MATCH A
+		WHERE SUP_ID = #{userId}
+		  AND MAT_CD = #{condMatCd}
+		  AND MAT_YN IN ('S', 'E')
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		  <choose>
+		  	<when test='condMatCd == "W"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_WHOUSE WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "C"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_CAR WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "E"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_EQUIP WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "M"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_MANPW WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  </choose>
+		GROUP BY CON_ID
+	</select>
+	
+	<select id="getMatWhouse" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatWhouse */
+		SELECT 
+			 A.WH_ID
+			,A.WH_ID AS CM_NO
+			,A.WH_NM
+			,B.SH_RNG_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_RNG_CLS' AND CC.CMCD = B.SH_RNG_CLS) AS SH_RNG_CLS_NM
+			,B.SH_FLR
+			,B.SH_LK_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_LK_CLS' AND CC.CMCD = B.SH_LK_CLS) AS SH_LK_CLS_NM
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+			,B.SH_USE_YN
+			,COALESCE((SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = B.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+		FROM GJ_DS.CM_WHOUSE A
+			,GJ_DS.SH_WHOUSE B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.WH_ID = B.WH_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('Y', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<select id="getMatCar" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatCar */
+		SELECT 
+			 A.CAR_ID
+			,A.CAR_ID AS CM_NO
+			,A.CAR_FULL_NO
+			,A.CAR_CLS_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'VHCOPTY' AND CC.CMCD = A.CAR_CLS_CD) AS CAR_CLS_CD_NM
+			,A.CAR_OPR_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'DLVTYPE' AND CC.CMCD = A.CAR_OPR_CD) AS CAR_OPR_CD_NM
+			,A.CAR_MOD_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'VHCTYPE' AND CC.CMCD = A.CAR_MOD_CD) AS CAR_MOD_CD_NM
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+			,B.SH_USE_YN
+			,COALESCE((SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = B.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+		FROM GJ_DS.CM_CAR A
+			,GJ_DS.SH_CAR B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.CAR_ID = B.CAR_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN ='Y'
+		  AND A.SH_YN IN ('Y','N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>G
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<select id="getMatEquip" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatEquip */
+		SELECT 
+			 A.EQUIP_ID
+			,A.EQUIP_ID AS CM_NO
+			,A.EQUIP_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'EQUIP_CD' AND CC.CMCD = A.EQUIP_CD) AS EQUIP_CD_NM
+			,A.EQUIP_NM
+			,A.MAKE_YEAR
+			,B.SH_QTY
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+			,B.SH_USE_YN
+			,COALESCE((SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = B.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+		FROM (
+				SELECT 
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_FKLIFT
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_KART
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_PLT
+			) A
+			,GJ_DS.SH_EQUIP B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.EQUIP_ID = B.EQUIP_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('Y', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<select id="getMatManpw" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatManpw */
+		SELECT 
+			 A.MANPW_NO
+			,A.MANPW_NO AS CM_NO
+			,A.MANPW_NM
+			,A.CP_CD
+			,A.WRK_TYP
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_TYP' AND CC.CMCD = A.WRK_TYP) AS WRK_TYP_NM
+			,A.WRK_GRP
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = A.WRK_GRP) AS WRK_GRP_NM
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,B.SH_PRC_STD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRC_STD' AND CC.CMCD = B.SH_PRC_STD) AS SH_PRC_STD_NM
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+			,B.SH_USE_YN
+			,COALESCE((SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = B.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+		FROM GJ_DS.CM_MANPW A
+			,GJ_DS.SH_MANPW B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.MANPW_NO = B.MANPW_NO
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<update id="updateCmWhouse" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_WHOUSE
+		  SET SH_YN = 'N'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE USE_YN = 'Y'
+		  AND SH_YN = 'S'
+		  <if test='cmNoList != null and cmNoList != ""'>
+		  	<foreach item="cmNo" collection="cmNoList" open="AND WH_ID IN (" separator="," close=")">
+				#{cmNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateShWhouse" parameterType="java.util.HashMap">
+		/* updateShWhouse */
+		UPDATE GJ_DS.SH_WHOUSE
+		  SET SH_USE_YN = 'E'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE SH_USE_YN = 'S'
+		  <if test='shNoList != null and shNoList != ""'>
+		  	<foreach item="shNo" collection="shNoList" open="AND SH_NO IN (" separator="," close=")">
+				#{shNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateCmCar" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_CAR
+		  SET SH_YN = 'N'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE USE_YN = 'Y'
+		  AND SH_YN = 'S'
+		  <if test='cmNoList != null and cmNoList != ""'>
+		  	<foreach item="cmNo" collection="cmNoList" open="AND CAR_ID IN (" separator="," close=")">
+				#{cmNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateShCar" parameterType="java.util.HashMap">
+		/* updateShCar */
+		UPDATE GJ_DS.SH_CAR
+		  SET SH_USE_YN = 'E'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE SH_USE_YN = 'S'
+		  <if test='shNoList != null and shNoList != ""'>
+		  	<foreach item="shNo" collection="shNoList" open="AND SH_NO IN (" separator="," close=")">
+				#{shNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateCmFklift" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_FKLIFT
+		  SET SH_YN = 'E'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE USE_YN = 'Y'
+		  AND SH_YN = 'S'
+		  <if test='cmNoList != null and cmNoList != ""'>
+		  	<foreach item="cmNo" collection="cmNoList" open="AND EQUIP_ID IN (" separator="," close=")">
+				#{cmNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateCmKart" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_KART
+		  SET SH_YN = 'E'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE USE_YN = 'Y'
+		  AND SH_YN = 'S'
+		  <if test='cmNoList != null and cmNoList != ""'>
+		  	<foreach item="cmNo" collection="cmNoList" open="AND EQUIP_ID IN (" separator="," close=")">
+				#{cmNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateCmPlt" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_PLT
+		  SET SH_YN = 'E'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE USE_YN = 'Y'
+		  AND SH_YN = 'S'
+		  <if test='cmNoList != null and cmNoList != ""'>
+		  	<foreach item="cmNo" collection="cmNoList" open="AND EQUIP_ID IN (" separator="," close=")">
+				#{cmNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateShEquip" parameterType="java.util.HashMap">
+		/* updateShEquip */
+		UPDATE GJ_DS.SH_EQUIP
+		  SET SH_USE_YN = 'E'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE SH_USE_YN = 'S'
+		  <if test='shNoList != null and shNoList != ""'>
+		  	<foreach item="shNo" collection="shNoList" open="AND SH_NO IN (" separator="," close=")">
+				#{shNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateCmManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		  SET SH_YN = 'N'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE USE_YN = 'Y'
+		  AND SH_YN = 'S'
+		  <if test='cmNoList != null and cmNoList != ""'>
+		  	<foreach item="cmNo" collection="cmNoList" open="AND MANPW_NO IN (" separator="," close=")">
+				#{cmNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateShManpw" parameterType="java.util.HashMap"> 
+		/* updateShManpw */
+		UPDATE GJ_DS.SH_MANPW
+		  SET SH_USE_YN = 'E'
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE SH_USE_YN = 'S'
+		  <if test='shNoList != null and shNoList != ""'>
+		  	<foreach item="shNo" collection="shNoList" open="AND SH_NO IN (" separator="," close=")">
+				#{shNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<update id="updateShMat" parameterType="java.util.HashMap">
+		/* updateShMat */
+		UPDATE GJ_DS.SH_MATCH
+		  SET MAT_YN = 'E'
+		  	 ,SH_END_DT = NOW()
+		  	 ,MAT_END_DT = NOW()
+		  	 ,MOD_DT = NOW()
+		  	 ,MOD_USER_ID = #{userId}
+		WHERE MAT_YN = 'S'
+		  <if test='matNoList != null and matNoList != ""'>
+		  	<foreach item="matNo" collection="matNoList" open="AND MAT_NO IN (" separator="," close=")">
+				#{matNo}
+			</foreach>
+		  </if>
+	</update>
+	
+	<insert id="insertShMatHist">
+		/* insertShMatHist */
+		INSERT INTO GJ_DS.SH_MATCH_HIST (
+			 HIST_NO	
+			,MAT_NO	
+			,MAT_YN	
+			,CRE_DT	
+			,CRE_USER_ID
+		) 
+		SELECT 
+			 CONCAT('MH', LPAD(CAST(NEXTVAL(sh_match_hist_seq) AS VARCHAR(8)), 8, '0'))
+			,MAT_NO
+			,'E'
+			,NOW()
+			,#{userId}
+		FROM GJ_DS.SH_MATCH
+		WHERE MAT_YN = 'E'
+		  <if test='matNoList != null and matNoList != ""'>
+		  	<foreach item="matNo" collection="matNoList" open="AND MAT_NO IN (" separator="," close=")">
+				#{matNo}
+			</foreach>
+		  </if>
+	</insert>
+	
+	<select id="getMoMatWhouseCnt" parameterType="java.util.HashMap" resultType="int">
+		/* getMoMatWhouseCnt */
+		SELECT 
+			 COUNT(*)
+		FROM GJ_DS.CM_WHOUSE A
+			,GJ_DS.SH_WHOUSE B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.WH_ID = B.WH_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+	</select>
+	
+	<select id="getMoMatWhouse" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMoMatWhouse */
+		SELECT 
+			 A.WH_ID
+			,A.WH_ID AS CM_NO
+			,A.WH_NM
+			,B.SH_RNG_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_RNG_CLS' AND CC.CMCD = B.SH_RNG_CLS) AS SH_RNG_CLS_NM
+			,B.SH_FLR
+			,B.SH_LK_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_LK_CLS' AND CC.CMCD = B.SH_LK_CLS) AS SH_LK_CLS_NM
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+		FROM GJ_DS.CM_WHOUSE A
+			,GJ_DS.SH_WHOUSE B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.WH_ID = B.WH_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		  LIMIT #{limit}, 10
+	</select>
+	
+	<select id="getMoMatCarCnt" parameterType="java.util.HashMap" resultType="int">
+		/* getMoMatCarCnt */
+		SELECT 
+			 COUNT(*)
+		FROM GJ_DS.CM_CAR A
+			,GJ_DS.SH_CAR B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.CAR_ID = B.CAR_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+	</select>
+	
+	<select id="getMoMatCar" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMoMatCar */
+		SELECT 
+			 A.CAR_ID
+			,A.CAR_ID AS CM_NO
+			,A.CAR_FULL_NO
+			,A.CAR_CLS_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'CAR_CLS_CD' AND CC.CMCD = A.CAR_CLS_CD) AS CAR_CLS_CD_NM
+			,A.CAR_OPR_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'CAR_OPR_CD' AND CC.CMCD = A.CAR_OPR_CD) AS CAR_OPR_CD_NM
+			,A.CAR_MOD_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'CAR_MOD_CD' AND CC.CMCD = A.CAR_MOD_CD) AS CAR_MOD_CD_NM
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+		FROM GJ_DS.CM_CAR A
+			,GJ_DS.SH_CAR B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.CAR_ID = B.CAR_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		  LIMIT #{limit}, 10
+	</select>
+	
+	<select id="getMoMatEquipCnt" parameterType="java.util.HashMap" resultType="int">
+		/* getMoMatEquipCnt */
+		SELECT 
+			COUNT(*)
+		FROM (
+				SELECT 
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN
+				FROM GJ_DS.CM_FKLIFT
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN
+				FROM GJ_DS.CM_KART
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN
+				FROM GJ_DS.CM_PLT
+			) A
+			,GJ_DS.SH_EQUIP B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.EQUIP_ID = B.EQUIP_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+	</select>
+	
+	<select id="getMoMatEquip" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMoMatEquip */
+		SELECT 
+			 A.EQUIP_ID
+			,A.EQUIP_ID AS CM_NO
+			,A.EQUIP_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'EQUIP_CD' AND CC.CMCD = A.EQUIP_CD) AS EQUIP_CD_NM
+			,A.EQUIP_NM
+			,A.MAKE_YEAR
+			,B.SH_QTY
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+		FROM (
+				SELECT 
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN
+				FROM GJ_DS.CM_FKLIFT
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN
+				FROM GJ_DS.CM_KART
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN
+				FROM GJ_DS.CM_PLT
+			) A
+			,GJ_DS.SH_EQUIP B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.EQUIP_ID = B.EQUIP_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		  LIMIT #{limit}, 10
+	</select>
+	
+	<select id="getMoMatManpwCnt" parameterType="java.util.HashMap" resultType="int">
+		/* getMoMatManpwCnt */
+		SELECT 
+			 COUNT(*)
+		FROM GJ_DS.CM_MANPW A
+			,GJ_DS.SH_MANPW B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.MANPW_NO = B.MANPW_NO
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+	</select>
+	
+	<select id="getMoMatManpw" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMoMatManpw */
+		SELECT 
+			 A.MANPW_NO
+			,A.MANPW_NO AS CM_NO
+			,A.MANPW_NM
+			,A.CP_CD
+			,A.WRK_TYP
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_TYP' AND CC.CMCD = A.WRK_TYP) AS WRK_TYP_NM
+			,A.WRK_GRP
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = A.WRK_GRP) AS WRK_GRP_NM
+			,B.SH_PRD_CLS
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = B.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,FORMAT(B.SH_PRD, N'#,0') AS SH_PRD
+			,FORMAT(B.SH_PRC, N'#,0') AS SH_PRC
+			,B.SH_PRC_STD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRC_STD' AND CC.CMCD = B.SH_PRC_STD) AS SH_PRC_STD_NM
+			,C.CON_ID
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,C.MAT_REQ_DT
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_NO
+			,C.MAT_NO
+		FROM GJ_DS.CM_MANPW A
+			,GJ_DS.SH_MANPW B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.MANPW_NO = B.MANPW_NO
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND A.SH_YN IN ('S', 'N')
+		  AND B.USE_YN = 'Y'
+		  AND C.MAT_YN IN ('S', 'E') -- 승인
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condMatConDtSt != null and condMatConDtSt != ""'>
+		  AND MAT_CON_DT <![CDATA[>=]]> #{condMatConDtSt}
+		  </if>
+		  <if test='condMatConDtEnd != null and condMatConDtEnd != ""'>
+		  AND MAT_CON_DT <![CDATA[<=]]> #{condMatConDtEnd}
+		  </if>
+		  LIMIT #{limit}, 10
+	</select>
+	
+</mapper>

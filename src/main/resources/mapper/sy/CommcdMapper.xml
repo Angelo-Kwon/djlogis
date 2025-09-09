@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.CommcdMapper">
+    
+         <!--  공통코드 조회 -->
+    <select id="selectCommcdList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+       select A.CMGRPCD||A.CMCD as ROWKEY
+    	     , A.CMGRPCD
+			 , B.CMGRPNM
+			 , A.CMCD
+			 , A.CMNM
+			 , A.DPORD
+			 , A.FLD1			
+		     , A.FLD2
+		     , A.FLD3			 
+			 ,A.ACTYN
+			 ,A.CREUSER
+			 ,date_format(A.CREDTTM ,'%Y-%m-%d %H:%i:%s') AS CREDTTM
+			 ,A.UPDUSER
+			 ,date_format(A.UPDDTTM ,'%Y-%m-%d %H:%i:%s') AS UPDDTTM 
+		  from GJ_OP.COMMCD A, GJ_OP.COMMGRP B
+		 where A.CMGRPCD = B.CMGRPCD		  
+		<if test='CMCD != null and CMCD != ""'>
+		   and UPPER(A.CMCD) like UPPER(concat('%',#{CMCD},'%'))
+		</if>
+		<if test='CMNM != null and CMNM != ""'>
+		   and UPPER(A.CMNM) like UPPER(concat('%',#{CMNM},'%'))
+		</if>
+		<if test='CMGRPCD != null and CMGRPCD != ""'>
+		   and UPPER(B.CMGRPCD) like UPPER(concat('%',#{CMGRPCD},'%'))
+		</if>
+		<if test='CMGRPNM != null and CMGRPNM != ""'>
+		   and UPPER(B.CMGRPNM) like UPPER(concat('%',#{CMGRPNM},'%'))
+		</if>
+		<if test='ACTYN != null and ACTYN != ""'>
+		   and A.ACTYN = #{ACTYN}
+		</if>
+		<if test='CMCD_SAME != null and CMCD_SAME != ""'>
+		   and B.CMGRPCD = #{CMGRPCD}	
+		   and A.CMCD  = #{CMCD_SAME}
+		</if>
+		 order by A.CMGRPCD , A.DPORD asc     
+    </select>
+    
+    <!--  공통코드 INSERT -->
+    <insert id="insertCommcd" parameterType="java.util.HashMap">
+    	insert into GJ_OP.COMMCD
+		(   CMGRPCD
+		  , CMCD
+		  , CMNM
+		  , DPORD
+		  , FLD1
+		  , FLD2
+		  , FLD3
+		  , ACTYN
+		  , CREUSER
+		  , CREDTTM
+		  , UPDUSER
+		  , UPDDTTM )
+		values
+		(  
+		    #{CMGRPCD}
+		  , #{CMCD}
+		  , #{CMNM}
+		  , #{DPORD}
+		  , #{FLD1}
+		  , #{FLD2}	
+		  , #{FLD3}			
+	      , IFNULL(#{ACTYN},'Y')
+	 	  , #{userId}
+		  , NOW()
+		  , #{userId}
+		  , NOW()
+		 )
+    </insert>
+    
+    <!--  공통코드 UPDATE -->
+    <update id="updateCommcd" parameterType="java.util.HashMap">
+		update GJ_OP.COMMCD
+		    set CMNM     = #{CMNM}
+			  , DPORD    = #{DPORD}
+			  , FLD1     = #{FLD1}
+			  , FLD2     = #{FLD2}
+			  , FLD3     = #{FLD3}
+			  , ACTYN    = #{ACTYN}
+			  , UPDUSER  = #{userId}
+			  , UPDDTTM  = NOW()   
+		 where CMGRPCD   = #{CMGRPCD}		   
+	       and CMCD      = #{CMCD}	   
+    </update>
+
+    <!--  공통코드 DELETE -->
+    <delete id="deleteCommcd" parameterType="java.util.HashMap">
+		delete from GJ_OP.COMMCD 
+		where CMGRPCD = #{CMGRPCD} and CMCD = #{CMCD}
+	</delete>
+</mapper>

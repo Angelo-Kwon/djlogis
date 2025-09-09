@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.JoinMapper">
+
+   <select id="checkUserId" parameterType="java.util.HashMap"
+      resultType="int">
+      select COUNT(*) from GJ_OP.OP_USER ou where ou.LOGIN_ID =
+      #{loginId}
+   </select>
+
+   <insert id="userInsert" parameterType="map">
+      INSERT INTO GJ_OP.OP_USER
+      (
+      USER_ID,
+      ACCOUNT_ID,
+      LOGIN_ID,
+      LOGIN_PWD,
+      USER_NM,
+      USER_TYPE,
+      USER_PHONE,
+      USER_EMAIL,
+      USER_CPCD,
+      COMPANY,
+      COMPKEY,
+      BIZ_NO,
+      BIZ_TYPE,
+      BIZ_COND,
+      DEPT,
+      SMS_YN,
+      EMAIL_YN,
+      POL_TERMS_YN,
+      POL_PSN_YN,
+      POL_GPS_YN,
+      CONFIRM_YN,
+      CONFIRM_DT,
+      CONFIRM_USER_ID,
+      MEMO,
+      USE_YN,
+      CRE_DT,
+      CRE_USER_ID,
+      MOD_DT,
+      MOD_USER_ID,
+      RS_TYPE
+      )
+      VALUES
+      (
+      #{userIdSeq},
+      #{accountId},
+      #{loginId},
+      #{loginPwd},
+      #{userNm},
+      #{userType},
+      #{userPhone},
+      #{userEmail},
+      #{userCpcd},
+      #{company},
+      '100',
+      #{bizNo},
+      #{bizType},
+      #{bizCond},
+      #{dept},
+      #{smsYn},
+      #{emailYn},
+      #{polTermsYn},
+      #{polPsnYn},
+      #{polGpsYn},
+      #{confirmYn},
+      #{confirmDt},
+      #{confirmUserId},
+      #{memo},
+      #{useYn},
+      now(),
+      #{creUserId},
+      now(),
+      #{modUserId},
+      #{rsType}
+      )
+   </insert>
+
+
+   <insert id="userInsertAuth" parameterType="map">
+      INSERT INTO
+      GJ_OP.OP_USER_ROLE_GROUP
+      (
+      URGROUP_ID
+      ,USER_ID
+      ,RGROUP_ID
+      ,USE_YN
+      ,CRE_DT
+      ,CRE_USER_ID
+      ,MOD_DT
+      ,MOD_USER_ID
+      )
+      VALUES
+      (
+      CONCAT('UG',LPAD(NEXTVAL(GJ_OP.op_user_role_group_seq), 8, 0))     
+      ,#{userIdSeq}
+      ,#{rgId}
+      ,#{useYn}
+      ,now()
+      ,#{creUserId}
+      ,now()
+      ,#{modUserId}
+      )
+   </insert>
+
+
+
+   <update id="userModify" parameterType="java.util.HashMap">
+      UPDATE GJ_OP.OP_USER
+      SET
+      LOGIN_PWD=#{loginPwd}
+      ,USER_NM=#{userNm}
+      ,USER_PHONE=#{userPhone}
+      ,USER_EMAIL=#{userEmail}
+      ,COMPANY=#{company}
+      ,BIZ_NO=#{bizNo}
+      ,BIZ_TYPE=#{bizType}
+      ,BIZ_COND=#{bizCond}
+      ,DEPT=#{dept}
+      ,SMS_YN=#{smsYn}
+      ,EMAIL_YN=#{emailYn}
+      ,POL_GPS_YN=#{polGpsYn}
+      ,CONFIRM_YN=#{confirmYn}
+      ,CONFIRM_DT=#{confirmDt}
+      ,CONFIRM_USER_ID=#{confirmUserId}
+      ,MOD_DT=now()
+      ,MOD_USER_ID=#{modUserId}
+      ,RS_TYPE=#{rsType}
+      WHERE LOGIN_ID = #{loginId}
+
+   </update>
+
+   <update id="resetPassword" parameterType="java.util.HashMap">
+      UPDATE GJ_OP.OP_USER
+      SET
+      LOGIN_PWD=#{loginPwd}
+      ,MOD_DT=now()
+      ,MOD_USER_ID=#{modUserId}
+      WHERE
+      LOGIN_ID = #{loginId}
+
+   </update>
+
+
+   <select id="getUserInfo" parameterType="java.util.HashMap"
+      resultType="java.util.HashMap">
+      SELECT * FROM GJ_OP.OP_USER U WHERE U.LOGIN_ID = #{loginId}
+   </select>
+
+
+   <select id="getUserIdSeq" resultType="java.lang.String">
+      SELECT CONCAT('US',
+      LPAD(CAST(NEXTVAL(GJ_OP.op_user_seq) AS
+      VARCHAR(8)), 8,'0')) FROM DUAL
+   </select>
+
+   <update id="updateMember" parameterType="com.common.dto.MemberVO">
+      UPDATE GJ_OP.OP_USER OU
+         SET
+         OU.USE_YN = 'N' 
+         WHERE
+         OU.LOGIN_ID = #{userName} 
+   </update>
+   
+   <select id="findById" resultType="com.common.dto.MemberVO" parameterType="java.lang.String">
+        SELECT OU.LOGIN_ID as userName 
+        ,OU.LOGIN_PWD as password
+        ,OU.USER_NM as name
+        ,OU.USER_PHONE as userPhone
+        ,OU.USE_YN as useYn
+        FROM GJ_OP.OP_USER OU
+        WHERE
+       OU.LOGIN_ID = #{userName} 
+    </select>
+
+</mapper>

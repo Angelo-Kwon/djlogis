@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcWareAvailMapper">
+
+	<select id="selectDcWareAvailList" parameterType="java.util.HashMap" resultType="java.util.HashMap">		
+		<choose>    
+	      <when test='schWaGubun != null and schWaGubun != ""'>
+	        SELECT 
+	            WA_SEQ
+	          , WA_GUBUN
+	          , WA_STOCK
+	          , WA_AVAILABLE
+	          , WA_SCHEDULE_STOCK
+	          , SUM(WA_STOCK + WA_AVAILABLE + WA_SCHEDULE_STOCK) AS SUM_WA_TOTAL
+	          , MOD_DT
+	        FROM GJ_OP.OP_WAREHOUSE_AVAILABLE
+	        WHERE WA_GUBUN LIKE CONCAT('%', #{schWaGubun}, '%')
+	        GROUP BY 
+	            WA_GUBUN, WA_SEQ, WA_STOCK, WA_AVAILABLE, WA_SCHEDULE_STOCK, MOD_DT
+		  </when>    
+		  <otherwise>
+	        SELECT 
+	            WA_SEQ
+	          , WA_GUBUN
+	          , WA_STOCK
+	          , WA_AVAILABLE
+	          , WA_SCHEDULE_STOCK
+	          , SUM(WA_STOCK + WA_AVAILABLE + WA_SCHEDULE_STOCK) AS SUM_WA_TOTAL
+	          , MOD_DT
+	        FROM GJ_OP.OP_WAREHOUSE_AVAILABLE
+	        GROUP BY 
+	            WA_GUBUN, WA_SEQ, WA_STOCK, WA_AVAILABLE, WA_SCHEDULE_STOCK, MOD_DT
+	
+	        UNION ALL
+	
+	        SELECT 
+	            NULL AS WA_SEQ
+	          , 0 AS WA_GUBUN
+	          , SUM(WA_STOCK) AS WA_STOCK
+	          , SUM(WA_AVAILABLE) AS WA_AVAILABLE
+	          , SUM(WA_SCHEDULE_STOCK) AS WA_SCHEDULE_STOCK
+	          , SUM(WA_STOCK + WA_AVAILABLE + WA_SCHEDULE_STOCK) AS SUM_WA_TOTAL
+	          , NULL AS MOD_DT
+	        FROM GJ_OP.OP_WAREHOUSE_AVAILABLE
+		  </otherwise>
+		</choose>
+	</select>	
+	
+	<update id="updateWareAvailInfo">
+		UPDATE GJ_OP.OP_WAREHOUSE_AVAILABLE
+		   SET WA_STOCK = #{WA_STOCK}
+		   	 , WA_AVAILABLE = #{WA_AVAILABLE}
+			 , WA_SCHEDULE_STOCK = #{WA_SCHEDULE_STOCK} 			 		
+			 , MOD_DT = NOW() 
+			 , MOD_USER_ID = #{userId}
+		 WHERE WA_SEQ = #{WA_SEQ}
+	</update>
+	
+	<select id="getLatestDate" parameterType="java.util.HashMap" resultType="String">
+		SELECT DATE(MAX(MOD_DT)) AS LATEST_MOD_DT
+		  FROM GJ_OP.OP_WAREHOUSE_AVAILABLE
+    </select>
+	
+</mapper>

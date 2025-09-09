@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rs.mapper.BoardMapper">
+
+	<!-- 소통게시판 정보 목록 조회 -->
+	<select id="selectShBoardList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT  /* mapper.rs.boardMapper : selectShBoardList */  
+			SB.COM_NO 
+			,SB.SH_NO 
+			,SB.CON_ID 
+			,OU.USER_NM as CON_NM
+			,SB.SUP_ID 
+			,OU2.USER_NM as SUP_NM
+			,SB.REQ_MARK 
+			,SB.RES_MARK 
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'MAT_CD' AND CC.CMCD = SB.MAT_CD) as MAT_CD 
+			,SB.CRE_DT 
+			,SB.CRE_USER_ID 
+			,SB.MOD_DT
+			,SB.MOD_USER_ID
+		FROM GJ_DS.SH_BOARD SB LEFT JOIN GJ_OP.OP_USER OU 
+				ON SB.CON_ID = OU.USER_ID
+			LEFT JOIN GJ_OP.OP_USER OU2 
+				ON SB.SUP_ID = OU2.USER_ID
+		WHERE 1=1
+		<if test='type != null and type != ""'>
+			<choose>
+				<when test='type.equals("con")'>
+					AND SB.CON_ID = #{userId}
+				</when>
+				<otherwise>
+					AND SB.SUP_ID = #{userId}
+				</otherwise>
+			</choose>
+		</if>
+		<if test='schToDate != null and schToDate != "" 
+			and schFromDate != null and schFromDate != ""'>
+			<![CDATA[
+				AND SB.CRE_DT >= CONCAT(#{schFromDate}, ' 00:00:00') 
+				AND SB.CRE_DT <= CONCAT(#{schToDate}, ' 23:59:59')
+			]]>
+		</if>
+		<if test='schConId != null and schConId != ""'>
+			AND SB.CON_ID LIKE CONCAT('%', #{schConId}, '%')
+		</if>
+		<if test='schConNm != null and schConNm != ""'>
+			AND OU.USER_NM LIKE CONCAT('%', #{schConNm}, '%')
+		</if>
+		<if test='schSupId != null and schSupId != ""'>
+			AND SB.SUP_ID LIKE CONCAT('%', #{schSupId}, '%')
+		</if>
+		<if test='schSupNm != null and schSupNm != ""'>
+			AND OU2.USER_NM LIKE CONCAT('%', #{schSupNm}, '%')
+		</if>
+	</select>
+	
+	<!-- 소통게시판 상세 목록 조회 -->
+	<select id="selectShBoardDetailInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT /* mapper.rs.boardMapper : selectShBoardDetailInfo */
+			COM_NO as com_no 
+			,SH_NO as edit_sh_no 
+			,CON_ID as edit_con_id 
+			,SUP_ID as edit_sup_id 
+			,REQ_MARK as edit_req_mark 
+			,RES_MARK as edit_res_mark 
+			,MAT_CD as edit_mat_cd 
+			,CRE_DT as edit_cre_dt 
+			,CRE_USER_ID as edit_cre_user_id 
+			,MOD_DT as edit_mod_dt
+			,MOD_USER_ID as edit_mod_user_id
+		FROM GJ_DS.SH_BOARD SB
+		WHERE COM_NO = #{com_no}
+	</select>
+	
+	<!-- 소통게시판 정보 등록 -->
+	<insert id="insertShBoardInfo" parameterType="java.util.HashMap">
+		INSERT INTO GJ_DS.SH_BOARD( /* mapper.rs.boardMapper : insertShBoardInfo */
+			COM_NO 
+			,SH_NO 
+			,CON_ID 
+			,SUP_ID 
+			,REQ_MARK 
+			,MAT_CD 
+			,CRE_DT 
+			,CRE_USER_ID 
+			,MOD_DT 
+			,MOD_USER_ID
+		)VALUES(
+			CONCAT(#{date}, LPAD(CAST(nextVAL(GJ_DS.sh_board_seq) AS CHAR(4)), 4 ,'0'))
+			,#{sh_no}
+			,#{userId}
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER OU WHERE OU.USER_ID = #{sup_id}) 
+			,#{edit_req_mark} 
+			,#{mat_cd} 
+			,now() 
+			,#{userId}
+			,now() 
+			,#{userId}
+		) 
+	</insert>
+	
+	<!-- 소통신청 정보 수정 -->
+	<update id="updateShConBoardInfo" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_BOARD
+		SET 
+			REQ_MARK = #{edit_req_mark} 
+			,MOD_DT = now() 
+			,MOD_USER_ID = #{userId}
+		WHERE COM_NO = #{com_no}
+	</update>
+	
+	<!-- 소통응답 정보 수정 -->
+	<update id="updateShSupBoardInfo" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_BOARD
+		SET 
+			RES_MARK = #{edit_res_mark}
+			,MOD_DT = now()
+			,MOD_USER_ID = #{userId}
+		WHERE COM_NO = #{com_no}
+	</update>
+	
+	<!-- 소통게시판 정보 삭제 -->
+	<delete id="deleteShBoardInfo" parameterType="java.util.HashMap" >
+		DELETE FROM GJ_DS.SH_BOARD /* mapper.rs.boardMapper : deleteShBoardInfo */
+		WHERE COM_NO=#{com_no}
+	</delete>
+
+	<!-- 모바일 소통게시판 정보 목록 조회 -->
+	<select id="selectMoShBoardList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT  /* mapper.rs.boardMapper : selectMoShBoardList */  
+			SB.COM_NO 
+			,SB.SH_NO 
+			,SB.CON_ID 
+			,OU.USER_NM as CON_NM
+			,SB.SUP_ID 
+			,OU2.USER_NM as SUP_NM
+			,SB.REQ_MARK 
+			,SB.RES_MARK 
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'MAT_CD' AND CC.CMCD = SB.MAT_CD) as MAT_CD 
+			,SB.CRE_DT 
+			,SB.CRE_USER_ID 
+			,SB.MOD_DT
+			,SB.MOD_USER_ID
+		FROM GJ_DS.SH_BOARD SB LEFT JOIN GJ_OP.OP_USER OU 
+				ON SB.CON_ID = OU.USER_ID
+			LEFT JOIN GJ_OP.OP_USER OU2 
+				ON SB.SUP_ID = OU2.USER_ID
+		WHERE 1=1
+		<if test='type != null and type != ""'>
+			<choose>
+				<when test='type.equals("con")'>
+					AND SB.CON_ID = #{userId}
+				</when>
+				<otherwise>
+					AND SB.SUP_ID = #{userId}
+				</otherwise>
+			</choose>
+		</if>
+		<if test='schToDate != null and schToDate != "" 
+			and schFromDate != null and schFromDate != ""'>
+			<![CDATA[
+				AND SB.CRE_DT >= CONCAT(#{schFromDate}, ' 00:00:00') 
+				AND SB.CRE_DT <= CONCAT(#{schToDate}, ' 23:59:59')
+			]]>
+		</if>
+		<if test='schConId != null and schConId != ""'>
+			AND SB.CON_ID LIKE CONCAT('%', #{schConId}, '%')
+		</if>
+		<if test='schConNm != null and schConNm != ""'>
+			AND OU.USER_NM LIKE CONCAT('%', #{schConNm}, '%')
+		</if>
+		<if test='schSupId != null and schSupId != ""'>
+			AND SB.SUP_ID LIKE CONCAT('%', #{schSupId}, '%')
+		</if>
+		<if test='schSupNm != null and schSupNm != ""'>
+			AND OU2.USER_NM LIKE CONCAT('%', #{schSupNm}, '%')
+		</if>
+		LIMIT #{limit}, 10
+	</select>
+
+	<!-- 소통답변 정보 수정 -->
+	<insert id="insertMoShBoard" parameterType="java.util.HashMap">
+		INSERT INTO GJ_DS.SH_BOARD (
+	  		   COM_NO
+	    	 , SH_NO
+	    	 , CON_ID
+	    	 , SUP_ID
+	    	 , REQ_MARK
+	    	 , MAT_CD
+	    	 , CRE_DT
+	    	 , CRE_USER_ID
+	    	 , MOD_DT
+	    	 , MOD_USER_ID
+		) VALUES (
+				 CONCAT(#{date}, LPAD(CAST(nextVAL(GJ_DS.sh_board_seq) AS CHAR(4)), 4 ,'0'))
+			   , #{shNo}
+			   , #{userId}
+			   , #{supId}
+			   , #{reqMark}
+			   , #{matCd}
+			   , NOW()
+			   , #{userId}
+			   , NOW()
+			   , #{userId}
+		)
+	</insert>
+
+	<!-- 소통답변 정보 수정 -->
+	<update id="updateMoShBoardResMark" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_BOARD
+		   SET RES_MARK = #{resMark}
+		     , MOD_DT = NOW()
+		     , MOD_USER_ID = #{userId}
+		 WHERE COM_NO = #{comNo}
+	</update>
+	
+</mapper>

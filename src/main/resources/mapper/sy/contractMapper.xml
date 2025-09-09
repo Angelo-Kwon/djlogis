@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.ContractMapper">
+
+	<!-- 계약등록 - 시스템 목록 조회 -->
+	<select id="getSystemList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 SYSTEM_ID
+			,SYSTEM_NM
+			,SYSTEM_KEY
+			,SYSTEM_DSCR
+			,SYSTEM_MANAGER
+			,COALESCE(SYSTEM_FEE,0) AS SYSTEM_FEE
+		FROM GJ_OP.OP_SYSTEM
+		WHERE 1=1
+		AND SYSTEM_NM > ''
+		AND SYSTEM_KEY > ''
+		AND USE_YN = 'Y'
+	</select>
+
+	<!-- 계약등록 - 업체정보 목록 조회 -->
+	<select id="getCustInfoList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CST.CUSTCD
+			,CST.CUSTNM
+			,CST.REGNO 
+			,CST.NATCD
+			,CST.ADR
+			,CST.ZIPCD
+			,CST.RPNM
+			,CST.ACTYN
+		FROM GJ_OP.CUSTTB CST                 /* 업체마스터 */
+		WHERE 1=1
+		<if test='condCustCd != null and condCustCd != ""'>
+		AND CST.CUSTCD LIKE CONCAT('%',#{condCustCd},'%')
+		</if>
+		<if test='condCustNm != null and condCustNm != ""'>
+		AND CST.CUSTNM LIKE CONCAT('%',#{condCustNm},'%')
+		</if>
+		<if test='condRegNo != null and condRegNo != ""'>
+		AND REPLACE(CST.REGNO, '-', '') LIKE CONCAT('%', REPLACE(#{condRegNo}, '-', ''),'%')
+		</if>
+		<if test='condContractYn != null and condContractYn != ""'>
+		AND EXISTS (SELECT
+									*
+								FROM GJ_OP.OP_CONTRACT CTR /* 계약 마스터 */
+								JOIN GJ_OP.OP_CONTRACT_DETAIL CTD /* 계약 마스터 */
+								 ON CTD.CONTRACT_ID = CTR.CONTRACT_ID
+								WHERE 1=1
+								AND CTR.CP_CD = CAST(CST.CUSTCD AS VARCHAR(20))
+								AND CTD.CONTRACT_YN = #{condContractYn}
+								)
+		</if>
+		<if test='condPhNm != null and condPhNm != ""'>
+		AND REPLACE(CST.PHNM,'-','') LIKE CONCAT('%',#{condPhNm},'%')
+		</if>
+		AND CST.ACTYN = 'Y'
+		ORDER BY CST.CUSTCD
+	</select>
+	
+	<!-- 계약등록 - 계약 목록 조회 -->
+	<select id="getContractList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CTR.CONTRACT_ID
+			,CTR.CP_CD
+			,GROUP_CONCAT(
+				(SELECT SYSTEM_NM FROM GJ_OP.OP_SYSTEM WHERE CAST(SYSTEM_ID AS VARCHAR(50)) = CTD.SYSTEM_ID) ORDER BY SYSTEM_NM DESC SEPARATOR ','
+			 ) AS SYSTEM_NM
+			,GROUP_CONCAT(
+				(SELECT SYSTEM_KEY FROM GJ_OP.OP_SYSTEM WHERE CAST(SYSTEM_ID AS VARCHAR(50)) = CTD.SYSTEM_ID) SEPARATOR ','
+			 ) AS SYSTEM_KEY
+			,FORMAT(CTR.TOTAL_SYSTEM_FEE + CTR.TOTAL_CLOUD_FEE,0) AS CONTRACT_FEE
+			,CTR.TOTAL_SYSTEM_FEE
+			,CTR.TOTAL_CLOUD_FEE AS CLOUD_FEE
+			,MAX(CONCAT(CTD.CONTRACT_START_TERM, ' ~ ', CTD.CONTRACT_END_TERM)) AS CONTRACT_TERM
+			,DATE_FORMAT(MAX(CTD.CONTRACT_START_TERM), '%Y-%m') AS CONTRACT_START_TERM
+			,DATE_FORMAT(MAX(CTD.CONTRACT_END_TERM), '%Y-%m') AS CONTRACT_END_TERM
+			,MAX((SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'CONTRACTYN' AND CAST(CC.CMCD AS VARCHAR(50)) = CTD.CONTRACT_YN)) AS CONTRACT_YN_NM
+			,MAX(USR.LOGIN_ID) AS LOGIN_ID
+			,MAX(CTD.MNG_NM) AS MNG_NM
+			,MAX(CTD.MNG_TEL) AS MNG_TEL
+			,MAX(CTD.MNG_EMAIL) AS MNG_EMAIL
+		FROM GJ_OP.OP_CONTRACT CTR /* 계약 마스터 */
+		LEFT OUTER JOIN GJ_OP.OP_CONTRACT_DETAIL CTD /* 계약 마스터 */
+		 ON CTD.CONTRACT_ID = CTR.CONTRACT_ID
+		LEFT OUTER JOIN GJ_OP.OP_USER USR /* 사용자 정보 */
+		 ON CAST(USR.USER_ID AS VARCHAR(50)) = CTD.USER_ID
+		WHERE 1=1
+		AND CTR.CP_CD = #{custCd}
+		<if test='contractId != null and contractId != ""'>
+		AND CTR.CONTRACT_ID = #{contractId}
+		</if>
+		GROUP BY CTR.CONTRACT_ID,CTR.CP_CD
+		ORDER BY CTR.CP_CD
+	</select>
+	
+	<!-- 계약등록 - 계약기간 시스템 중복 조회 -->
+	<select id="getContractTerm" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			GROUP_CONCAT((SELECT SYSTEM_KEY FROM GJ_OP.OP_SYSTEM WHERE CAST(SYSTEM_ID AS VARCHAR(50)) = CTD.SYSTEM_ID) SEPARATOR ',') as systemKey
+		FROM 
+			GJ_OP.OP_CONTRACT_DETAIL CTD LEFT JOIN GJ_OP.OP_CONTRACT OC 
+				ON CTD.CONTRACT_ID  = OC.CONTRACT_ID 
+		WHERE 
+			CTD.CONTRACT_YN IN ('Y', 'C') 
+			<if test='cpcd != null and cpcd != ""'>
+				AND OC.CP_CD = #{cpcd}
+			</if>
+			<if test='contractStartTerm != null and contractStartTerm != "" 
+					and contractEndTerm != null and contractEndTerm != ""'>
+				 AND (
+                (DATE_FORMAT(CTD.CONTRACT_START_TERM, '%Y-%m') <![CDATA[>=]]> #{contractStartTerm} AND DATE_FORMAT(CTD.CONTRACT_START_TERM, '%Y-%m') <![CDATA[<=]]> #{contractEndTerm})
+                OR
+                (DATE_FORMAT(CTD.CONTRACT_END_TERM, '%Y-%m') <![CDATA[>=]]> #{contractStartTerm} AND DATE_FORMAT(CTD.CONTRACT_END_TERM, '%Y-%m') <![CDATA[<=]]> #{contractEndTerm})
+                OR
+                (DATE_FORMAT(CTD.CONTRACT_START_TERM, '%Y-%m') <![CDATA[<=]]> #{contractStartTerm} AND DATE_FORMAT(CTD.CONTRACT_END_TERM, '%Y-%m') <![CDATA[>=]]> #{contractEndTerm})
+            	)
+
+			</if>
+	</select>
+	
+	<!-- 계약등록 - 계약ID 중복검사 -->
+	<select id="checkIdDup" parameterType="java.util.HashMap" resultType="String">
+		SELECT
+			CASE
+				WHEN COUNT(*) > 0 THEN 'Y'
+				ELSE 'N'
+			END
+		FROM GJ_OP.OP_USER
+		WHERE 1=1
+		AND USE_YN = 'Y'
+		AND LOGIN_ID = #{loginId}
+	</select>
+	
+	<!-- 계약등록 - 사용자 입력 -->
+	<insert id="saveUser" parameterType="java.util.HashMap" >
+		INSERT INTO GJ_OP.OP_USER
+		(
+			 USER_ID
+			,ACCOUNT_ID
+			,LOGIN_ID
+			,LOGIN_PWD
+			,USER_NM
+			,USER_PHONE
+			,USER_EMAIL
+			,USER_TYPE
+			,COMPANY
+			,USE_YN
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{userIdSeq}
+			,#{custCd}
+			,#{loginId}
+			,#{loginPwd}
+			,#{loginId}
+			,#{userPhone}
+			,#{userEmail}
+			,#{userType}
+			,#{custNm}
+			,'Y'
+			,now()
+			,#{userId}
+			,now()
+			,#{userId}
+		)
+		ON DUPLICATE KEY UPDATE
+			 ACCOUNT_ID  = #{accountId}     
+			,LOGIN_ID    = #{loginId}       
+			,USER_NM     = #{loginId}        
+			,USER_PHONE  = #{userPhone}     
+			,USER_EMAIL  = #{userEmail}     
+			,USER_TYPE   = #{userType}      
+			,USE_YN      = #{useYn}          
+			,MOD_DT      = now()           
+			,MOD_USER_ID = #{userId}     
+	</insert>
+	
+	<!-- 계약등록 - 사용자 그룹 입력 -->
+	<insert id="saveUserGroup" parameterType="java.util.HashMap" >
+		INSERT INTO GJ_OP.OP_USER_ROLE_GROUP
+		(
+			 URGROUP_ID
+			,USER_ID
+			,RGROUP_ID
+			,USE_YN
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 CONCAT('UG', LPAD(NEXTVAL(GJ_OP.op_user_role_group_seq), 8, 0))
+			,#{userIdSeq}
+			,#{rgroupId}
+			,'Y'
+			,now()
+			,#{userId}
+			,now()
+			,#{userId}
+		)
+	</insert>
+	
+	<!-- 계약등록 - 어카운트 업체마스터 입력 -->
+	<insert id="saveAtct" parameterType="java.util.HashMap" >
+		INSERT INTO GJ_OP.ATCTTB
+		(
+			 ACTCD
+			,CUSTCD
+			,ACTYN
+			,CREUSER
+			,CREDTTM
+			,UPDUSER
+			,UPDDTTM
+		)VALUES(
+			 #{accountId}
+			,#{custCd}
+			,'Y'
+			,#{userId}
+			,NOW()
+			,#{userId}
+			,NOW()
+		)
+		ON DUPLICATE KEY UPDATE
+			 ACTYN   = #{actYn}     
+			,UPDUSER = #{userId}      
+			,UPDDTTM = now()    
+	</insert>
+	
+	<!-- 계약키 조회 -->
+	<select id="getContractId" resultType="String">
+		SELECT CONCAT('CT',LPAD(NEXTVAL(GJ_OP.op_contract_seq), 8, '0'))
+	</select>
+	
+	<!-- 계약등록 - 업체별 계약정보 입력 -->
+	<insert id="saveContract" parameterType="java.util.HashMap" >
+		INSERT INTO GJ_OP.OP_CONTRACT
+		(
+			 CONTRACT_ID
+			,ACCOUNT_ID
+			,CP_CD
+			,CP_NM
+			,TOTAL_SYSTEM_FEE
+			,TOTAL_CLOUD_FEE
+			,TOTAL_CONTRACT_TERM
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{contractId}
+			,#{accountId}
+			,#{custCd}
+			,#{custNm}
+			,REPLACE(#{totalSystemFee},',','')
+			,REPLACE(#{totalCloudFee},',','')
+			,DATEDIFF(LAST_DAY(CONCAT(#{contractEndTerm}, '-01')),LAST_DAY(CONCAT(#{contractStartTerm}, '-01') - interval 1 month) + interval 1 day) + 1
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		)
+		ON DUPLICATE KEY UPDATE
+			 ACCOUNT_ID          = #{accountId}        
+			,CP_CD               = #{custCd}             
+			,CP_NM               = #{custNm}             
+			,TOTAL_SYSTEM_FEE    = #{totalSystemFee}   
+			,TOTAL_CLOUD_FEE     = #{totalCloudFee}    
+			,TOTAL_CONTRACT_TERM = #{totalContractTerm}
+			,MOD_DT              = now()           
+			,MOD_USER_ID         = #{userId}    
+	</insert>
+	
+	<!-- 계약등록 - 업체별 계약정보 상세 입력 -->
+	<insert id="saveContractDetail" parameterType="java.util.HashMap" >
+		INSERT INTO GJ_OP.OP_CONTRACT_DETAIL
+		(
+			 CONTRACT_ID
+			,CONTRACT_SEQ
+			,SYSTEM_ID
+			,SYSTEM_NM
+			,CONTRACT_FEE
+			,CONTRACT_START_TERM
+			,CONTRACT_END_TERM
+			,CONTRACT_YN
+			,SYSTEM_FEE
+			,CLOUD_FEE
+			,MNG_NM
+			,MNG_TEL
+			,MNG_EMAIL
+			,USER_ID
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{contractId}
+			,(SELECT COALESCE(MAX(CONTRACT_SEQ) + 1, 1) FROM GJ_OP.OP_CONTRACT_DETAIL ALIAS_FOR_SUBQUERY WHERE CONTRACT_ID = #{contractId})
+			,#{systemId}
+			,#{systemNm}
+			,#{systemFee} + #{cloudFee}
+			,LAST_DAY(CONCAT(#{contractStartTerm}, '-01') - interval 1 month) +interval 1 day
+			,LAST_DAY(CONCAT(#{contractEndTerm}, '-01'))
+			,'Y'
+			,#{systemFee}
+			,#{cloudFee}
+			,#{mngNm}
+			,#{mngTel}
+			,#{mngEmail}
+			,#{userIdSeq}
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		)
+		ON DUPLICATE KEY UPDATE
+			 SYSTEM_ID           = #{systemId}         
+			,SYSTEM_NM           = #{systemNm}         
+			,CONTRACT_FEE        = #{systemFee} + #{cloudFee}
+			,CONTRACT_START_TERM = #{contractStartTerm}
+			,CONTRACT_END_TERM   = #{contractEndTerm}  
+			,CONTRACT_YN         = #{contractYn}       
+			,SYSTEM_FEE          = #{systemFee}        
+			,CLOUD_FEE           = #{cloudFee}         
+			,MNG_NM              = #{mngNm}            
+			,MNG_TEL             = #{mngTel}           
+			,MNG_EMAIL           = #{mngEmail}         
+			,MOD_DT              = now()           
+			,MOD_USER_ID         = #{userId}    
+	</insert>
+	
+</mapper>

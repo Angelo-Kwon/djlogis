@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rs.mapper.ChargeMapper">
+	
+	<select id="getConId" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getConId */
+		SELECT
+			 A.CON_ID AS CODE 
+			,(SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = A.CON_ID) AS VALUE
+		FROM GJ_DS.SH_MATCH A
+		WHERE SUP_ID = #{userId}
+		  AND MAT_CD = #{condMatCd}
+		  AND MAT_YN IN ('S', 'E', 'F')
+		  <if test='condShStDtSt != null and condShStDtSt != ""'>
+		  AND SH_ST_DT <![CDATA[>=]]> #{condShStDtSt}
+		  </if>
+		  <if test='condShStDtEnd != null and condShStDtEnd != ""'>
+		  AND SH_ST_DT <![CDATA[<=]]> #{condShStDtEnd}
+		  </if>
+		  <choose>
+		  	<when test='condMatCd == "W"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_WHOUSE WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "C"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_CAR WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "E"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_EQUIP WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "M"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_MANPW WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  </choose>
+		GROUP BY CON_ID
+	</select>
+	
+	<select id="getConNm" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getConNm */
+		SELECT
+			 A.CON_ID AS CODE 
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = A.CON_ID) AS VALUE
+		FROM GJ_DS.SH_MATCH A
+		WHERE SUP_ID = #{userId}
+		  AND MAT_CD = #{condMatCd}
+		  AND MAT_YN IN ('S', 'E', 'F')
+		  <if test='condShStDtSt != null and condShStDtSt != ""'>
+		  AND SH_ST_DT <![CDATA[>=]]> #{condShStDtSt}
+		  </if>
+		  <if test='condShStDtEnd != null and condShStDtEnd != ""'>
+		  AND SH_ST_DT <![CDATA[<=]]> #{condShStDtEnd}
+		  </if>
+		  <choose>
+		  	<when test='condMatCd == "W"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_WHOUSE WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "C"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_CAR WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "E"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_EQUIP WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  	<when test='condMatCd == "M"'>
+		  		AND EXISTS (SELECT 1 FROM GJ_DS.SH_MANPW WHERE SH_NO = A.SH_NO AND USE_YN = 'Y' AND SH_USE_YN IN ('S', 'E'))
+		  	</when>
+		  </choose>
+		GROUP BY CON_ID
+	</select>
+	
+	<select id="getMatWhouse" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatWhouse */
+		SELECT 
+			 (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,B.SH_NO
+			,'W' AS MAT_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'MAT_CD' AND CC.CMCD = 'W') AS MAT_CD_NM
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_PRD
+			,C.MAT_NO
+			,DATE_FORMAT(NOW(), '%Y-%m-%d')AS BASE_DD
+			,DATEDIFF(NOW(), C.MAT_CON_DT) + 1 AS USE_MD
+			,FORMAT((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC, N'#,0') AS TOTAL_POC
+			,0.005 AS CHARGE_RATE -- TODO 추후 요율테이블 정보 적용 필요
+			,FORMAT(((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC) * 0.005, N'#,0') AS CHARGE_PRC
+			,(SELECT CASE WHEN COUNT(*) > 0 THEN '완료' ELSE '미정산' END FROM GJ_DS.CM_CHARGE WHERE MAT_NO = C.MAT_NO AND SH_NO = C.SH_NO) AS SUP_PRC_YN
+			,B.SH_USE_YN
+		FROM GJ_DS.CM_WHOUSE A
+			,GJ_DS.SH_WHOUSE B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.WH_ID = B.WH_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND B.USE_YN = 'Y'
+		  AND B.SH_USE_YN IN ('S', 'E') -- 승인, 종료
+		  AND C.MAT_YN IN ('S', 'E', 'F') -- 승인, 종료
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condShStDtSt != null and condShStDtSt != ""'>
+		  AND SH_ST_DT <![CDATA[>=]]> #{condShStDtSt}
+		  </if>
+		  <if test='condShStDtEnd != null and condShStDtEnd != ""'>
+		  AND SH_ST_DT <![CDATA[<=]]> #{condShStDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<select id="getMatCar" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatCar */
+		SELECT 
+			 (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,B.SH_NO
+			,'C' AS MAT_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'MAT_CD' AND CC.CMCD = 'C') AS MAT_CD_NM
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_PRD
+			,C.MAT_NO
+			,DATE_FORMAT(NOW(), '%Y-%m-%d')AS BASE_DD
+			,DATEDIFF(NOW(), C.MAT_CON_DT) + 1 AS USE_MD
+			,FORMAT((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC, N'#,0') AS TOTAL_POC
+			,0.005 AS CHARGE_RATE -- TODO 추후 요율테이블 정보 적용 필요
+			,FORMAT(((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC) * 0.005, N'#,0') AS CHARGE_PRC
+			,(SELECT CASE WHEN COUNT(*) > 0 THEN '완료' ELSE '미정산' END FROM GJ_DS.CM_CHARGE WHERE MAT_NO = C.MAT_NO AND SH_NO = C.SH_NO) AS SUP_PRC_YN
+			,B.SH_USE_YN
+		FROM GJ_DS.CM_CAR A
+			,GJ_DS.SH_CAR B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.CAR_ID = B.CAR_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND B.USE_YN = 'Y'
+		  AND B.SH_USE_YN IN ('S', 'E') -- 승인, 종료
+		  AND C.MAT_YN IN ('S', 'E', 'F') -- 승인, 종료
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condShStDtSt != null and condShStDtSt != ""'>
+		  AND SH_ST_DT <![CDATA[>=]]> #{condShStDtSt}
+		  </if>
+		  <if test='condShStDtEnd != null and condShStDtEnd != ""'>
+		  AND SH_ST_DT <![CDATA[<=]]> #{condShStDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<select id="getMatEquip" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatEquip */
+		SELECT 
+			 (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,B.SH_NO
+			,'E' AS MAT_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'MAT_CD' AND CC.CMCD = 'E') AS MAT_CD_NM
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_PRD
+			,C.MAT_NO
+			,DATE_FORMAT(NOW(), '%Y-%m-%d')AS BASE_DD
+			,DATEDIFF(NOW(), C.MAT_CON_DT) + 1 AS USE_MD
+			,FORMAT((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC, N'#,0') AS TOTAL_POC
+			,0.005 AS CHARGE_RATE -- TODO 추후 요율테이블 정보 적용 필요
+			,FORMAT(((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC) * 0.005, N'#,0') AS CHARGE_PRC
+			,(SELECT CASE WHEN COUNT(*) > 0 THEN '완료' ELSE '미정산' END FROM GJ_DS.CM_CHARGE WHERE MAT_NO = C.MAT_NO AND SH_NO = C.SH_NO) AS SUP_PRC_YN
+		FROM (
+				SELECT 
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_FKLIFT
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_KART
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, MAKE_YEAR, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_PLT
+			) A
+			,GJ_DS.SH_EQUIP B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.EQUIP_ID = B.EQUIP_ID
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND B.USE_YN = 'Y'
+		  AND B.SH_USE_YN IN ('S', 'E') -- 승인, 종료
+		  AND C.MAT_YN IN ('S', 'E', 'F') -- 승인, 종료
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condShStDtSt != null and condShStDtSt != ""'>
+		  AND SH_ST_DT <![CDATA[>=]]> #{condShStDtSt}
+		  </if>
+		  <if test='condShStDtEnd != null and condShStDtEnd != ""'>
+		  AND SH_ST_DT <![CDATA[<=]]> #{condShStDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<select id="getMatManpw" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getMatManpw */
+		SELECT 
+			 (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_LOGIN_ID
+			,(SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) AS CON_NM
+			,B.SH_NO
+			,'M' AS MAT_CD
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'MAT_CD' AND CC.CMCD = 'M') AS MAT_CD_NM
+			,C.MAT_CON_DT
+			,C.SH_ST_DT
+			,B.SH_PRD
+			,C.MAT_NO
+			,DATE_FORMAT(NOW(), '%Y-%m-%d')AS BASE_DD
+			,DATEDIFF(NOW(), C.MAT_CON_DT) + 1 AS USE_MD
+			,FORMAT((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC, N'#,0') AS TOTAL_POC
+			,0.005 AS CHARGE_RATE -- TODO 추후 요율테이블 정보 적용 필요
+			,FORMAT(((DATEDIFF(NOW(), C.MAT_CON_DT) + 1) * B.SH_PRC) * 0.005, N'#,0') AS CHARGE_PRC
+			,(SELECT CASE WHEN COUNT(*) > 0 THEN '완료' ELSE '미정산' END FROM GJ_DS.CM_CHARGE WHERE MAT_NO = C.MAT_NO AND SH_NO = C.SH_NO) AS SUP_PRC_YN
+			,B.SH_USE_YN
+		FROM GJ_DS.CM_MANPW A
+			,GJ_DS.SH_MANPW B
+			,GJ_DS.SH_MATCH C
+		WHERE A.USER_ID = B.USER_ID
+		  AND A.MANPW_NO = B.MANPW_NO
+		  AND B.SH_NO = C.SH_NO
+		  AND A.USE_YN = 'Y'
+		  AND B.USE_YN = 'Y'
+		  AND B.SH_USE_YN IN ('S', 'E') -- 승인, 종료
+		  AND C.MAT_YN IN ('S', 'E', 'F') -- 승인, 종료
+		  AND C.SUP_ID = #{userId}
+		  <if test='condConId != null and condConId != ""'>
+		  AND (SELECT LOGIN_ID FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConId}, '%')
+		  </if>
+		  <if test='condConNm != null and condConNm != ""'>
+		  AND (SELECT USER_NM FROM GJ_OP.OP_USER WHERE USER_ID = C.CON_ID) LIKE CONCAT('%', #{condConNm}, '%')
+		  </if>
+		  <if test='condShStDtSt != null and condShStDtSt != ""'>
+		  AND SH_ST_DT <![CDATA[>=]]> #{condShStDtSt}
+		  </if>
+		  <if test='condShStDtEnd != null and condShStDtEnd != ""'>
+		  AND SH_ST_DT <![CDATA[<=]]> #{condShStDtEnd}
+		  </if>
+		ORDER BY A.CRE_DT DESC
+	</select>
+	
+	<insert id="insertCmCharge">
+		/* insertCmCharge */
+		<selectKey keyProperty="HIST_NO" resultType="String" order="BEFORE">
+	    	SELECT CONCAT('CG', LPAD(CAST(NEXTVAL(cm_charge_seq) AS VARCHAR(8)), 8, '0')) FROM DUAL
+		</selectKey>
+		INSERT INTO GJ_DS.CM_CHARGE (
+			 HIST_NO
+			,MAT_NO
+			,SH_NO
+			,TOTAL_POC
+			,CHARGE_PRC
+			,SMS_YN
+			,USE_MD
+			,BASE_DD
+			,CHARGE_RATE
+			,SUP_PRC_YN
+			,CON_PRC_YN
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{HIST_NO}
+			,#{MAT_NO}
+			,#{SH_NO}
+			,REPLACE(#{TOTAL_POC},",","")
+			,REPLACE(#{CHARGE_PRC},",","")
+			,#{SMS_YN}
+			,#{USE_MD}
+			,#{BASE_DD}
+			,#{CHARGE_RATE}
+			,'Y'
+			,'N'
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		) 
+	</insert>
+</mapper>

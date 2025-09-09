@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.CommgrpMapper">
+   
+    <!--  공통그룹코드 조회 -->
+    <select id="selectCommgrpList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+       select A.CMGRPCD as ROWKEY
+    	     ,A.CMGRPCD
+			 ,A.CMGRPNM			
+			 ,A.ACTYN
+			 ,A.CREUSER
+			 ,date_format(A.CREDTTM ,'%Y-%m-%d %H:%i:%s') AS CREDTTM
+			 ,A.UPDUSER
+			 ,date_format(A.UPDDTTM ,'%Y-%m-%d %H:%i:%s') AS UPDDTTM 
+		  from GJ_OP.COMMGRP A
+		 where 1=1
+		<if test='CMGRPCD != null and CMGRPCD != ""'>
+		   and A.CMGRPCD like concat('%',#{CMGRPCD},'%')
+		</if>
+		<if test='CMGRPNM != null and CMGRPNM != ""'>
+		   and A.CMGRPNM like concat('%',#{CMGRPNM},'%')
+		</if>	
+		<if test='ACTYN != null and ACTYN != ""'>
+		   and A.ACTYN = #{ACTYN}
+		</if>	
+		<!-- <if test='ACTYN == null or ACTYN == ""'>
+		   and A.ACTYN = 'Y'
+		</if> -->
+		 order by A.CMGRPCD asc     
+    </select>
+    
+    <!--  공통그룹코드 INSERT -->
+    <insert id="insertCommgrp" parameterType="java.util.HashMap">
+    	insert into GJ_OP.COMMGRP
+		(   CMGRPCD
+		  , CMGRPNM		  
+		  , ACTYN
+		  , CREUSER
+		  , CREDTTM
+		  , UPDUSER
+		  , UPDDTTM )
+		values
+		(  
+		    #{CMGRPCD}
+		  , #{CMGRPNM}
+	      , IFNULL(#{ACTYN},'Y')
+	 	  , #{userId}
+		  , NOW()
+		  , #{userId}
+		  , NOW()
+		 )
+    </insert>
+    
+    <!--  공통그룹코드 UPDATE -->
+    <update id="updateCommgrp" parameterType="java.util.HashMap">
+		update GJ_OP.COMMGRP
+		    set CMGRPNM  = #{CMGRPNM}
+			  , ACTYN    = #{ACTYN}
+			  , UPDUSER  = #{userId}
+			  , UPDDTTM  = NOW()   
+		 where CMGRPCD = #{CMGRPCD}
+    </update>
+    
+     <!--  공통그룹코드 DELETE -->
+    <delete id="deleteCommgrp" parameterType="java.util.HashMap">
+		delete from GJ_OP.COMMGRP
+		where CMGRPCD = #{CMGRPCD}
+	</delete>
+</mapper>

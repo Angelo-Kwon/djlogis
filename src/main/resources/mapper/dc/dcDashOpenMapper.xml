@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcDashOpenMapper">
+	
+	<!-- 입고유형별 현황 조회 -->
+	<select id="selectInTypeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select M.DOCTYPE, M.DOCTYNM as "name", SUM(S.RCHSQTY) AS "value"
+		  from GJ_WM.VINBST_TMP S
+		 inner join GJ_WM.MDOCMA M ON S.COMPKEY = M.COMPKEY
+		                     AND S.WAREKEY = M.WAREKEY 
+		                     AND S.DOCCATE = M.DOCCATE 
+		                     AND S.DOCTYPE = M.DOCTYPE 
+		 where S.COMPKEY = '100'
+		  <if test="DOCTYPE != null and DOCTYPE != ''">
+		   and S.DOCTYPE = #{DOCTYPE} -- 480 반입 490 기타입고
+		   </if>
+		   <if test="searchCenter != null and searchCenter != ''">
+		   and S.WAREKEY = #{searchCenter}
+		   </if>
+		   <if test="searchOwner != null and searchOwner != ''">
+		   and S.OWNERKY = #{searchOwner}
+		   </if>
+
+		 GROUP BY M.DOCTYPE, M.DOCTYNM
+	</select>
+	
+	<!-- 출고유형별 현황 조회 -->
+	<select id="selectOutTypeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select M.DOCTYPE, M.DOCTYNM as "name", SUM(S.TCMPQTY) AS "value"
+		  from GJ_WM.VOUBST_TMP S
+		 inner join GJ_WM.MDOCMA M ON S.COMPKEY = M.COMPKEY
+		                     AND S.WAREKEY = M.WAREKEY 
+		                     AND S.DOCCATE = M.DOCCATE 
+		                     AND S.DOCTYPE = M.DOCTYPE 
+		 where S.COMPKEY = '100'
+		  <if test="DOCTYPE != null and DOCTYPE != ''">
+		   and S.DOCTYPE = #{DOCTYPE} -- 780 반출 790 기타출고
+		   </if>
+		   <if test="searchCenter != null and searchCenter != ''">
+		   and S.WAREKEY = #{searchCenter}
+		   </if>
+		   <if test="searchOwner != null and searchOwner != ''">
+		   and S.OWNERKY = #{searchOwner}
+		   </if>
+		 GROUP BY M.DOCTYPE, M.DOCTYNM
+	</select>
+	
+	<!-- 입고 COUNT 조회 -->
+	<select id="selectInCountList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	with vinbst as (
+			select
+				*
+			from
+				GJ_WM.VINBST_TMP S
+			where
+				1 = 1
+			and S.COMPKEY = '100'
+			<if test="DOCTYPE != null and DOCTYPE != ''">
+		    and S.DOCTYPE = #{DOCTYPE} -- 780 반출 790 기타출고
+		    </if>
+		    <if test="searchCenter != null and searchCenter != ''">
+		    and S.WAREKEY = #{searchCenter}
+		    </if>
+		    <if test="searchOwner != null and searchOwner != ''">
+		    and S.OWNERKY = #{searchOwner}
+		    </if>
+		)
+		select
+			'오더' as "name"
+			, IFNULL(SUM(S.CORDCNT), 0) as "max"
+			, IFNULL(SUM(case when S.ASNSTAT = 'CMP' THEN S.CORDCNT ELSE 0 END), 0) AS "done"
+		from
+			vinbst S
+		union all
+		select
+			'수량' as "name"
+			, IFNULL((SUM(S.ASNDQTY)+2000), 0) as "max"
+			, IFNULL((SUM(S.RCHSQTY)+2000), 0) AS "done"
+		from
+			vinbst S
+		union all
+		select
+			'SKU' as "name"
+			, count(DISTINCT SKUMKEY) as "max"
+			, count(DISTINCT case when S.ASNSTAT = 'CMP' THEN SKUMKEY ELSE null END) AS "done"
+		from
+			vinbst S		
+		union all
+		select
+			'화주' as "name"
+			, count(DISTINCT S.OWNERKY) as "max"
+			, count(DISTINCT case when S.ASNSTAT = 'CMP' THEN S.OWNERKY ELSE null END) AS "done"
+		from
+			vinbst S
+	
+	
+	</select>
+	
+	<!-- 출고 COUNT 조회 -->
+	<select id="selectOutCountList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		with voubst as (
+			select
+				*
+			from
+				GJ_WM.VOUBST_TMP S
+			where
+				1 = 1
+			and S.COMPKEY = '100'			
+			<if test="DOCTYPE != null and DOCTYPE != ''">
+		    and S.DOCTYPE = #{DOCTYPE} -- 780 반출 790 기타출고
+		    </if>
+		    <if test="searchCenter != null and searchCenter != ''">
+		    and S.WAREKEY = #{searchCenter}
+		    </if>
+		    <if test="searchOwner != null and searchOwner != ''">
+		    and S.OWNERKY = #{searchOwner}
+		    </if>
+
+		)
+		<if test="DOCTYPE == null or DOCTYPE != '790'">
+		select
+			'오더' as "name"
+			, IFNULL(SUM(S.CORDCNT)+200, 0) as "max"
+			, IFNULL(SUM(case when S.SHPITST = 'SHPOUT' THEN S.CORDCNT ELSE 0 END)+200, 0) AS "done"
+		from
+			voubst S
+		union all
+		</if>
+		select
+			'수량' as "name"
+			, IFNULL(SUM(S.FORDQTY)+15000, 0) as "max"
+			, IFNULL(SUM(S.TCMPQTY)+15000, 0) AS "done"
+		from
+			voubst S
+		union all
+		select
+			'SKU' as "name"
+			, count(DISTINCT SKUMKEY)+312 as "max"
+			, count(DISTINCT case when S.SHPITST = 'SHPOUT' THEN SKUMKEY ELSE null END)+312 AS "done"
+		from
+			voubst S
+		<if test="DOCTYPE == null or DOCTYPE != '790'">
+		union all
+		select
+			'배송처' as "name"
+			, count(DISTINCT S.DESTKEY)+5 as "max"
+			, count(DISTINCT case when S.SHPITST = 'SHPOUT' THEN S.DESTKEY ELSE null END)+5 AS "done"
+		from
+			voubst S
+		</if>
+	</select>
+	
+	<select id="selectWareList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			COMPKEY,
+			WAREKEY as "key",
+			WHNAMLC as "val"
+		FROM
+			GJ_WM.MWARMA
+		WHERE
+			WHUSEYN = 'Y'
+		AND
+			COMPKEY = #{COMPKEY}
+	</select>
+	
+	<select id="selectOwnerList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			COMPKEY,
+			OWNERKY as "key",
+			OWNAMLC as "val"
+		FROM
+			GJ_WM.MOWRMA
+		WHERE
+			OWUSEYN = 'Y'
+		AND
+			COMPKEY = #{COMPKEY}
+	</select>
+	
+	<select id="selectGroupChart" parameterType="java.util.HashMap" resultType="java.util.HashMap">		
+		SELECT 
+			CASE 
+	            WHEN VI.DOCTYPE = 480 THEN '반입'
+	            WHEN VI.DOCTYPE = 782 THEN '반출'
+	            WHEN VI.DOCTYPE = 490 THEN '기타입고'
+	            WHEN VI.DOCTYPE = 792 THEN '기타출고'            
+	        END as "doctype",
+	        VI.CORDCNT as "주문",
+	        VI.ASNDQTY as "수량",
+	        count(VI.SKUMKEY) as "SKU",
+	        count(VI.OWNERKY) as "화주"
+		FROM
+		    GJ_WM.VINBST_TMP VI
+		WHERE
+		    VI.COMPKEY = 100
+		AND
+			VI.DOCTYPE IN (480, 490, 782, 792)
+		GROUP BY
+		    VI.DOCTYPE		
+		ORDER BY
+		    CASE VI.DOCTYPE
+		        WHEN 480 THEN 1
+		        WHEN 782 THEN 2
+		        WHEN 490 THEN 3
+		        WHEN 792 THEN 4
+		    END			
+	</select>
+	
+	<select id="getWhRoleGroup" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			wrg.WAREKEY,
+			w.WHNAMLC
+		FROM GJ_OP.OP_WH_ROLE_GROUP wrg LEFT JOIN GJ_WM.MWARMA w
+			ON wrg.WAREKEY = w.WAREKEY 
+		WHERE 
+			w.COMPKEY = '100'
+			AND USE_YN = 'Y'
+			AND URGROUP_ID = #{rip}
+	</select>
+	
+	<select id="selectStockBarList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+				SUM(S.CORDCNT) AS "T_ORDER",
+				SUM(CASE WHEN S.ASNSTAT = 'CMP' THEN S.CORDCNT ELSE 0 END) AS "C_ORDER",
+				SUM(S.ASNDQTY) AS "T_QTY",
+				SUM(S.RCHSQTY) AS "C_QTY",
+				COUNT(DISTINCT S.SKUMKEY) AS "T_SKU",
+				COUNT(DISTINCT CASE WHEN
+				S.ASNSTAT = 'CMP' THEN S.SKUMKEY ELSE NULL END) AS "C_SKU"
+		FROM
+			GJ_WM.VINBST_TMP S
+		WHERE
+			S.COMPKEY = '100'
+			AND S.WAREKEY IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			AND S.STATDUR = 'R'
+			AND S.STACATE = 'DOC'
+			<!-- AND S.ASNDATE = to_char(NOW() ,'YYYYMMDD') -->
+	</select>
+
+	<select id="selectStockDouList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select
+			M.DOCTYPE,
+			M.DOCTYNM,
+			SUM(S.RCHSQTY) AS "S_QTY"
+		from
+			GJ_WM.VINBST_TMP S
+		inner join GJ_WM.MDOCMA M ON
+			S.COMPKEY = M.COMPKEY
+			AND S.WAREKEY = M.WAREKEY
+			AND S.DOCCATE = M.DOCCATE
+			AND S.DOCTYPE = M.DOCTYPE
+		where
+			S.COMPKEY = '100'
+			and S.WAREKEY IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			and S.STATDUR = 'R'
+			and S.STACATE = 'DOC'
+			<!-- AND S.ASNDATE = to_char(NOW() ,'YYYYMMDD') -->
+		GROUP BY
+			M.DOCTYPE,M.DOCTYNM;
+	</select>
+
+	<select id="selectDeliveryBarList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+				SUM(S.CORDCNT) AS "T_ORDER",
+				SUM(CASE WHEN S.SHPITST = 'SHPOUT' THEN S.CORDCNT ELSE 0 END) AS "C_ORDER",
+				SUM(S.FORDQTY) AS "T_QTY",
+				SUM(S.TCMPQTY) AS "C_QTY",
+				COUNT(DISTINCT S.SKUMKEY) AS "T_SKU",
+				COUNT(DISTINCT CASE WHEN S.SHPITST = 'SHPOUT' THEN S.SKUMKEY ELSE NULL END) AS "C_SKU"
+		FROM GJ_WM.VOUBST_TMP S
+		WHERE
+			S.COMPKEY = '100'
+			AND S.WAREKEY  IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			AND S.STATDUR = 'R'
+			AND S.STACATE = 'DOC'
+			<!-- AND S.SPEIDAT = to_char(NOW() ,'YYYYMMDD'); -->
+	</select>
+
+	<select id="selectDeliveryDouList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select M.DOCTYPE,
+			M.DOCTYNM, SUM(S.TCMPQTY) AS "DEL_QTY"
+		from GJ_WM.VOUBST_TMP S
+		inner join GJ_WM.MDOCMA M 
+			ON S.COMPKEY = M.COMPKEY
+			AND S.WAREKEY = M.WAREKEY
+			AND S.DOCCATE = M.DOCCATE
+			AND S.DOCTYPE = M.DOCTYPE
+		where S.COMPKEY = '100'
+			and S.WAREKEY  IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			and S.STATDUR = 'R'
+			and S.STACATE = 'DOC'
+			<!-- AND S.SPEIDAT = to_char(NOW() ,'YYYYMMDD') -->
+		GROUP BY M.DOCTYPE, M.DOCTYNM
+	</select>
+	
+</mapper>

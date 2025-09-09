@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.common.mapper.CommonMapper">
+	
+	<!-- 공통코드 조회 -->
+	<select id="getCommCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			 CG.CMGRPCD
+			,CC.CMCD
+			,CC.CMNM 
+		FROM GJ_OP.COMMGRP CG
+			,GJ_OP.COMMCD CC 
+		WHERE CG.CMGRPCD = CC.CMGRPCD 
+		  AND CG.ACTYN = 'Y' 
+		  AND CC.ACTYN = 'Y' 
+		  AND CG.CMGRPCD = #{cmgrpcd}
+		ORDER BY DPORD
+	</select>
+	
+		<!-- 업체코드 조회 -->
+	<select id="getCorpCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">		
+		SELECT 
+		CPCD,CPNM,REGNO
+		FROM MASTER.CORPMASTER
+		
+	</select>
+	
+	<!-- 사용자 Grid Setting Layout 조회 -->
+ 	<select id="selectGridSettingLayout" resultType="com.common.dto.GridSettingLayoutDTO">
+		select PROGRID, PGRIDID, NUBRCEL, HOVERMD, FREZCOL, FREZROW, COLBODR, ROWBODR, STRPROW, GHEIGHT
+		  from GJ_OP.SGRIDH
+		 where 1=1
+		   and COMPKEY = #{userData.compkey}
+		   and USERACT = #{userData.useract}
+		   and PROGRID = #{progrid}
+		   and PGRIDID = #{pgridid}
+    </select>
+
+ 	<!-- 사용자 Grid Column Layout 조회 -->
+ 	<select id="selectGridColumnLayout" resultType="com.common.dto.GridColumnLayoutDTO">
+		select PROGRID, PGRIDID, DATAIDX, SORTNUM, PHIDDEN, PQALIGN, DATATYP, PQWIDTH
+		  from GJ_OP.SGRIDL
+		 where 1=1
+		   and COMPKEY = #{userData.compkey}
+		   and USERACT = #{userData.useract}
+		   and PROGRID = #{progrid}
+		   and PGRIDID = #{pgridid}
+		 order by SORTNUM asc
+    </select>
+
+	<!-- 사용자 Grid Setting Layout 저장 -->
+	<insert id="mergeSettingLayout" parameterType="com.common.dto.GridSettingLayoutDTO">
+	 insert
+	   into GJ_OP.SGRIDH (
+	      COMPKEY, USERACT, PROGRID, PGRIDID, NUBRCEL, HOVERMD
+	    , FREZCOL, FREZROW, COLBODR, ROWBODR, STRPROW, GHEIGHT
+	    , CREDATE, CRETIME, CREUSER, LMODATE, LMOTIME, LMOUSER)
+	 values (
+	 		  #{compkey}, #{useract}, #{progrid}, #{pgridid}, #{nubrcel}, #{hovermd}
+			, #{frezcol}, #{frezrow}, #{colbodr}, #{rowbodr}, #{strprow}, #{gheight}
+			, to_char(NOW() ,'YYYYMMDD'), to_char(NOW() ,'hh24miss'), #{useract}
+		, to_char(NOW() ,'YYYYMMDD'), to_char(NOW() ,'hh24miss'), #{useract} )
+		ON DUPLICATE KEY UPDATE
+			  NUBRCEL = values(NUBRCEL), HOVERMD = values(HOVERMD), FREZCOL = values(FREZCOL)
+		    , FREZROW = values(FREZROW), COLBODR = values(COLBODR), ROWBODR = values(ROWBODR)
+		    , STRPROW = values(STRPROW), GHEIGHT = values(GHEIGHT)
+			, LMODATE = values(LMODATE), LMOTIME = values(LMOTIME), LMOUSER = values(LMOUSER)
+	</insert>
+	
+	<!-- 사용자 Grid Column Layout 저장 -->
+	<insert id="mergeColumnLayout" parameterType="com.common.dto.GridColumnLayoutDTO">
+	 insert
+	   into GJ_OP.SGRIDL (
+	       COMPKEY, USERACT, PROGRID, PGRIDID, DATAIDX
+	     , SORTNUM, PHIDDEN, PQALIGN, DATATYP, PQWIDTH
+	     , CREDATE, CRETIME, CREUSER, LMODATE, LMOTIME, LMOUSER)
+	 values
+		<foreach collection="list" item="item"  separator=",">
+			(  #{userData.compkey}, #{userData.useract}, #{progrid}, #{pgridid}, #{item.dataidx}
+			 , #{item.sortnum}, #{item.phidden}, #{item.pqalign}, #{item.datatyp}, #{item.pqwidth}
+			 , to_char(NOW() ,'YYYYMMDD'), to_char(NOW() ,'hh24miss'), #{userData.useract}
+		 , to_char(NOW() ,'YYYYMMDD'), to_char(NOW() ,'hh24miss'), #{userData.useract} )
+			</foreach>
+		ON DUPLICATE KEY UPDATE
+			  SORTNUM = values(SORTNUM), PHIDDEN = values(PHIDDEN), PQALIGN = values(PQALIGN)
+		    , DATATYP = values(DATATYP), PQWIDTH = values(PQWIDTH)
+			, LMODATE = values(LMODATE), LMOTIME = values(LMOTIME), LMOUSER = values(LMOUSER)
+	</insert>
+	
+	<!-- 사용자 Grid Column Layout 삭제 -->
+	<delete id="deleteColumnLayout" parameterType="com.common.dto.GridColumnLayoutDTO">
+	 delete
+	   from GJ_OP.SGRIDL
+	  where COMPKEY = #{userData.compkey}
+	    and USERACT = #{userData.useract}
+	  and PROGRID = #{progrid}
+	  and PGRIDID = #{pgridid}
+	</delete>
+	
+	<!-- 사용자 Grid Setting Layout 삭제 -->
+	<delete id="deleteSettingLayout" parameterType="com.common.dto.GridSettingLayoutDTO">
+	 delete
+	   from GJ_OP.SGRIDH
+	  where COMPKEY = #{userData.compkey}
+	    and USERACT = #{userData.useract}
+	  and PROGRID = #{progrid}
+	  and PGRIDID = #{pgridid}
+	</delete>
+</mapper>

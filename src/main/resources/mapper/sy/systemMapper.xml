@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.SystemMapper">
+
+	<!-- 시스템관리 정보 목록 조회 -->
+	<select id="selectOpSystemList" parameterType="java.util.HashMap"
+		resultType="java.util.HashMap">
+		SELECT 
+			SYSTEM_ID 
+			,SYSTEM_NM 
+			,SYSTEM_DSCR 
+			,SYSTEM_MANAGER 
+			,SYSTEM_FEE 
+			,CASE WHEN USE_YN = 'Y' THEN '사용' ELSE '미사용' END as USE_YN 
+			,CRE_DT 
+			,CRE_USER_ID 
+			,MOD_DT 
+			,MOD_USER_ID
+		FROM GJ_OP.OP_SYSTEM
+		WHERE 1=1
+			<if test='schSystemId != null and schSystemId != ""'>
+				AND SYSTEM_ID LIKE CONCAT('%',#{schSystemId},'%')
+			</if>
+			<if test='schSystemNm != null and schSystemNm != ""'>
+				AND SYSTEM_NM LIKE CONCAT('%',#{schSystemNm},'%')
+			</if>
+			<if test='schSystemMng != null and schSystemMng != ""'>
+				AND SYSTEM_MANAGER LIKE CONCAT('%',#{schSystemMng},'%')
+			</if>
+			<if test='schUseYn != null and schUseYn != ""'>
+				AND USE_YN = #{schUseYn}
+			</if>
+	</select>
+
+	<!-- 시스템관리 정보 등록 -->
+	<insert id="insertOpSystemInfo" parameterType="java.util.HashMap">
+		INSERT INTO GJ_OP.OP_SYSTEM(
+			SYSTEM_ID 
+			,SYSTEM_NM 
+			,SYSTEM_MANAGER 
+			,SYSTEM_FEE 
+			,USE_YN 
+			,CRE_DT 
+			,CRE_USER_ID 
+			,MOD_DT 
+			,MOD_USER_ID
+		)VALUES
+		<foreach collection="list" item="item" separator=",">
+			(
+				<choose>
+					<when test='item.SYSTEM_ID != null and !item.SYSTEM_ID.equals("")'>
+						#{item.SYSTEM_ID}
+					</when>
+					<otherwise>
+						CONCAT('SY', LPAD(CAST(nextVAL(GJ_OP.op_system_seq) AS CHAR(8)), 8 ,'0'))
+					</otherwise>
+				</choose>
+				,#{item.SYSTEM_NM}
+				,#{item.SYSTEM_MANAGER}
+				,#{item.SYSTEM_FEE}
+				, CASE WHEN #{item.USE_YN} = '미사용' THEN 'N' ELSE 'Y' END
+				,now() 
+				,#{login_id} 
+				,now() 
+				,#{login_id}
+			)
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+						SYSTEM_NM = VALUES(SYSTEM_NM)
+						,SYSTEM_MANAGER = VALUES(SYSTEM_MANAGER)
+						,SYSTEM_FEE = VALUES(SYSTEM_FEE)
+						,USE_YN = VALUES(USE_YN)
+						,MOD_DT = now()
+						,MOD_USER_ID = #{login_id}
+	</insert>
+	
+	<!-- 시스템 관리 사용 여부 수정 -->
+	<update id="updateOpSystemUseYn" parameterType="java.util.HashMap">
+		UPDATE GJ_OP.OP_SYSTEM
+		SET 
+			USE_YN = "N"
+			,MOD_DT = now()
+			,MOD_USER_ID = #{login_id}
+		WHERE SYSTEM_ID IN (
+			<foreach collection="systemIdList" item="item" separator=",">
+				#{item}
+			</foreach>
+		)
+	</update>
+	
+</mapper>

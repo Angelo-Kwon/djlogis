@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.AtctMapper">  
+         <!--  어카운트업체 목록 : 어카운트코드와 업체 코드가 같은업체 목록조회 -->
+    <select id="selectAtctActList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+       select A.ACTCD
+		    , B.CUSTNM  AS ACTNM			
+	     from GJ_OP.ATCTTB A , GJ_OP.CUSTTB B
+		  where A.CUSTCD = B.CUSTCD
+		    and A.ACTYN = 'Y'
+		 order by A.ACTCD asc     
+    </select>
+       
+    <!--  어카운트 업체 목록조회 -->
+    <select id="selectAtctList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+   <!--     select A.ACTCD as ROWKEY
+		    , A.ACTCD
+		    , B.CUSTNM  AS ACTNM
+			, A.CUSTCD
+			, C.CUSTNM 
+			, C.REGNO
+			, C.CPNO
+			, C.NATCD
+			, C.ADR
+			, C.ZIPCD
+			, C.BUTY
+			, C.BUITM
+			, C.RPNM
+			, C.BOD
+			, C.BCD
+			, C.PCHG
+			, C.PHNM
+			, C.PREML 
+			, A.ACTYN
+			, A.CREUSER
+			, date_format(A.CREDTTM ,'%Y-%m-%d %H:%i:%s') AS CREDTTM
+			, A.UPDUSER
+			, date_format(A.UPDDTTM ,'%Y-%m-%d %H:%i:%s') AS UPDDTTM 
+	     from GJ_OP.ATCTTB A , GJ_OP.CUSTTB B, GJ_OP.CUSTTB C
+		  where A.ACTYN = 'Y'
+		    and A.ACTCD = B.CUSTCD
+		    and A.CUSTCD = C.CUSTCD
+	    <if test='ACTCD != null and ACTCD != ""'>
+		   and A.ACTCD  like concat('%',#{ACTCD},'%')
+		</if>
+		<if test='ACTNM != null and ACTNM != ""'>
+		   and B.CUSTNM  like concat('%',#{ACTNM},'%')
+		</if>
+		<if test='CUSTCD != null and CUSTCD != ""'>
+		   and A.CUSTCD like concat('%',#{CUSTCD},'%')
+		</if>
+		<if test='CUSTNM != null and CUSTNM != ""'>
+		   and C.CUSTNM like concat('%',#{CUSTNM},'%')
+		</if>
+		<if test='REGNO != null and REGNO != ""'>
+		   and replace(C.REGNO, '-', '') like concat('%',replace(#{REGNO}, '-', ''),'%')
+		</if>	
+		<if test='ACTYN != null and ACTYN != ""'>
+		   and A.ACTYN = #{ACTYN}
+		</if>	
+		 order by A.ACTCD asc   -->   
+		 
+		  SELECT 
+		   	C.CUSTCD 
+		    ,C.CUSTNM  AS ACTNM
+			, C.CUSTNM 
+			, C.REGNO
+			, C.CPNO
+			, C.NATCD
+			, C.ADR
+			, C.ZIPCD
+			, C.BUTY
+			, C.BUITM
+			, C.RPNM
+			, C.BOD
+			, C.BCD
+			, C.PCHG
+			, C.PHNM
+			, C.PREML 
+			, C.ACTYN 
+		 FROM 
+			GJ_OP.CUSTTB C
+		 WHERE 1=1 	
+		 	<if test='CUSTCD != null and CUSTCD != ""'>
+			   AND C.CUSTCD LIKE CONCAT('%',#{CUSTCD},'%')
+			</if> 
+			<if test='CUSTNM != null and CUSTNM != ""'>
+			   AND C.CUSTNM LIKE CONCAT('%',#{CUSTNM},'%')
+			</if>
+			<if test='REGNO != null and REGNO != ""'>
+			   AND REPLACE(C.REGNO, '-', '') LIKE CONCAT('%',REPLACE(#{REGNO}, '-', ''),'%')
+			</if>	
+			<if test='ACTYN != null and ACTYN != ""'>
+			   AND C.ACTYN = #{ACTYN}
+			</if>
+		ORDER BY C.CUSTCD	
+    </select>
+    
+    <select id="selectCustList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      select  A.CUSTCD as ROWKEY
+    	    , A.CUSTCD
+			, A.CUSTNM
+			, A.NATCD
+			, A.REGNO
+		    , A.CPNO	
+		    , A.ADR
+		    , A.ZIPCD
+		    , A.BUTY
+		    , A.BUITM
+		    , A.RPNM
+		    , A.BOD
+		    , A.BCD
+		    , A.PCHG
+		    , A.PHNM
+		    , A.PREML
+			, A.ACTYN
+			, A.CREUSER
+			, date_format(A.CREDTTM ,'%Y-%m-%d %H:%i:%s') AS CREDTTM
+			, A.UPDUSER
+			, date_format(A.UPDDTTM ,'%Y-%m-%d %H:%i:%s') AS UPDDTTM 
+		  from GJ_OP.CUSTTB A
+		 where A.ACTYN = 'Y'	  
+		<if test='srchCUSTCD != null and srchCUSTCD != ""'>
+		   and A.CUSTCD like concat('%',#{srchCUSTCD},'%')
+		</if>
+		<if test='srchCUSTNM != null and srchCUSTNM != ""'>
+		   and A.CUSTNM like concat('%',#{srchCUSTNM},'%')
+		</if>
+		 order by A.CUSTNM asc     
+		 limit 2000     
+    </select>
+    
+    <!--  어카운트 업체 INSERT -->
+    <insert id="insertAtct" parameterType="java.util.HashMap">
+    	<!-- INSERT INTO GJ_OP.ATCTTB
+		(   
+		    ACTCD
+		  , CUSTCD			
+		  , ACTYN
+		  , CREUSER
+		  , CREDTTM
+		  , UPDUSER
+		  , UPDDTTM )
+		values
+		(
+		    #{ACTCD}
+		  , #{CUSTCD}		 
+	      , IFNULL(#{ACTYN},'Y')
+	 	  , #{userId}
+		  , NOW()
+		  , #{userId}
+		  , NOW()
+		 )
+		 ON DUPLICATE KEY 
+        update  CUSTCD   = values(CUSTCD)  
+			  , ACTYN    = values(ACTYN)
+			  , UPDUSER  = values(UPDUSER)
+			  , UPDDTTM  = values(UPDDTTM) -->
+			  
+		INSERT INTO GJ_OP.CUSTTB(
+			CUSTCD
+			, CUSTNM
+			, REGNO
+			, CPNO
+			, NATCD
+			, ADR
+			, ZIPCD
+			, BUTY
+			, BUITM
+			, RPNM
+			, BOD
+			, BCD
+			, PCHG
+			, PHNM
+			, PREML
+			, ACTYN
+			, CREUSER
+			, CREDTTM
+			, UPDUSER
+			, UPDDTTM
+		) VALUES (
+			<choose>
+				<when test='CUSTCD != null and !CUSTCD.equals("")'>
+					#{CUSTCD}
+				</when>
+				<otherwise>
+					CONCAT(LPAD(CAST(nextVAL(GJ_OP.custtb_seq) AS CHAR(7)), 7 ,'0'))
+				</otherwise>
+			</choose>
+			, #{CUSTNM}
+			, #{REGNO}
+			, #{CPNO}
+			, #{NATCD}
+			, #{ADR}
+			, #{ZIPCD}
+			, #{BUTY}
+			, #{BUITM}
+			, #{RPNM}
+			, #{BOD}
+			, #{BCD}
+			, #{PCHG}
+			, #{PHNM}
+			, #{PREML}
+			, #{ACTYN}
+			, #{USERID}
+			, NOW()
+			, #{USERID}
+			, NOW()
+		) ON DUPLICATE KEY UPDATE 
+						REGNO      = VALUES(REGNO)
+						, CPNO     = VALUES(CPNO)
+						, NATCD    = VALUES(NATCD)
+						, ADR      = VALUES(ADR)
+						, ZIPCD    = VALUES(ZIPCD)
+						, BOD      = VALUES(BOD)
+						, BCD      = VALUES(BCD)
+						, PCHG     = VALUES(PCHG)
+						, PHNM     = VALUES(PHNM)
+						, PREML    = VALUES(PREML)
+						, ACTYN    = VALUES(ACTYN)
+						, UPDUSER  = VALUES(UPDUSER)
+						, UPDDTTM  = VALUES(UPDDTTM)
+						, RPNM 	   = VALUES(RPNM)
+						, BUTY     = VALUES(BUTY)
+						, BUITM    = VALUES(BUITM)
+    </insert>
+    
+    <!--  어카운트 업체 UPDATE -->
+    <update id="updateAtct" parameterType="java.util.HashMap">
+		update GJ_OP.ATCTTB
+		    set CUSTCD  = #{CUSTCD}
+			  , ACTYN   = #{ACTYN}
+			  , UPDUSER = #{userId}
+			  , UPDDTTM  = NOW()   
+		 where ACTCD  = #{ACTCD}	  
+	       and CUSTCD = #{CUSTCD}	    
+    </update>
+
+	<delete id="deleteAtct" parameterType="java.util.HashMap">
+		DELETE FROM GJ_OP.CUSTTB
+		WHERE CUSTCD=#{CUSTCD}
+		AND NOT EXISTS (
+		    SELECT 1
+		    FROM GJ_OP.OP_CONTRACT B
+		    WHERE GJ_OP.CUSTTB.CUSTCD COLLATE utf8mb4_unicode_ci = B.CP_CD COLLATE utf8mb4_unicode_ci
+		    	AND GJ_OP.CUSTTB.CUSTCD = #{CUSTCD}
+		)
+	</delete>
+    
+</mapper>

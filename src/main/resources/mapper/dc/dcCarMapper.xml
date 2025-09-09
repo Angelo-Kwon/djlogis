@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcCarMapper">
+   
+   <select id="getDelv" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      /* getDelv */
+      SELECT A.VHPLNKY, A.VHCSNAM /* 배차계획번호, 차량명 */
+           , A.PLNSTAT, (SELECT COMCDTX FROM GJ_WM.V_MCODEM V WHERE V.COMPKEY = A.COMPKEY AND V.COMCDKY = 'PLNSTAT' AND V.COMCDVL = A.PLNSTAT) AS PLNSTNM /* 운행상태 */
+           , A.VHLOLAT, A.VHLOLON /* 위도 경도 */
+           , A.CREDATE, A.CRETIME /* 수신 날자, 시간 */
+           , DATE_FORMAT(CONCAT(A.CREDATE, A.CRETIME), '%Y-%m-%d %H:%i:%s') as CREDT
+           , (SELECT COUNT(*) FROM GJ_WM.TVLOHI WHERE COMPKEY = A.COMPKEY AND VHPLNKY = A.VHPLNKY) as LO_CNT
+           , A.VHPDATE
+        FROM (  
+          SELECT TH.COMPKEY, TH.VHPLNKY, TH.VEHICKY, TV.VHCSNAM /* 운송계획, 차량번호*/
+               , TL.VHLOGSQ, TL.VHLOLAT, TL.VHLOLON /* 위 경도 */
+               , TL.CREDATE, TL.CRETIME /* 위치 날자 시간 */
+               , TH.PLNSTAT, TH.VHPDATE
+               , ROW_NUMBER() OVER(PARTITION BY TH.COMPKEY, TH.VEHICKY ORDER BY TL.VHLOGSQ DESC) rnk
+            FROM GJ_WM.TPLNHD TH 
+           INNER JOIN GJ_WM.TVHCMA TV ON TH.COMPKEY = TV.COMPKEY 
+             AND TH.WAREKEY = TV.WAREKEY 
+             AND TH.VEHICKY = TV.VEHICKY 
+           INNER JOIN GJ_WM.TVLOHI TL ON TH.COMPKEY = TL.COMPKEY 
+             AND TH.VHPLNKY = TL.VHPLNKY 
+           WHERE 1=1
+             AND TH.COMPKEY = '100'      -- 로그인 사용자의 어카운트
+             AND TH.VHPDATE = DATE_FORMAT(#{VHPDATE}, '%Y%m%d')
+             AND TH.PLNSTAT NOT IN ('CANCLE')      
+             <if test="WAREKEY != null and WAREKEY != ''">
+                   AND TH.WAREKEY = #{WAREKEY}  -- 화면에에서 선택 (광성=WH01  대유=WH02)
+                </if> 
+            <if test="VHCSNAM != null and VHCSNAM != ''">
+               AND TV.VHCSNAM LIKE CONCAT('%', #{VHCSNAM}, '%')
+            </if>
+            <if test="USERACT != null and USERACT != ''">
+               AND TH.USERACT LIKE CONCAT('%', #{USERACT}, '%')
+            </if>
+            <if test="VHUSEYN != null and VHUSEYN != ''">
+               AND TV.VHUSEYN = #{VHUSEYN}
+            </if>
+      ) A 
+      WHERE 1=1 
+        AND A.rnk = 1
+   </select>
+   
+   <select id="getDelvDtl" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      /* getDelvDtl */
+      SELECT 
+         * 
+      FROM (
+            SELECT 
+               TH.VHPLNKY
+               , TV.VHCSNAM
+               , TL.VHLOGSQ
+               , TL.VHLOLAT -- 위도
+               , TL.VHLOLON -- 경도
+               , TL.CREDATE
+               , TL.CRETIME
+               , ROW_NUMBER() OVER(PARTITION BY TL.COMPKEY, TL.VHPLNKY ORDER BY TL.VHLOGSQ DESC) AS RNK
+               , CONCAT(WF.UPLSVIP, WF.UPLPATH, WF.UPLFLNM) AS SPEC_IMG_PATH
+            FROM GJ_WM.TPLNHD TH 
+            INNER JOIN GJ_WM.TVHCMA TV 
+               ON TH.COMPKEY = TV.COMPKEY 
+               AND TH.WAREKEY = TV.WAREKEY 
+               AND TH.VEHICKY = TV.VEHICKY 
+            INNER JOIN GJ_WM.TVLOHI TL 
+               ON TH.COMPKEY = TL.COMPKEY 
+               AND TH.VHPLNKY = TL.VHPLNKY 
+            LEFT JOIN GJ_WM.WASNFL WF 
+               ON TH.COMPKEY = WF.COMPKEY 
+               AND TH.VHPLNKY = WF.VHPLNKY
+            WHERE 1=1 
+               -- AND TH.COMPKEY ='200' -- 조건 확인 필요 
+               AND TH.PLNSTAT NOT IN ('CANCLE') 
+                AND TH.VHPDATE = #{VHPDATE} -- 기준일 
+                AND TH.VHPLNKY = #{VHPLNKY} -- 운송계획 
+         ) T
+      WHERE T.RNK = 1
+   </select>
+   
+   <select id="getSend" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      /* 
+         getSend
+         TODO 임시테이블 사용. 추후 변경 필요 
+      */
+      SELECT 
+         TV.VEHICKY      -- 차량코드
+         , TV.VHCSNAM   -- 차량번호
+         , TH.PLNSTAT    -- 차량상태
+         , CASE 
+            WHEN TH.PLNSTAT IN ('PLAN', 'LOADING') THEN "준비"
+            WHEN TH.PLNSTAT IN ('START', 'UNLOADING') THEN "운행중"
+            WHEN TH.PLNSTAT IN ('FINISH') THEN "완료"
+            ELSE ""
+           END AS PLNSTAT_NM
+         , CASE 
+            WHEN CONCAT(TH.STPITDT, TH.STPITTM) = '' THEN NULL
+            ELSE DATE_FORMAT(CONCAT(TH.STPITDT, TH.STPITTM), '%Y-%m-%d %T')
+           END AS STPIT_TS
+         , CASE 
+            WHEN CONCAT(TH.TRFINDT, TH.TRFINTM) = '' THEN NULL
+            ELSE DATE_FORMAT(CONCAT(TH.TRFINDT, TH.TRFINTM), '%Y-%m-%d %T')
+           END AS TRFIN_TS
+         , (SELECT COUNT(*) FROM GJ_WM.TVLOHI WHERE COMPKEY = TH.COMPKEY AND VHPLNKY = TH.VHPLNKY) AS LO_CNT
+         , TH.VHPDATE
+         , TH.VHPLNKY
+         , ROW_NUMBER() OVER(ORDER BY TV.VEHICKY, TH.VHPLNKY DESC) AS PRIORITY
+      FROM GJ_WM.TPLNHD TH 
+      INNER JOIN GJ_WM.TVHCMA TV 
+         ON TH.COMPKEY = TV.COMPKEY 
+         AND TH.WAREKEY = TV.WAREKEY 
+         AND TH.VEHICKY = TV.VEHICKY
+      WHERE 1 = 1 
+         -- AND TH.COMPKEY = '200' -- 조건 확인 필요 
+         AND TH.PLNSTAT NOT IN ('CANCLE')
+         -- AND TH.VHPDATE = DATE_FORMAT(NOW(), '%Y%m%d') -- 기준일. TODO 운영 반영 시 주석 제거 필요
+         <if test="VHCSNAM != null and VHCSNAM != ''">
+         AND TV.VHCSNAM LIKE CONCAT('%', #{VHCSNAM}, '%')
+         </if>
+         <if test="USERACT != null and USERACT != ''">
+         AND TH.USERACT LIKE CONCAT('%', #{USERACT}, '%')
+         </if>
+         <if test="VHUSEYN != null and VHUSEYN != ''">
+         AND TV.VHUSEYN = #{VHUSEYN}
+         </if>
+   </select>
+   
+   <select id="getSendDtl" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      /* 
+         getSendDtl
+         TODO 임시테이블 사용. 추후 변경 필요 
+      */
+      SELECT 
+         * 
+      FROM (
+            SELECT 
+               TH.VHPLNKY
+               , TV.VHCSNAM
+               , TL.VHLOGSQ
+               , TL.VHLOLAT -- 위도
+               , TL.VHLOLON -- 경도
+               , TL.CREDATE
+               , TL.CRETIME
+               , ROW_NUMBER() OVER(PARTITION BY TL.COMPKEY, TL.VHPLNKY ORDER BY TL.VHLOGSQ DESC) AS RNK
+               , CONCAT(WF.UPLSVIP, WF.UPLPATH, WF.UPLFLNM) AS SPEC_IMG_PATH
+            FROM GJ_WM.TPLNHD TH 
+            INNER JOIN GJ_WM.TVHCMA TV 
+               ON TH.COMPKEY = TV.COMPKEY 
+               AND TH.WAREKEY = TV.WAREKEY 
+               AND TH.VEHICKY = TV.VEHICKY 
+            INNER JOIN GJ_WM.TVLOHI TL 
+               ON TH.COMPKEY = TL.COMPKEY 
+               AND TH.VHPLNKY = TL.VHPLNKY 
+            LEFT JOIN GJ_WM.WASNFL WF 
+               ON TH.COMPKEY = WF.COMPKEY 
+               AND TH.VHPLNKY = WF.VHPLNKY
+            WHERE 1 = 1 
+               -- AND TH.COMPKEY ='200' -- 조건 확인 필요 
+               AND TH.PLNSTAT NOT IN ('CANCLE') 
+                AND TH.VHPDATE = #{VHPDATE} -- 기준일 
+                AND TH.VHPLNKY = #{VHPLNKY} -- 운송계획 
+         ) T
+      WHERE T.RNK = 1
+   </select>
+
+   <select id="getRealDelv" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      SELECT   A.VHPLNKY
+		     , A.VHCSNAM
+		     , A.PLNSTAT
+		     , (SELECT COMCDTX FROM GJ_WM.V_MCODEM V WHERE V.COMPKEY = A.COMPKEY AND V.COMCDKY = 'PLNSTAT' AND V.COMCDVL = A.PLNSTAT) AS PLNSTNM
+		     , A.VHLOLAT
+		     , A.VHLOLON
+		     , A.CREDATE
+		     , A.CRETIME
+		     , A.SHTRTNM
+		     , GJ_WM.FN_SY_USERNAM(A.COMPKEY, A.USERACT) AS USERNAM
+		     , A.SeqNum
+		     , A.rnk
+		     , DATE_FORMAT(CONCAT(A.CREDATE, A.CRETIME), '%Y-%m-%d %H:%i:%s') as CREDT
+		FROM (
+		    SELECT TH.COMPKEY, TH.VHPLNKY, TH.VEHICKY, TV.VHCSNAM
+		         , TL.VHLOGSQ, TL.VHLOLAT, TL.VHLOLON
+		         , TL.CREDATE, TL.CRETIME
+		         , TH.PLNSTAT
+		         , ROW_NUMBER() OVER(PARTITION BY TH.COMPKEY, TH.VEHICKY ORDER BY TL.VHLOGSQ DESC) rnk
+		         , E.SHTRTNM
+		         , CONCAT(MIN(B.SAATC10), '-', MAX(B.SAATC10)) AS SeqNum
+		         , TH.USERACT
+		      FROM GJ_WM.TPLNHD TH
+		      INNER JOIN GJ_WM.TVHCMA TV ON TH.COMPKEY = TV.COMPKEY AND TH.WAREKEY = TV.WAREKEY AND TH.VEHICKY = TV.VEHICKY
+		      INNER JOIN GJ_WM.TVLOHI TL ON TH.COMPKEY = TL.COMPKEY AND TH.VHPLNKY = TL.VHPLNKY
+		      INNER JOIN GJ_WM.TPLNIT B ON TH.COMPKEY = B.COMPKEY AND TH.VHPLNKY = B.VHPLNKY
+		      INNER JOIN GJ_WM.TSHRHD E ON TH.COMPKEY = E.COMPKEY AND TH.WAREKEY = E.WAREKEY AND TH.SHTRTKY = E.SHTRTKY
+		      WHERE 1=1
+		        AND TH.COMPKEY = '100'
+		        AND TH.WAREKEY = 'WH02'
+		        AND TH.VHPDATE = DATE_FORMAT(NOW(), '%Y%m%d')
+		        AND TH.PLNSTAT NOT IN ('CANCLE')
+		        AND TH.VEHICKY = #{VEHICKY}
+		    GROUP BY TH.COMPKEY, TH.VHPLNKY, TH.VEHICKY, TV.VHCSNAM, TL.VHLOGSQ, TL.VHLOLAT, TL.VHLOLON, TL.CREDATE, TL.CRETIME, TH.PLNSTAT, E.SHTRTNM, TH.USERACT
+		) A
+		WHERE A.VHPLNKY IN (
+		    SELECT LatestGroups.VHPLNKY
+		    FROM (
+		        SELECT TH.VHPLNKY, MAX(DATE_FORMAT(CONCAT(TL.CREDATE, TL.CRETIME), '%Y-%m-%d %H:%i:%s')) AS LatestCREDT
+		          FROM GJ_WM.TVLOHI TL
+		          INNER JOIN GJ_WM.TPLNHD TH ON TH.COMPKEY = TL.COMPKEY AND TH.VHPLNKY = TL.VHPLNKY
+		         WHERE TH.COMPKEY = '100'
+		           AND TH.WAREKEY = 'WH02'
+		           AND TH.VHPDATE = DATE_FORMAT(NOW(), '%Y%m%d')
+		           AND TH.PLNSTAT NOT IN ('CANCLE')
+		           AND TH.VEHICKY = #{VEHICKY}
+		         GROUP BY TH.VHPLNKY
+		         ORDER BY LatestCREDT DESC
+		         LIMIT 1
+		    ) LatestGroups
+		)
+		ORDER BY A.rnk
+   </select>
+
+   <select id="getRealDelvCount" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      SELECT COUNT(*) AS TotalCount /* 데이터의 총 개수 */
+          ,COUNT(CASE WHEN A.PLNSTAT ='FINISH' THEN 1 END) AS CompleteCount /* '완료' 상태인 데이터의 개수 */
+          ,COUNT(CASE WHEN A.PLNSTAT ='START' THEN 1 END) AS DepartureCount /* '출발(운행)' 상태인 데이터의 개수 */
+      FROM (
+             SELECT TH.COMPKEY, TH.VHPLNKY, TH.VEHICKY, TV.VHCSNAM /* 운송계획, 차량번호*/,
+                  TL.VHLOGSQ, TL.VHLOLAT, TL.VHLOLON /* 위 경도 */,
+                  TL.CREDATE, TL.CRETIME /* 위치 날자 시간 */,
+                  TH.PLNSTAT,
+                  ROW_NUMBER() OVER(PARTITION BY TH.COMPKEY, TH.VEHICKY ORDER BY TL.VHLOGSQ DESC) rnk,
+                   E.SHTRTNM,
+                  CONCAT(MIN(B.SAATC10), '-', MAX(B.SAATC10)) AS SeqNum /* 운송 서열번호 */,
+                  TH.USERACT
+             FROM GJ_WM.TPLNHD TH
+                    INNER JOIN GJ_WM.TVHCMA TV ON TH.COMPKEY = TV.COMPKEY
+                AND TH.WAREKEY = TV.WAREKEY
+                AND TH.VEHICKY = TV.VEHICKY
+                    INNER JOIN GJ_WM.TVLOHI TL ON TH.COMPKEY = TL.COMPKEY
+                AND TH.VHPLNKY = TL.VHPLNKY
+                    INNER JOIN GJ_WM.TPLNIT B ON TH.COMPKEY = B.COMPKEY AND TH.VHPLNKY = B.VHPLNKY
+                    INNER JOIN GJ_WM.TSHRHD E ON TH.COMPKEY = E.COMPKEY AND TH.WAREKEY = E.WAREKEY AND TH.SHTRTKY = E.SHTRTKY
+             WHERE 1=1
+               AND TH.COMPKEY = '100'      /* 로그인 사용자의 어카운트*/
+               AND TH.WAREKEY = 'WH02'     /* 화면에에서 선택 (광성=WH01  대유=WH02) */
+               AND TH.VHPDATE = DATE_FORMAT(NOW(), '%Y%m%d') /* 기준일 : 오늘로 입력 */
+               AND TH.PLNSTAT NOT IN ('CANCLE')
+             GROUP BY TH.COMPKEY, TH.VHPLNKY, TH.VEHICKY, TV.VHCSNAM, TL.VHLOGSQ, TL.VHLOLAT, TL.VHLOLON, TL.CREDATE, TL.CRETIME, TH.PLNSTAT, E.SHTRTNM, TH.USERACT
+          ) A
+      WHERE 1=1
+        AND A.rnk = 1
+   </select>
+   
+   <select id="selectCenterList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      select C.WAREKEY, D.WHNAMLC
+          from GJ_OP.OP_USER A 
+                inner join GJ_OP.OP_USER_ROLE_GROUP B  ON A.USER_ID = B.USER_ID
+               inner join GJ_OP.OP_WH_ROLE_GROUP C  ON B.RGROUP_ID = C.URGROUP_ID
+               inner join GJ_WM.MWARMA D ON C.WAREKEY = D.WAREKEY 
+         where A.LOGIN_ID = 'WM03'
+               and A.USE_YN = 'Y'
+               and C.USE_YN = 'Y'
+               and D.COMPKEY = '100'
+         order by C.WAREKEY DESC
+   </select>
+   
+   <select id="getPathButton" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      SELECT /* COMPKEY, WAREKEY, SHTGRNM,*/ SHTRTKY, SUBSTR(SHTRTNM, 2) SHTRTNM
+         FROM GJ_WM.TSHRHD t 
+        WHERE COMPKEY ='100'  /* 로그인 사용자의 어카운트*/
+              AND WAREKEY ='WH02' /* 화면에에서 선택 (광성=WH01  대유=WH02) */
+              AND TSUSEYN='Y' 
+     ORDER BY SHTRTNM              
+   </select>
+   
+   <select id="getStateCount" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      SELECT COALESCE(SUM(A.PLSPCNT + A.PLSSCNT + A.PLSFCNT), 0) AS PLSTCNT, /* 전체 */
+             COALESCE(SUM(A.PLSPCNT), 0) AS PLSPCNT, 
+             COALESCE(SUM(A.PLSSCNT), 0) AS PLSSCNT, 
+             COALESCE(SUM(A.PLSFCNT), 0) AS PLSFCNT /* 배차, 운행, 완료 */
+         from ( 
+            SELECT TH.WAREKEY
+                 , (case when PLNSTAT = 'PLAN'   then 1 else 0 end) as PLSPCNT 
+                 , (case when PLNSTAT = 'START'  then 1 else 0 end) as PLSSCNT
+                 , (case when PLNSTAT = 'FINISH' then 1 else 0 end) as PLSFCNT 
+                 , ROW_NUMBER() OVER(PARTITION BY TH.COMPKEY, TH.VEHICKY ORDER BY TH.VHPLNKY DESC) rnk
+                FROM GJ_WM.TPLNHD TH
+              INNER JOIN GJ_WM.TVHCMA TV ON TH.COMPKEY = TV.COMPKEY 
+                AND TH.WAREKEY = TV.WAREKEY 
+                AND TH.VEHICKY = TV.VEHICKY  
+              INNER JOIN GJ_WM.TVLOHI TL ON TH.COMPKEY = TL.COMPKEY
+                AND TH.VHPLNKY = TL.VHPLNKY            
+              WHERE 1=1
+                AND TH.COMPKEY = '100'        /* 로그인 사용자의 어카운트*/
+                AND TH.WAREKEY = #{WAREKEY}       /* 화면에에서 선택 (광성=WH01  대유=WH02) */                
+                AND TH.VHPDATE = to_char(NOW() ,'YYYYMMDD')
+                <!-- and TH.SHTRTKY = 'D000000002' --> /* 1.번 노선 키  , 전체일경우 조건 제거 */
+                <if test='SHTRTKY != null and SHTRTKY != ""'>
+                AND TH.SHTRTKY = #{SHTRTKY}
+                </if>   
+                AND TH.PLNSTAT NOT IN ('CANCLE') 
+        ) A 
+        where A.rnk=1         
+   </select>
+   
+   <select id="carGridList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      select A.WAREKEY, A.VHPLNKY, A.VEHICKY, A.PLNSTNM, A.SHTRTKY, A.VHCSNAM,
+             A.VHLOLAT, A.VHLOLON, DATE_FORMAT(CONCAT(A.CREDATE, A.CRETIME), '%Y-%m-%d %H:%i:%s') as CREDT
+         from ( 
+            SELECT TH.WAREKEY, TH.VHPLNKY, TH.VEHICKY
+                 , TH.PLNSTAT, (SELECT COMCDTX FROM GJ_WM.V_MCODEM V WHERE V.COMPKEY = TH.COMPKEY AND V.COMCDKY = 'PLNSTAT' AND V.COMCDVL = TH.PLNSTAT) AS PLNSTNM 
+                 , TH.SHTRTKY
+                 , TV.VHCSNAM   
+                 , TL.VHLOLAT, TL.VHLOLON, TL.CREDATE, TL.CRETIME 
+                 , (case when PLNSTAT = 'PLAN'   then 1 else 0 end) as PLSPCNT 
+                 , (case when PLNSTAT = 'START'  then 1 else 0 end) as PLSSCNT
+                 , (case when PLNSTAT = 'FINISH' then 1 else 0 end) as PLSFCNT 
+                 , ROW_NUMBER() OVER(PARTITION BY TH.COMPKEY, TH.VEHICKY ORDER BY TH.VHPLNKY DESC) rnk
+              FROM GJ_WM.TPLNHD TH
+              INNER JOIN GJ_WM.TVHCMA TV ON TH.COMPKEY = TV.COMPKEY 
+                AND TH.WAREKEY = TV.WAREKEY 
+                AND TH.VEHICKY = TV.VEHICKY              
+              INNER JOIN GJ_WM.TVLOHI TL ON TH.COMPKEY = TL.COMPKEY 
+                AND TH.VHPLNKY = TL.VHPLNKY   
+              WHERE 1=1
+                AND TH.COMPKEY = '100'        /* 로그인 사용자의 어카운트*/                                
+                AND TH.WAREKEY = #{WAREKEY}       /* 화면에에서 선택 (광성=WH01  대유=WH02) */
+                AND TH.VHPDATE = to_char(NOW() ,'YYYYMMDD')                                                                                                        
+                AND TH.PLNSTAT NOT IN ('CANCLE') 
+                <if test='SHTRTKY != null and SHTRTKY != ""'>
+                AND TH.SHTRTKY = #{SHTRTKY}
+                </if>                       
+        ) A 
+        where A.rnk=1  
+        <if test='PLNSTAT != null and PLNSTAT != ""'>
+          AND A.PLNSTAT = #{PLNSTAT}
+        </if>   
+   </select>   
+   
+</mapper>

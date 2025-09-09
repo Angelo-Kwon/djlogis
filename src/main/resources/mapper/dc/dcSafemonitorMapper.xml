@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcSafemonitorMapper">
+	
+	<select id="selectSafemonitorList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			C.COMPKEY
+			, C.CONAMLC -- 회사 
+			, W.WAREKEY -- 창고 
+			, W.WHNAMLC -- 센터
+			, CASE WHEN W.WHUSEYN = 'Y' THEN '사용' ELSE '미사용' END AS WHUSEYN -- 사용여부 
+		    , Z.ZOBUILD -- 동
+		    , Z.ZONENAM -- 존 name
+		    , Z.ZONEKEY -- 존 key
+		FROM GJ_WM.MZONMA Z
+		INNER JOIN GJ_WM.MWARMA W ON Z.COMPKEY = W.COMPKEY AND Z.WAREKEY = W.WAREKEY
+		INNER JOIN GJ_WM.MCOMMA C ON Z.COMPKEY = C.COMPKEY
+		WHERE Z.COMPKEY = '100'
+		  AND Z.WAREKEY = 'WH01'
+		  AND Z.ZONETYP = 'STORAGE'
+        <if test='schWHNAMLC != null and schWHNAMLC != ""'>
+        	AND W.WHNAMLC LIKE CONCAT('%', #{schWHNAMLC} ,'%')  
+        </if>
+		<if test='schWAREKEY != null and schWAREKEY != ""'>
+			AND W.WAREKEY LIKE CONCAT('%', #{schWAREKEY} ,'%')
+		</if>
+		<if test='schWHUSEYN != null and schWHUSEYN != ""'>
+			AND W.WHUSEYN = #{schWHUSEYN}
+		</if>
+	</select>
+	
+	<select id="selectSafemonitorDtlList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			SERIAL_NO 					-- 시리얼번호
+			, WHNAMLC 					-- 센터
+			, WAREKEY 					-- 창고
+			, SENSOR_TYPE 				-- 센서종류
+			, SENSOR_NM 				-- 센서명
+			, USE_YN 					-- 사용여부
+			, FLOOR_PLAN_FILE 			-- 도면파일
+			, WARNING_DETECTION_TYPE 	-- 이상 감지 구분
+			, SENSOR_LOCATION 			-- 위치
+			, TO_CHAR(WARNING_DT, 'YYYY-MM-DD HH24:MI:SS') AS WARNING_DT -- 감지 일시
+			, MNG_NM 					-- 담당자 이름
+			, PROP_MEDIUM 				-- 전파 매체
+			, TO_CHAR(PROP_DT, 'YYYY-MM-DD HH24:MI:SS') AS PROP_DT -- 전파 일시
+			, PROP_DESC 				-- 전파 내용
+			, ZONEKEY					-- 존 key
+		FROM GJ_OP.SENSOR_TEMP
+		WHERE IFNULL(WARNING_DETECTION_TYPE, '') != '' 
+		  AND WHNAMLC = #{whnamlc}
+		  AND WAREKEY = #{warekey}
+		  AND ZONEKEY = #{zonekey}
+		ORDER BY WARNING_DT DESC
+	</select>
+</mapper>

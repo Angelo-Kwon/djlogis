@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcSafesceneMapper">
+	
+	<select id="selectSafesceneList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			SCENARIO_NO
+			, WARNING_TYPE
+			, PROCESS
+			, MESSAGE
+			, ALERT_TYPE
+			, JUDGMENT_YN
+			, AUTO_YN
+			, USE_YN
+			, WHNAMLC
+			, WAREKEY
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+		FROM GJ_OP.SCENARIO_TEMP
+		<where>
+		<if test='schWarningType != null and schWarningType != ""'>
+			AND WARNING_TYPE LIKE CONCAT('%',#{schWarningType},'%')
+		</if> 
+		<if test='schAlertType != null and schAlertType != ""'>
+			AND ALERT_TYPE LIKE CONCAT('%',#{schAlertType},'%')
+		</if> 
+		<if test='schUseYn != null and schUseYn != ""'>
+			AND USE_YN = #{schUseYn}
+		</if> 
+		</where>
+	</select>
+	
+	<insert id="createSafescene" parameterType="java.util.List">
+		INSERT INTO GJ_OP.SCENARIO_TEMP(
+			SCENARIO_NO
+			, WARNING_TYPE
+			, PROCESS
+			, MESSAGE
+			, ALERT_TYPE
+			, JUDGMENT_YN
+			, AUTO_YN
+			, USE_YN
+			, WHNAMLC
+			, WAREKEY
+			, CRE_DT 
+			, CRE_USER_ID 
+			, MOD_DT 
+			, MOD_USER_ID
+		) VALUES (
+			(SELECT CONCAT(TO_CHAR(NOW(), 'YYYYMMDD'), LPAD(IFNULL(CAST(SUBSTR(MAX(T.SCENARIO_NO), 9) AS UNSIGNED), 0) + 1, 7, '0')) FROM GJ_OP.SCENARIO_TEMP AS T)
+			, #{WARNING_TYPE}
+			, #{PROCESS}
+			, #{MESSAGE}
+			, #{ALERT_TYPE}
+			, #{JUDGMENT_YN}
+			, #{AUTO_YN}
+			, #{USE_YN}
+			, #{WHNAMLC}
+			, #{WAREKEY}
+			, NOW()
+			, #{userId}
+			, NOW()
+			, #{userId}
+		)
+	</insert>
+	
+	<update id="updateSafescene">
+		UPDATE GJ_OP.SCENARIO_TEMP
+		   SET WARNING_TYPE = #{WARNING_TYPE}
+		   	 , PROCESS = #{PROCESS}
+			 , MESSAGE = #{MESSAGE}
+			 , ALERT_TYPE = #{ALERT_TYPE}
+			 , JUDGMENT_YN = #{JUDGMENT_YN}
+			 , AUTO_YN = #{AUTO_YN}
+			 , USE_YN = #{USE_YN}
+			 , MOD_DT = NOW() 
+			 , MOD_USER_ID = #{userId}
+		WHERE SCENARIO_NO = #{SCENARIO_NO}
+	</update>
+	
+	<delete id="deleteSafescene">
+		DELETE FROM GJ_OP.SCENARIO_TEMP
+		WHERE SCENARIO_NO = #{SCENARIO_NO}
+	</delete>
+</mapper>

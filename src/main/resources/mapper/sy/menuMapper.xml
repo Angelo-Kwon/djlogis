@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.MenuMapper">
+
+	<select id="getMainMenuList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* com.sy.mapper.MenuMapper : getMenuList */
+		WITH RECURSIVE MENU_R AS (
+			SELECT	MENU_ID
+					, MENU_PID
+					, MENU_NM
+					, MENU_KEY
+					, MENU_GBN
+					, 1 AS MENU_LEVEL 
+					, SYSTEM_ID
+					, PRGM_ID 
+					, SVC_PORT
+					, PRGM_URL 
+					, MENU_SEQ
+					, USE_YN
+					, CONCAT(SYSTEM_ID, ',', MENU_SEQ) AS ORDER_SEQ
+			FROM 	GJ_OP.OP_MENU A
+			WHERE 	MENU_PID =''
+			UNION ALL
+			SELECT	M.MENU_ID
+					, M.MENU_PID
+					, M.MENU_NM
+					, M.MENU_KEY
+					, M.MENU_GBN
+					, MENU.MENU_LEVEL + 1 AS MENU_LEVEL
+					, M.SYSTEM_ID
+					, M.PRGM_ID 
+					, M.SVC_PORT
+					, M.PRGM_URL 
+					, M.MENU_SEQ
+					, M.USE_YN
+					, CONCAT(MENU.ORDER_SEQ, ',', M.MENU_SEQ ) AS ORDER_SEQ
+			FROM	MENU
+			INNER 	JOIN 
+					GJ_OP.OP_MENU M
+			ON 		MENU.MENU_ID = M.MENU_PID
+		), MENU AS (
+			SELECT
+					M.MENU_ID,
+					M.MENU_PID,
+					M.MENU_NM,
+					M.MENU_KEY,
+					M.MENU_GBN,
+					M.MENU_LEVEL,
+					M.SYSTEM_ID,
+					M.PRGM_ID,
+					M.SVC_PORT,
+					M.PRGM_URL,
+					RM.RMENU_ID,
+					M.ORDER_SEQ
+				FROM
+					MENU_R M
+				LEFT OUTER JOIN
+					GJ_OP.OP_ROLE_MENU RM
+				ON
+					M.MENU_ID = RM.MENU_ID 
+				AND
+					RM.RGROUP_ID = GJ_OP.get_role_group_id(#{userId})
+				WHERE
+					M.USE_YN = 'Y'
+				AND
+					(M.MENU_GBN = 'M' OR RM.RMENU_ID IS NOT NULL)
+		)	SELECT
+					M.MENU_ID,
+					M.MENU_PID,
+					M.MENU_NM,
+					M.MENU_KEY,
+					M.MENU_GBN,
+					M.MENU_LEVEL,
+					M.SYSTEM_ID,
+					M.PRGM_ID,
+					M.SVC_PORT,
+					M.PRGM_URL,
+					M.RMENU_ID,
+					MP.MENU_NM AS MENU_PNM,
+					SY.SYSTEM_NM AS SYSTEM_NM
+			FROM
+					MENU M
+			LEFT OUTER JOIN	MENU MP
+			ON		M.MENU_PID = MP.MENU_ID
+			JOIN	GJ_OP.OP_SYSTEM SY
+			ON		M.SYSTEM_ID  = SY.SYSTEM_ID
+			WHERE 	M.MENU_GBN = 'P'
+			   OR	( SELECT COUNT(*) FROM MENU MT WHERE MT.MENU_PID = M.MENU_ID ) > 0
+			ORDER	BY M.ORDER_SEQ
+	</select>
+	
+	<select id="getMenuInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* com.sy.mapper.MenuMapper : getMenuInfo */
+		SELECT
+				M.MENU_ID,
+				M.MENU_NM,
+				M.SYSTEM_ID,
+				M.PRGM_ID,
+				M.SVC_PORT,
+				M.PRGM_URL,
+				MP.MENU_ID AS MENU_PID,
+				MP.MENU_NM AS MENU_PNM,
+				SYSTEM_NM
+		FROM
+				GJ_OP.OP_MENU M
+		JOIN 	
+				GJ_OP.OP_MENU MP
+		ON
+				M.MENU_PID = MP.MENU_ID
+		JOIN 	
+				GJ_OP.OP_SYSTEM SY
+		ON
+				M.SYSTEM_ID = SY.SYSTEM_ID
+		WHERE
+				1 = 1
+				AND M.USE_YN = 'Y'
+				AND MP.USE_YN = 'Y'
+				AND SY.USE_YN = 'Y'
+		  		AND M.PRGM_URL LIKE CONCAT(#{requestUrl}, '%')
+		LIMIT 1
+	</select>
+	
+	<select id="getSystemList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* com.sy.mapper.MenuMapper : getSystemList */
+		SELECT
+				os.SYSTEM_ID,
+				os.SYSTEM_KEY,
+				os.SYSTEM_NM				
+		FROM
+				GJ_OP.OP_SYSTEM os RIGHT JOIN (SELECT 
+												DISTINCT(SYSTEM_ID) 
+										      FROM GJ_OP.OP_ROLE_MENU orm LEFT JOIN GJ_OP.OP_MENU om 
+										    	ON om.MENU_ID = orm.MENU_ID  
+										      <if test='rgroupId != null and rgroupId != ""'>
+											      WHERE orm.RGROUP_ID = #{rgroupId}
+										      </if>
+										   	  ) tb
+				ON os.SYSTEM_ID = tb.SYSTEM_ID
+		WHERE
+				USE_YN = 'Y'
+	</select>
+	
+	<select id="getMenuList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+			SELECT	
+				M.MENU_ID
+				, M.MENU_PID
+				, M.MENU_NM
+				, M.MENU_KEY
+				, M.MENU_GBN
+				, M.SYSTEM_ID
+				, M.PRGM_ID 
+				, SVC_PORT
+				, M.PRGM_URL 
+				, M.MENU_SEQ
+				, M.USE_YN
+				, CASE
+			        WHEN EXISTS (
+			            SELECT 1
+			            FROM GJ_OP.OP_MENU SUB
+			            WHERE SUB.MENU_PID = M.MENU_ID
+			            AND SUB.USE_YN = 'Y'
+			        ) THEN 'Y'
+			        ELSE 'N'
+			    END AS CHILD_EXIST
+			    , CASE
+			        WHEN EXISTS (
+			            SELECT 1
+			            FROM GJ_OP.OP_ROLE_MENU R
+			            WHERE R.MENU_ID = M.MENU_ID
+			            AND R.USE_YN = 'Y'
+			        ) THEN 'Y'
+			        ELSE 'N'
+			    END AS ROLE_EXIST
+		FROM 	GJ_OP.OP_MENU M
+		WHERE 	1=1
+		<if test='systemId != null and systemId != ""'>
+		AND		M.SYSTEM_ID = #{systemId}
+		</if>
+		AND		M.USE_YN = 'Y'
+		ORDER	BY M.SYSTEM_ID, M.MENU_SEQ
+	</select>
+	
+	<select id="insMenu" parameterType="java.util.HashMap" resultType="String">
+		INSERT
+			INTO
+				GJ_OP.OP_MENU
+			(
+				MENU_ID,
+				SYSTEM_ID,
+				MENU_KEY,
+				MENU_PID,
+				MENU_GBN,
+				MENU_NM,
+				MENU_SEQ,
+				PRGM_ID,
+				SVC_PORT,
+				PRGM_URL,
+				USE_YN,
+				RGROUP_ID,
+				CRE_DT,
+				CRE_USER_ID,
+				MOD_DT,
+				MOD_USER_ID
+			) VALUES (
+				CONCAT('MN', LPAD(CAST(nextVAL(GJ_OP.op_menu_seq) AS CHAR(8)), 8, '0')),
+				#{SYSTEM_ID},
+				#{MENU_KEY},
+				IFNULL(#{MENU_PID}, ''),
+				#{MENU_GBN},
+				#{MENU_NM},
+				#{MENU_SEQ},
+				#{PRGM_ID},
+				#{SVC_PORT},
+				#{PRGM_URL},
+				'Y',
+				NULL,
+				now(),
+				#{userId},
+				now(),
+				#{userId}
+			) RETURNING MENU_ID
+	</select>
+	
+	<update id="updMenu" parameterType="java.util.HashMap">
+		UPDATE
+				GJ_OP.OP_MENU
+		SET
+				SYSTEM_ID = #{SYSTEM_ID},
+				MENU_KEY = #{MENU_KEY},
+				MENU_PID = #{MENU_PID},
+				MENU_NM = #{MENU_NM},
+				MENU_SEQ = #{MENU_SEQ},
+				PRGM_ID = #{PRGM_ID},
+				SVC_PORT = #{SVC_PORT},
+				PRGM_URL = #{PRGM_URL},
+				RGROUP_ID = NULL,
+				MOD_DT = now(),
+				MOD_USER_ID = #{userId}
+		WHERE
+				MENU_ID = #{MENU_ID};
+	</update>
+	
+	<update id="delMenu" parameterType="java.util.HashMap">
+		UPDATE
+				GJ_OP.OP_MENU
+		SET
+				USE_YN = 'N'
+		WHERE
+				MENU_ID = #{MENU_ID};
+	</update>
+
+	<select id="getBookmarkList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+				BM.MENU_ID,
+				MN.MENU_NM 
+		FROM
+				GJ_OP.CM_BOOKMARK BM
+		JOIN
+				GJ_OP.OP_MENU MN
+		ON
+				BM.MENU_ID = MN.MENU_ID 
+		WHERE
+				BM.CRE_USER_ID = #{userId}
+	</select>
+	
+	<insert id="insBookmark" parameterType="java.util.HashMap">
+		INSERT
+			INTO
+				GJ_OP.CM_BOOKMARK
+			(
+				BOOKMARK_ID,
+				MENU_ID,
+				CRE_DT,
+				CRE_USER_ID
+			) VALUES (
+				CONCAT('BM', LPAD(CAST(nextVAL(GJ_OP.cm_bookmark_seq) AS CHAR(8)), 8, '0')),
+				#{menuId},
+				now(),
+				#{userId}
+			)
+	</insert>
+	
+	<update id="delBookmark" parameterType="java.util.HashMap">
+		DELETE
+		FROM
+				GJ_OP.CM_BOOKMARK
+		WHERE
+				MENU_ID = #{menuId}
+		AND		
+				CRE_USER_ID = #{userId}
+	</update>
+	
+</mapper>
+

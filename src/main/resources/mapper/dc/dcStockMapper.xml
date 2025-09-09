@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcStockMapper">
+	
+	<select id="selectStockList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			C.COMPKEY
+			, C.CONAMLC -- 회사 
+			, W.WAREKEY
+			, W.WHNAMLC -- 센터
+			, CASE WHEN W.WHUSEYN = 'Y' THEN '사용' ELSE '미사용' END AS WHUSEYN -- 사용여부 
+		    , Z.ZOBUILD -- 동
+		    , Z.ZONEKEY -- 
+		    , Z.ZONENAM -- ZONE명
+		FROM GJ_WM.MZONMA Z
+		INNER JOIN GJ_WM.MWARMA W ON Z.COMPKEY = W.COMPKEY AND Z.WAREKEY = W.WAREKEY
+		INNER JOIN GJ_WM.MCOMMA C ON Z.COMPKEY = C.COMPKEY
+		WHERE Z.COMPKEY = '100'
+		  AND Z.WAREKEY = 'WH01'
+		  AND Z.ZONETYP = 'STORAGE'
+        <if test='schWHNAMLC != null and schWHNAMLC != ""'>
+        	AND W.WHNAMLC LIKE CONCAT('%', #{schWHNAMLC} ,'%') 
+        </if>
+		<if test='schWAREKEY != null and schWAREKEY != ""'>
+			AND W.WAREKEY LIKE CONCAT('%', #{schWAREKEY} ,'%')
+		</if>
+		<if test='schWHUSEYN != null and schWHUSEYN != ""'>
+			AND W.WHUSEYN = #{schWHUSEYN}
+		</if>
+	</select>
+	
+	<select id="selectStockDtlList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			LOCAKEY -- 로케이션
+			, OWNERKY -- 화주
+			, SKUDESC -- SKUDESC
+			, ZONEKEY
+			, FORMAT(SUM(STOTQTY), N'#,0') AS STOTQTY
+		FROM GJ_WM.WSTKKY S 
+		WHERE S.COMPKEY = '100'
+		  -- AND S.WAREKEY = 'WH01'
+		  AND S.AREAKEY = 'STG'
+		  AND S.STOTQTY > 0   
+		GROUP BY COMPKEY, WAREKEY,  LOCAKEY, OWNERKY, SKUMKEY
+		HAVING WAREKEY = #{warekey} 
+		   AND ZONEKEY = #{zonekey}
+	</select>
+</mapper>

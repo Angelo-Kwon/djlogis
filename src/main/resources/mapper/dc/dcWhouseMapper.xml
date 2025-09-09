@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcWhouseMapper">
+	
+	<!-- 창고 정보관리 목록 조회 -->
+	<select id="selectDcWhouseList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* mapper.mc.dcWhouseMapper : selectDcWhouseList */
+		SELECT 
+           C.COMPKEY
+          , C.CONAMLC -- 회사 
+          , W.WAREKEY -- 창고
+          , W.WHNAMLC -- 센터
+          , CASE WHEN W.WHUSEYN = 'Y' THEN '사용' ELSE '미사용' END AS WHUSEYN -- 사용여부 
+          , Z.ZOBUILD -- 동
+          , Z.ZONENAM -- ZONE명
+          , Z.ZONETYP -- ZONE타입
+          , W.WHNAMEN -- 영문명
+          , CONCAT_WS( ' ', W.WHADDR1, W.WHADDR2, W.WHADDR3) AS WHADDR -- 창고주소
+          , W.WATELN1 -- 창고전화번호
+        FROM GJ_WM.MZONMA Z
+        INNER JOIN GJ_WM.MWARMA W ON Z.COMPKEY = W.COMPKEY 
+           AND Z.WAREKEY = W.WAREKEY
+        INNER JOIN GJ_WM.MCOMMA C ON Z.COMPKEY = C.COMPKEY
+        WHERE Z.COMPKEY = '100'
+         AND Z.WAREKEY = 'WH01'
+         AND Z.ZONETYP = 'STORAGE' 
+        <if test='schWAREKEY != null and schWAREKEY != ""'>
+        	AND W.WAREKEY LIKE CONCAT('%', #{schWAREKEY} ,'%') 
+        </if>
+		<if test='schCONAMLC != null and schCONAMLC != ""'>
+			AND C.CONAMLC LIKE CONCAT('%', #{schCONAMLC} ,'%')
+		</if>
+		<if test='schWHNAMLC != null and schWHNAMLC != ""'>
+			AND W.WHNAMLC LIKE CONCAT('%', #{schWHNAMLC} ,'%')
+		</if>
+		ORDER BY C.CONAMLC
+	</select>
+	
+</mapper>

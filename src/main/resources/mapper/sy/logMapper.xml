@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.LogMapper">
+	
+	<!-- 로그관리 목록 건 수 -->
+	<select id="selectLogCnt" parameterType="java.util.HashMap" resultType="int">
+		/* mapper.sy.logMapper : selectLogCnt */
+		SELECT 
+			COUNT(*)
+		FROM 
+			GJ_OP.OP_LOG
+		WHERE
+			1=1
+			<if test='schLogDiv != null and !schLogDiv.equals("")'>
+				AND LOG_DIV = #{schLogDiv}
+			</if>
+			<if test='schCreUserId != null and !schCreUserId.equals("")'>
+				AND CRE_USER_ID LIKE CONCAT('%', #{schCreUserId}, '%')
+			</if>
+	</select>
+	
+	<!-- 로그관리 목록 조회 -->
+	<select id="selectLogList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* mapper.sy.logMapper : selectLogList */
+		SELECT 
+			LOG_SEQ
+			, LOG_DIV
+			, LOG_IP
+			, LOG_INFO
+			, DATE_FORMAT(LOG_OUT_TIME, '%Y-%m-%d %H:%i:%s') AS LOG_OUT_TIME
+			, DATE_FORMAT(CRE_DT, '%Y-%m-%d %H:%i:%s') AS CRE_DT
+			, CRE_DT
+			, CRE_USER_ID
+		FROM 
+			GJ_OP.OP_LOG
+		WHERE
+			1=1
+			<if test='schLogDiv != null and !schLogDiv.equals("")'>
+				AND LOG_DIV = #{schLogDiv}
+			</if>
+			<if test='schCreUserId != null and !schCreUserId.equals("")'>
+				AND CRE_USER_ID LIKE CONCAT('%', #{schCreUserId}, '%')
+			</if>
+		ORDER BY 
+			CRE_DT DESC
+		LIMIT #{limit}, 200
+	</select>
+	
+	<!-- 로그인/페이지 이동시 로그 저장 -->
+	<insert id="insertLog" parameterType="java.util.HashMap">
+		/*mapper.sy.logMapper : insertLog */
+		<selectKey order="BEFORE" keyProperty="seq,cre_dt" resultType="hashmap">
+			SELECT 
+				<choose>
+					<when test='log_seq != null and !log_seq.equals("")'>
+						#{log_seq}
+					</when>
+					<otherwise>
+						CONCAT(#{date}, LPAD(CAST(nextVAL(GJ_OP.op_log_seq) AS CHAR(8)), 8 ,'0'))
+					</otherwise>
+				</choose> as seq
+				, DATE_FORMAT(NOW(),'%Y-%m-%d %T') as cre_dt
+		</selectKey>
+		INSERT INTO GJ_OP.OP_LOG(
+			LOG_SEQ
+			, LOG_DIV
+			, LOG_INFO
+			, LOG_IP
+			, CRE_DT
+			, CRE_USER_ID
+		) VALUES (
+			#{seq}
+			, #{log_div}
+			, IFNULL(#{log_info}, "")
+			, #{log_ip}
+			, #{cre_dt}
+			, #{login_id}
+		) 
+	</insert>
+	
+	<!-- 로그아웃시 로그아웃 시간 수정 -->
+	<update id="updateLog" parameterType="java.util.HashMap">
+		/*mapper.sy.logMapper : updateLog */
+		UPDATE GJ_OP.OP_LOG
+		SET 
+			LOG_OUT_TIME = NOW()
+		WHERE 
+			CRE_DT LIKE CONCAT(#{cre_dt}, '%')
+			AND LOG_DIV = 'LOGIN'
+			AND LOG_IP = #{log_ip}
+			AND LOG_OUT_TIME IS NULL
+			AND CRE_USER_ID = #{login_id}
+	</update>
+	
+</mapper>

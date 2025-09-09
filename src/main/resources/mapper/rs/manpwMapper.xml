@@ -1,0 +1,947 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rs.mapper.ManpwMapper">
+	<sql id="condition">
+		<if test='condWrkCd != null and condWrkCd != ""'>
+		AND CM.WRK_CD = #{condWrkCd}
+		</if>
+		<if test='wrkCd != null and wrkCd != ""'>
+		AND CM.WRK_CD = #{wrkCd}
+		</if>
+		<if test='condManpwNo != null and condManpwNo != ""'>
+		AND CM.MANPW_NO LIKE CONCAT('%', #{condManpwNo}, '%')
+		</if>
+		<if test='condManpwNm != null and condManpwNm != ""'>
+		AND CM.MANPW_NM LIKE CONCAT('%', #{condManpwNm}, '%')
+		</if>
+		<if test='manpwNo != null and manpwNo != ""'>
+		AND CM.MANPW_NO = #{manpwNo}
+		</if>
+		<if test='condWrkTyp != null and condWrkTyp != ""'>
+		AND CM.WRK_TYP = #{condWrkTyp}
+		</if>
+		<if test='condCpCd != null and condCpCd != ""'>
+		AND CM.CP_CD = #{condCpCd}
+		</if>
+		<if test='cpCd != null and cpCd != ""'>
+		AND CM.CP_CD = #{cpCd}
+		</if>
+		<if test='condShYn != null and condShYn != ""'>
+		AND SH.SH_USE_YN = #{condShYn}
+		</if>
+		<if test='condBrNo != null and condBrNo != ""'>
+		AND CM.BR_NO LIKE CONCAT('%', #{condBrNo}, '%')
+		</if>
+		<if test='brNo != null and brNo != ""'>
+		AND CM.BR_NO = #{brNo}
+		</if>
+		<if test='condUseYn != null and condUseYn != ""'>
+		AND CM.USE_YN = #{condUseYn}
+		</if>
+		<if test='condUseYn == null or condUseYn == ""'>
+			AND CM.USE_YN != 'D'
+		</if>
+	</sql>
+	
+	<sql id="mobileCondition">
+		<if test='condWrkCd != null and condWrkCd != ""'>
+			AND CM.WRK_CD LIKE CONCAT('%' ,#{condWrkCd}, '%')
+		</if>
+		<if test='condCpNm != null and condCpNm != ""'>
+			AND CM.CPNM LIKE CONCAT('%', #{condCpNm}, '%')
+		</if>
+		<if test='condShYn != null and condShYn != ""'>
+			AND CM.SH_USE_YN = #{condShYn}
+		</if>
+		<if test='condBrNo != null and condBrNo != ""'>
+			AND CM.BR_NO LIKE CONCAT('%', REPLACE(#{condBrNo}, '-', ''),'%')
+		</if>
+	</sql>
+
+<!-- SEQ 조회 -->
+	<select id="getSeq" parameterType="String" resultType="String">
+		SELECT LPAD(NEXTVAL(${value}), 8, '0')
+	</select>
+	
+	<select id="getManpwBasicInfoList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+    	SELECT CM.USER_ID
+        	 , CM.WRK_CD AS wrkCd
+        	 , CM.MANPW_NO AS manpwNo
+        	 , CM.CP_CD AS cpCd
+        	 , CM.BR_NO AS brNo
+        	 , CM.MANPW_NM
+        	 , CM.MANPW_NM AS manpwNm
+        	 , CM.WRK_TYP AS wrkTyp
+        	 , CM.WRK_TIME1 AS wrkTime1
+        	 , CM.WRK_TIME2 AS wrkTime2
+        	 , CM.WRK_GRP AS wrkGrp
+        	 , CM.NGT_YN AS ngtYn
+        	 , CM.LICN_YN AS licnYn
+        	 , CM.WRK_AREA AS wrkArea
+        	 , FORMAT(CM.WRK_REQ_MON, N'#,0') AS wrkReqMon
+        	 , CM.SH_YN
+        	 , CM.SH_YN AS shYn
+        	 , SM.SH_USE_YN AS shUseYn
+        	 , fn_manpw_state(CM.MANPW_NO) AS SH_USE_YN_NM
+        	 , CM.USE_YN
+        	 , CM.USE_YN AS useYn
+        	 , FORMAT(CM.CM_PRICE, N'#,0') AS cmPrice
+        	 , (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_CD' AND CC.CMCD = CM.WRK_CD) AS wrkCdNm
+        	 , (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_TYP' AND CC.CMCD = CM.WRK_TYP) AS wrkTypNm
+        	 , (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = CM.WRK_GRP) AS wrkGrpNm
+        	 , (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_AREA' AND CC.CMCD = CM.WRK_AREA) AS wrkAreaNm
+    	 	 , AD.USER_ID AS AD_USER_ID
+			 , AD.MANPW_NO AS AD_MANPW_NO
+			 , AD.WRK_GRP1
+			 , AD.WRK_GRP2
+			 , AD.WRK_PHTO
+			 , AD.WRK_LICN
+			 , AD.WRK_LICN2
+			 , AD.WRK_LICN3
+			 , (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = AD.WRK_GRP1) AS WRK_GRP1_NM
+			 , (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = AD.WRK_GRP2) AS WRK_GRP2_NM
+    	  FROM GJ_DS.CM_MANPW CM
+    	  LEFT JOIN GJ_DS.AD_MANPW AD
+		  ON CM.USER_ID = AD.USER_ID
+		  AND CM.MANPW_NO = AD.MANPW_NO
+    	  LEFT JOIN GJ_DS.SH_MANPW SM
+    	    ON CM.MANPW_NO = SM.MANPW_NO
+    	 WHERE CM.USER_ID = #{userId}
+    	   AND CM.USE_YN != 'D'
+    	 <if test='wrkCd != null and !wrkCd.equals("")'>
+		   AND CM.WRK_CD = #{wrkCd}
+		 </if>
+    	 <if test='wrkTyp != null and !wrkTyp.equals("")'>
+		   AND CM.WRK_TYP = #{wrkTyp}
+		 </if>
+    	 <if test='manpwNm != null and !manpwNm.equals("")'>
+		   AND CM.MANPW_NM LIKE CONCAT('%', #{manpwNm}, '%')
+		 </if>
+    	 <if test='useYn != null and !useYn.equals("")'>
+		   AND CM.USE_YN = #{useYn}
+		 </if>
+    	 <choose>
+    	 	<when test='shUseYn != null and shUseYn.equals("E")'>
+				AND (SM.SH_USE_YN IS NULL OR SM.SH_USE_YN = 'E')
+			</when>
+			<when test='shUseYn != null and !shUseYn.equals("")'>
+				AND SM.SH_USE_YN = #{shUseYn}
+			</when>
+		 </choose>
+    	 ORDER BY CM.CRE_DT DESC
+	</select>
+
+	<insert id="insertCmManpw" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="manpwNo" keyColumn="MANPW_NO">
+		/* com.rs.mapper.ManpwMapper [insertCmManpw] */
+		<selectKey order="BEFORE" keyProperty="manpwNo" resultType="String">
+			SELECT CONCAT('CM', LPAD(CAST(NEXTVAL(cm_manpw_seq) AS VARCHAR(8)), 8, '0'))
+		</selectKey>
+		INSERT INTO GJ_DS.CM_MANPW
+		(
+			 USER_ID
+			,WRK_CD
+			,MANPW_NO
+			,CP_CD
+			,BR_NO
+			,MANPW_NM
+			,WRK_TYP
+			,WRK_TIME1
+			,WRK_TIME2
+			,WRK_GRP
+			,NGT_YN
+			,LICN_YN
+			,WRK_AREA
+			,WRK_REQ_MON -- 입력 필드 없음
+			,SH_YN
+			,USE_YN
+			,CM_PRICE
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{userId}
+			,#{wrkCd}
+			,#{manpwNo}
+			,#{cpCd}
+			,REPLACE(#{brNo},'-','')
+			,#{manpwNm}
+			,#{wrkTyp}
+			,#{wrkTime1}
+			,#{wrkTime2}
+			,#{wrkGrp}
+			,#{ngtYn}
+			,#{licnYn}
+			,#{wrkArea}
+			,REPLACE(NULLIF(#{wrkReqMon}, ''),',','')
+			,'N'
+			,#{useYn}
+			,REPLACE(NULLIF(#{cmPrice}, '0'),',','')
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		)
+	</insert>
+
+	<update id="updateCmManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		   SET MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+			 , WRK_CD = #{wrkCd}
+			 , CP_CD = #{cpCd}
+			 , BR_NO = REPLACE(#{brNo},"-","")
+			 , MANPW_NM = #{manpwNm}
+			 , WRK_TYP = #{wrkTyp}
+			 , WRK_TIME1 = #{wrkTime1}
+			 , WRK_TIME2 = #{wrkTime2}
+			 , WRK_GRP = #{wrkGrp}
+			 , NGT_YN = #{ngtYn}
+			 , LICN_YN = #{licnYn}
+			 , WRK_AREA = #{wrkArea}
+			 , WRK_REQ_MON = REPLACE(NULLIF(#{wrkReqMon}, ''),',','')
+			 , SH_YN = 'N'
+			 , CM_PRICE = REPLACE(NULLIF(#{cmPrice}, '0'),',','')
+			 , USE_YN = #{useYn}
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+
+	<update id="deleteCmManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		   SET USE_YN = 'D'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+
+	<insert id="createCm" parameterType="java.util.HashMap" >
+		<selectKey keyProperty="MANPW_NO" resultType="string" order="BEFORE">
+	    	SELECT CONCAT('CM', LPAD(CAST(NEXTVAL(cm_manpw_seq) AS VARCHAR(8)), 8, '0')) FROM DUAL
+		</selectKey>
+		INSERT INTO GJ_DS.CM_MANPW
+		(
+			 USER_ID
+			,WRK_CD
+			,MANPW_NO
+			,CP_CD
+			,BR_NO
+			,MANPW_NM
+			,WRK_TYP
+			,WRK_TIME1
+			,WRK_TIME2
+			,WRK_GRP
+			,NGT_YN
+			,LICN_YN
+			,WRK_AREA
+			,WRK_REQ_MON -- 입력 필드 없음
+			,SH_YN
+			,USE_YN
+			,CM_PRICE
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{userId}
+			,#{WRK_CD}
+			,#{MANPW_NO} -- 년도(4) + 시퀀스(6)
+			,#{CP_CD}
+			,REPLACE(#{BR_NO},"-","")
+			,#{MANPW_NM}
+			,#{WRK_TYP}
+			,#{WRK_TIME1}
+			,#{WRK_TIME2}
+			,#{WRK_GRP}
+			,#{NGT_YN}
+			,#{LICN_YN}
+			,#{WRK_AREA}
+			,REPLACE(#{WRK_REQ_MON},",","")
+			,'N'
+			,#{useYn}
+			,REPLACE(#{CM_PRICE},",","")
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		)
+	</insert>
+
+	<update id="updateCm" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		SET
+			 MOD_USER_ID = #{userId}
+		    ,MOD_DT = NOW()
+			<if test='WRK_CD != null and WRK_CD != ""'>
+			,WRK_CD = #{WRK_CD}
+			</if>
+			<if test='CP_CD != null and CP_CD != ""'>
+			,CP_CD = #{CP_CD}
+			</if>
+			<if test='BR_NO != null and BR_NO != ""'>
+			,BR_NO = #{BR_NO}
+			</if>
+			<if test='MANPW_NM != null and MANPW_NM != ""'>
+			,MANPW_NM = #{MANPW_NM}
+			</if>
+			<if test='WRK_TYP != null and WRK_TYP != ""'>
+			,WRK_TYP = #{WRK_TYP}
+			</if>
+			<if test='WRK_TIME1 != null and WRK_TIME1 != ""'>
+			,WRK_TIME1 = #{WRK_TIME1}
+			</if>
+			<if test='WRK_TIME2 != null and WRK_TIME2 != ""'>
+			,WRK_TIME2 = #{WRK_TIME2}
+			</if>
+			<if test='WRK_GRP != null and WRK_GRP != ""'>
+			,WRK_GRP = #{WRK_GRP}
+			</if>
+			<if test='NGT_YN != null and NGT_YN != ""'>
+			,NGT_YN = #{NGT_YN}
+			</if>
+			<if test='LICN_YN != null and LICN_YN != ""'>
+			,LICN_YN = #{LICN_YN}
+			</if>
+			<if test='WRK_AREA != null and WRK_AREA != ""'>
+			,WRK_AREA = #{WRK_AREA}
+			</if>
+			<if test='WRK_REQ_MON != null and WRK_REQ_MON != ""'>
+			,WRK_REQ_MON = REPLACE(#{WRK_REQ_MON},",","")
+			</if>
+			<if test='SH_YN != null and SH_YN != ""'>
+			,SH_YN = #{SH_YN}
+			</if>
+			<if test='CM_PRICE != null and CM_PRICE != ""'>
+			,CM_PRICE = REPLACE(#{CM_PRICE},",","")
+			</if>
+			<if test='USE_YN != null and USE_YN != ""'>
+			,USE_YN = #{USE_YN}
+			</if>
+		WHERE USER_ID = #{userId}
+		  <if test='MANPW_NO != null and MANPW_NO != ""'>
+		  AND MANPW_NO = #{MANPW_NO}
+		  </if>
+		  <if test='manpwNoList != null and manpwNoList != ""'>
+		  	<foreach item="manpwNo" collection="manpwNoList" open="AND MANPW_NO IN (" separator="," close=")">
+				#{manpwNo}
+			</foreach>
+		  </if>
+	</update>
+
+	<update id="deleteCm" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		  SET USE_YN = 'D'
+		WHERE USER_ID = #{userId}
+		  AND MANPW_NO = #{MANPW_NO}
+	</update>
+
+	<select id="getAd" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CM.USER_ID
+			,CM.USE_YN
+			,CM.WRK_CD
+			,CM.MANPW_NO
+			,CM.CP_CD -- 인력업체 테이블 참조
+			,CM.BR_NO
+			,CM.MANPW_NM
+			,CM.WRK_TYP
+			,CM.WRK_TIME1
+			,CM.WRK_TIME2
+			,CM.WRK_GRP
+			,CM.NGT_YN
+			,CM.LICN_YN
+			,CM.WRK_AREA
+			,CM.WRK_REQ_MON
+			,FORMAT(CM.WRK_REQ_MON, N'#,0') AS F_WRK_REQ_MON
+			,CM.SH_YN
+			,FN_MANPW_STATE(CM.MANPW_NO) AS SH_USE_YN_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_CD' AND CC.CMCD = CM.WRK_CD) AS WRK_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_TYP' AND CC.CMCD = CM.WRK_TYP) AS WRK_TYP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = CM.WRK_GRP) AS WRK_GRP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_AREA' AND CC.CMCD = CM.WRK_AREA) AS WRK_AREA_NM
+			,AD.USER_ID AS AD_USER_ID
+			,AD.MANPW_NO AS AD_MANPW_NO
+			,AD.WRK_GRP1
+			,AD.WRK_GRP2
+			,AD.WRK_PHTO
+			,AD.WRK_LICN
+			,AD.WRK_LICN2
+			,AD.WRK_LICN3
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = AD.WRK_GRP1) AS WRK_GRP1_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = AD.WRK_GRP2) AS WRK_GRP2_NM
+		FROM GJ_DS.CM_MANPW CM
+		LEFT JOIN GJ_DS.AD_MANPW AD
+		  ON CM.USER_ID = AD.USER_ID
+		  AND CM.MANPW_NO = AD.MANPW_NO
+		WHERE CM.USER_ID = #{userId}
+		  AND CM.USE_YN IN ('Y', 'N')
+		  <include refid="condition"></include>
+		ORDER BY CM.CRE_DT DESC
+	</select>
+
+	<insert id="insertAdManpw" parameterType="java.util.HashMap" >
+		INSERT INTO GJ_DS.AD_MANPW
+		(
+			 USER_ID
+			,MANPW_NO
+			,WRK_GRP1
+			,WRK_GRP2
+			,WRK_PHTO
+			,WRK_LICN
+			,WRK_LICN2
+			,WRK_LICN3
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{userId}
+			,#{manpwNo}
+			,#{WRK_GRP1}
+			,#{WRK_GRP2}
+			,#{WRK_PHTO}
+			,#{WRK_LICN}
+			,#{WRK_LICN2}
+			,#{WRK_LICN3}
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		)
+	</insert>
+
+	<update id="updateAdManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.AD_MANPW
+			SET USER_ID		= #{userId}
+			, WRK_GRP1		= #{WRK_GRP1}
+			, WRK_GRP2		= #{WRK_GRP2}
+			, WRK_PHTO		= #{WRK_PHTO}
+			, WRK_LICN		= #{WRK_LICN}
+			, WRK_LICN2		= #{WRK_LICN2}
+			, WRK_LICN3		= #{WRK_LICN3}
+			, MOD_DT		= NOW()
+			, MOD_USER_ID	= #{userId}
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+
+	<delete id="deleteAdManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.AD_MANPW
+		  SET USE_YN = 'D'
+		WHERE USER_ID = #{userId}
+		  AND MANPW_NO = #{MANPW_NO}
+	</delete>
+
+	<select id="getSh" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CM.USER_ID
+			,CM.WRK_CD
+			,CM.MANPW_NO
+			,CM.CP_CD -- 인력업체 테이블 참조
+			,CM.BR_NO
+			,CM.MANPW_NM
+			,CM.WRK_TYP
+			,CM.WRK_TIME1
+			,CM.WRK_TIME2
+			,CM.WRK_GRP
+			,CM.NGT_YN
+			,CM.LICN_YN
+			,CM.WRK_AREA
+			,FORMAT(CM.WRK_REQ_MON, N'#,0') AS WRK_REQ_MON
+			,CM.SH_YN
+			,FN_MANPW_STATE(CM.MANPW_NO) AS SH_USE_YN_NM
+			,FORMAT(CM.CM_PRICE, N'#,0') AS CM_PRICE
+			,FORMAT(IFNULL(SH.SH_PRC, CM.CM_PRICE), N'#,0') AS SH_PRC
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_CD' AND CC.CMCD = CM.WRK_CD) AS WRK_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_TYP' AND CC.CMCD = CM.WRK_TYP) AS WRK_TYP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = CM.WRK_GRP) AS WRK_GRP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_AREA' AND CC.CMCD = CM.WRK_AREA) AS WRK_AREA_NM
+			,AD.WRK_PHTO
+			,SH.SH_NO
+			,SH.SH_DT
+			,SH.USER_ID
+			,SH.MANPW_NO
+			,SH.SH_PRD_CLS
+			,FORMAT(SH.SH_PRD, N'#,0') AS SH_PRD
+			,SH.SH_PRC_STD
+			,SH.SH_PRC
+			,SH.SH_LT_DT
+			,SH.SH_USE_YN
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = SH.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRC_STD' AND CC.CMCD = SH.SH_PRC_STD) AS SH_PRC_STD_NM
+			,COALESCE((SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = SH.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+		FROM GJ_DS.CM_MANPW CM
+		LEFT JOIN GJ_DS.AD_MANPW AD
+		  ON CM.USER_ID = AD.USER_ID
+		  AND CM.MANPW_NO = AD.MANPW_NO
+		LEFT JOIN GJ_DS.SH_MANPW SH
+		  ON CM.USER_ID = SH.USER_ID
+		  AND CM.MANPW_NO = SH.MANPW_NO
+		  AND SH.USE_YN = 'Y'
+		  <choose>
+		  	<when test="callFrom == 'shEnd'">
+		  		AND SH.SH_USE_YN IN ('R', 'A', 'S', 'E')
+		  	</when>
+		  	<otherwise>
+		  		AND SH.SH_USE_YN IN ('R', 'A', 'S')
+		  	</otherwise>
+		  </choose>
+		WHERE CM.USER_ID = #{userId}
+		  AND CM.USE_YN = 'Y'
+		  <if test="callFrom == 'shEnd'">
+		  AND CM.SH_YN != 'Y'
+		  AND SH.MANPW_NO IS NOT NULL
+		  </if>
+		<include refid="condition"></include>
+		ORDER BY CM.CRE_DT DESC
+	</select>
+
+	<insert id="createSh" parameterType="java.util.HashMap" >
+		<selectKey keyProperty="shNo" resultType="String" order="BEFORE">
+	    	SELECT CONCAT('SM', LPAD(CAST(NEXTVAL(sh_manpw_seq) AS VARCHAR(8)), 8, '0')) FROM DUAL
+		</selectKey>
+		INSERT INTO GJ_DS.SH_MANPW
+		(
+			 SH_NO
+			,SH_DT
+			,USER_ID
+			,MANPW_NO
+			,SH_PRD_CLS
+			,SH_PRD
+			,SH_PRC_STD
+			,SH_PRC
+			,SH_LT_DT
+			,SH_USE_YN
+			,USE_YN
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{shNo}
+			,NOW()
+			,#{userId}
+			,#{MANPW_NO}
+			,#{SH_PRD_CLS}
+			,REPLACE(#{SH_PRD},",","")
+			,#{SH_PRC_STD}
+			,REPLACE(#{SH_PRC},",","")
+			,#{SH_LT_DT}
+			,'R'
+			,'Y'
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		)
+	</insert>
+
+	<update id="updateSh" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_MANPW
+		SET
+			 MOD_USER_ID = #{userId}
+		    ,MOD_DT = NOW()
+		    <if test='SH_PRD_CLS != null and SH_PRD_CLS != ""'>
+			,SH_PRD_CLS = #{SH_PRD_CLS}
+			</if>
+			<if test='SH_PRD != null and SH_PRD != ""'>
+			,SH_PRD = REPLACE(#{SH_PRD},",","")
+			</if>
+			<if test='SH_PRC_STD != null and SH_PRC_STD != ""'>
+			,SH_PRC_STD = #{SH_PRC_STD}
+			</if>
+			<if test='SH_PRC != null and SH_PRC != ""'>
+			,SH_PRC = REPLACE(#{SH_PRC},",","")
+			</if>
+			<if test='SH_LT_DT != null and SH_LT_DT != ""'>
+			,SH_LT_DT = #{SH_LT_DT}
+			</if>
+			<if test='USE_YN != null and USE_YN != ""'>
+			,USE_YN = #{USE_YN}
+			</if>
+			<if test='SH_USE_YN != null and SH_USE_YN != ""'>
+			,SH_USE_YN = #{SH_USE_YN}
+			</if>
+		WHERE USER_ID = #{userId}
+		  <if test='MANPW_NO != null and MANPW_NO != ""'>
+		  AND MANPW_NO = #{MANPW_NO}
+		  </if>
+		  <if test='SH_NO != null and SH_NO != ""'>
+		  AND SH_NO = #{SH_NO}
+		  </if>
+	</update>
+
+	<update id="deleteSh" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_MANPW
+		  SET USE_YN = 'D'
+		  	 ,SH_USE_YN = 'D'
+		WHERE USER_ID = #{userId}
+		  <if test='MANPW_NO != null and MANPW_NO != ""'>
+		  AND MANPW_NO = #{MANPW_NO}
+		  </if>
+		  <if test='SH_NO != null and SH_NO != ""'>
+		  AND SH_NO = #{SH_NO}
+		  </if>
+	</update>
+
+	<update id="endSh" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_MANPW
+		  SET SH_USE_YN = 'E'
+		WHERE USER_ID = #{userId}
+		  <if test='manpwNo != null and manpwNo != ""'>
+		  AND MANPW_NO = #{manpwNo}
+		  </if>
+		  <if test='shNo != null and shNo != ""'>
+		  AND SH_NO = #{shNo}
+		  </if>
+		  <if test='manpwNoList != null and manpwNoList != ""'>
+		  	<foreach item="manpwNo" collection="manpwNoList" open="AND MANPW_NO IN (" separator="," close=")">
+				#{manpwNo}
+			</foreach>
+		  </if>
+		  <if test='shNoList != null and shNoList != ""'>
+		  	<foreach item="shNo" collection="shNoList" open="AND SH_NO IN (" separator="," close=")">
+				#{shNo}
+			</foreach>
+		  </if>
+	</update>
+
+	<select id="getCpCd" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 MM.CPCD AS CODE
+			,MM.CPNM AS VALUE
+		FROM MASTER.CORPMASTER MM
+	</select>
+
+	<select id="getManpwNo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CM.MANPW_NO AS CODE
+			,CM.MANPW_NO AS VALUE
+		FROM GJ_DS.CM_MANPW CM
+		LEFT JOIN GJ_DS.SH_MANPW SH
+		  ON CM.USER_ID = SH.USER_ID
+		  AND CM.MANPW_NO = SH.MANPW_NO
+		  AND SH.USE_YN = 'Y'
+		  <choose>
+		  	<when test="callFrom == 'shEnd'">
+		  		AND SH.SH_USE_YN IN ('R', 'A', 'S', 'E')
+		  	</when>
+		  	<otherwise>
+		  		AND SH.SH_USE_YN IN ('R', 'A', 'S')
+		  	</otherwise>
+		  </choose>
+		WHERE CM.USER_ID = #{userId}
+		  AND CM.USE_YN = 'Y'
+		  <if test="callFrom == 'shEnd'">
+		  AND CM.SH_YN != 'N'
+		  AND SH.MANPW_NO IS NOT NULL
+		  </if>
+		GROUP BY CM.MANPW_NO
+	</select>
+
+	<select id="getBrNo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CM.BR_NO AS CODE
+			,CM.BR_NO AS VALUE
+		FROM GJ_DS.CM_MANPW CM
+		LEFT JOIN GJ_DS.SH_MANPW SH
+		  ON CM.USER_ID = SH.USER_ID
+		  AND CM.MANPW_NO = SH.MANPW_NO
+		  AND SH.USE_YN = 'Y'
+		  <choose>
+		  	<when test="callFrom == 'shEnd'">
+		  		AND SH.SH_USE_YN IN ('R', 'A', 'S', 'E')
+		  	</when>
+		  	<otherwise>
+		  		AND SH.SH_USE_YN IN ('R', 'A', 'S')
+		  	</otherwise>
+		  </choose>
+		WHERE CM.USER_ID = #{userId}
+		  AND CM.USE_YN = 'Y'
+		  <if test="callFrom == 'shEnd'">
+		  AND CM.SH_YN != 'N'
+		  AND SH.MANPW_NO IS NOT NULL
+		  </if>
+		GROUP BY CM.BR_NO
+	</select>
+
+	<select id="getMoSh" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT CM.MANPW_NO AS manpwNo
+			 , CM.MANPW_NM AS manpwNm
+			 , CM.CP_CD AS cpCd
+			 , CM.WRK_CD AS wrkCd
+			 , CM.BR_NO AS brNo
+			 , CM.WRK_TYP AS wrkTyp
+			 , CM.WRK_TIME1 AS wrkTime1
+			 , CM.WRK_TIME2 AS wrkTime2
+			 , CM.WRK_GRP AS wrkGrp
+			 , CM.NGT_YN AS ngtYn
+			 , CM.LICN_YN AS licnYn
+			 , CM.WRK_AREA AS wrkArea
+			 , FORMAT(CM.WRK_REQ_MON, N'#,0') AS wrkReqMon
+			 , CM.USE_YN AS useYn
+			 , FORMAT(CM.CM_PRICE, N'#,0') AS cmPrice
+			 , AD.WRK_GRP1 AS wrkGrp1
+			 , AD.WRK_GRP2 AS wrkGrp2
+			 , AD.WRK_PHTO  AS wrkPhto
+			 , AD.WRK_PHTO3 AS wrkPhto2
+			 , AD.WRK_PHTO2 AS wrkPhto3
+			 , AD.WRK_LICN AS wrkLicn
+			 , AD.WRK_LICN2 AS wrkLicn2
+			 , AD.WRK_LICN3 AS wrkLicn3
+			 , SHM.SH_NO AS shNo
+			 , SHM.SH_USE_YN AS shUseYn
+			 , FN_MANPW_STATE(SHM.MANPW_NO) AS shUseYnNm
+			 , SHM.CRE_USER_ID AS shUserId
+			 , SHM.SH_PRD_CLS AS shPrdCls
+			 , SHM.SH_PRD AS shPrd
+			 , SHM.SH_LT_DT AS shLtDt
+			 , SM.MAT_NO AS matNo
+		     , SM.CON_ID AS manConId
+			 , SB.COM_NO AS comNo
+			 , SB.REQ_MARK AS reqMark
+			 , SB.CON_ID AS comConId
+		  FROM GJ_DS.CM_MANPW CM
+		  LEFT JOIN GJ_DS.AD_MANPW AD
+			ON CM.USER_ID = AD.USER_ID
+		   AND CM.MANPW_NO = AD.MANPW_NO
+		  LEFT JOIN (
+			  SELECT SHM.MANPW_NO
+				   , SHM.SH_USE_YN
+				   , SHM.CRE_USER_ID
+				   , SHM.SH_NO
+				   , SHM.SH_PRD_CLS
+				   , SHM.SH_PRD
+				   , SHM.SH_LT_DT
+			    FROM SH_MANPW SHM
+			    JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_MANPW GROUP BY MANPW_NO) SHM2
+			      ON SHM.SH_NO = SHM2.SH_NO
+			   ) SHM
+			ON CM.MANPW_NO = SHM.MANPW_NO
+		  LEFT JOIN SH_MATCH SM
+			ON SHM.SH_NO = SM.SH_NO
+		   AND SM.MAT_CD = 'W'
+		   AND SM.MAT_YN = 'A'
+		  LEFT JOIN (
+			  SELECT SB.COM_NO
+				   , SB.CON_ID
+				   , SB.SH_NO
+				   , SB.REQ_MARK
+			    FROM SH_BOARD SB
+			    JOIN (SELECT MAX(COM_NO) AS COM_NO FROM SH_BOARD WHERE RES_MARK IS NULL) SB2
+			      ON SB.COM_NO = SB2.COM_NO) SB
+		    ON SHM.SH_NO = SB.SH_NO
+		 WHERE CM.USER_ID = #{userId}
+		   AND CM.USE_YN != 'D'
+		 ORDER BY CM.CRE_DT DESC
+	</select>
+
+	<insert id="insertMoCmManpw" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="manpwNo" keyColumn="MANPW_NO">
+		/* com.rs.mapper.ManpwMapper [insertCmManpw] */
+		<selectKey order="BEFORE" keyProperty="manpwNo" resultType="String">
+			SELECT CONCAT('CM', LPAD(CAST(NEXTVAL(cm_manpw_seq) AS VARCHAR(8)), 8, '0'))
+		</selectKey>
+		INSERT INTO GJ_DS.CM_MANPW
+		(
+			  USER_ID
+			, WRK_CD
+			, MANPW_NO
+			, CP_CD
+			, BR_NO
+			, MANPW_NM
+			, WRK_TYP
+			, WRK_TIME1
+			, WRK_TIME2
+			, WRK_GRP
+			, NGT_YN
+			, LICN_YN
+			, WRK_AREA
+			, WRK_REQ_MON -- 입력 필드 없음
+			, SH_YN
+			, USE_YN
+			, CM_PRICE
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+		)VALUES(
+			  #{userId}
+			, #{wrkCd}
+			, #{manpwNo}
+			, #{cpCd}
+			, REPLACE(#{brNo},'-','')
+			, #{manpwNm}
+			, #{wrkTyp}
+			, #{wrkTime1}
+			, #{wrkTime2}
+			, #{wrkGrp}
+			, #{ngtYn}
+			, #{licnYn}
+			, #{wrkArea}
+			, REPLACE(NULLIF(#{wrkReqMon}, ''),',','')
+			, 'N'
+			, #{useYn}
+			, REPLACE(NULLIF(#{cmPrice}, ''),',','')
+			, NOW()
+			, #{userId}
+			, NOW()
+			, #{userId}
+		)
+	</insert>
+
+	<update id="updateMoCmManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		   SET MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+			 , WRK_CD = #{wrkCd}
+			 , CP_CD = #{cpCd}
+			 , BR_NO = REPLACE(#{brNo},"-","")
+			 , MANPW_NM = #{manpwNm}
+			 , WRK_TYP = #{wrkTyp}
+			 , WRK_TIME1 = #{wrkTime1}
+			 , WRK_TIME2 = #{wrkTime2}
+			 , WRK_GRP = #{wrkGrp}
+			 , NGT_YN = #{ngtYn}
+			 , LICN_YN = #{licnYn}
+			 , WRK_AREA = #{wrkArea}
+			 , WRK_REQ_MON = REPLACE(NULLIF(#{wrkReqMon}, ''),',','')
+			 , SH_YN = 'N'
+			 , CM_PRICE = CAST(REPLACE(NULLIF(#{cmPrice}, ''), ',', '') AS UNSIGNED)
+			 , USE_YN = #{useYn}
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+
+	<update id="deleteMoCmManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		   SET USE_YN = 'D'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+
+	<insert id="insertMoAdManpw" parameterType="java.util.HashMap" >
+		INSERT INTO GJ_DS.AD_MANPW
+		(
+		 	USER_ID
+		  , MANPW_NO
+		  , WRK_GRP1
+		  , WRK_GRP2
+		  , WRK_PHTO
+		  , WRK_PHTO2
+		  , WRK_PHTO3
+		  , WRK_LICN
+		  , WRK_LICN2
+		  , WRK_LICN3
+		  , CRE_DT
+		  , CRE_USER_ID
+		  , MOD_DT
+		  , MOD_USER_ID
+		) VALUES (
+				 #{userId}
+			   , #{manpwNo}
+			   , #{wrkGrp1}
+			   , #{wrkGrp2}
+			   , #{wrkPhto}
+			   , #{wrkPhto2}
+			   , #{wrkPhto3}
+			   , #{wrkLick}
+			   , #{wrkLick2}
+			   , #{wrkLick3}
+			   , NOW()
+			   , #{userId}
+			   , NOW()
+			   , #{userId}
+			   )
+	</insert>
+
+	<update id="updateMoAdManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.AD_MANPW
+		   SET USER_ID = #{userId}
+		     , WRK_GRP1	=  #{wrkGrp1}
+		     , WRK_GRP2	=  #{wrkGrp2}
+		     , WRK_PHTO	=  #{wrkPhto}
+		     , WRK_PHTO2 = #{wrkPhto2}
+		     , WRK_PHTO3 = #{wrkPhto3}
+		     , WRK_LICN	=  #{wrkLick}
+		     , WRK_LICN2 = #{wrkLick2}
+		     , WRK_LICN3 = #{wrkLick3}
+		     , MOD_DT = NOW()
+		     , MOD_USER_ID = #{userId}
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+
+	<delete id="deleteMoAdManpw" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.AD_MANPW
+		SET USE_YN = 'D'
+		WHERE USER_ID = #{userId}
+		  AND MANPW_NO = #{manpwNo}
+	</delete>
+
+	<insert id="insertMoShManpw" parameterType="java.util.HashMap" >
+		/* mapper.rs.manpwMapper : insertMoShManpw */
+		INSERT INTO GJ_DS.SH_MANPW
+		(
+		  SH_NO
+		, SH_DT
+		, USER_ID
+		, MANPW_NO
+		, SH_USE_YN
+		, SH_PRD_CLS
+		, SH_PRD
+		, SH_LT_DT
+		, USE_YN
+		, CRE_DT
+		, CRE_USER_ID
+		, MOD_DT
+		, MOD_USER_ID
+		)
+		VALUES (
+				 CONCAT('SM',LPAD(NEXTVAL(sh_manpw_seq), 8, 0))
+			   , DATE_FORMAT(NOW(),'%Y%m%d')
+			   , #{userId}
+			   , #{manpwNo}
+			   , #{shUseYn}
+			   , #{shPrdCls}
+			   , REPLACE(#{shPrd}, ',', '')
+			   , REPLACE(#{shSqu}, ',', '')
+			   , #{shLtDt}
+			   , 'Y'
+			   , NOW()
+			   , #{userId}
+			   , NOW()
+			   , #{userId}
+			   )
+	</insert>
+
+	<update id="updateMoShManpw" parameterType="java.util.HashMap">
+		/*mapper.rs.manpwMapper : updateMoShManpw */
+		UPDATE GJ_DS.SH_MANPW
+		SET SH_USE_YN = #{shUseYn}
+		  , SH_PRD = REPLACE(#{shPrd}, ',', '')
+		  , SH_SQU = REPLACE(#{shSqu}, ',', '')
+		  , SH_LK_CLS = #{shLkCls}
+		  , SH_LT_DT = #{shLtDt}
+		  , SH_PRD_CLS = #{shPrdCls}
+		  , MOD_DT = NOW()
+		  , MOD_USER_ID = #{userId}
+		WHERE USER_ID = #{userId}
+		  AND SH_NO = #{shNo}
+	</update>
+
+	<update id="updateMoManpwShYn" parameterType="java.util.HashMap">
+		/*mapper.rs.manpwMapper : updateMoManpwShYn */
+		UPDATE GJ_DS.CM_MANPW
+		SET SH_YN = 'Y'
+		  , MOD_USER_ID = #{userId}
+		  , MOD_DT = NOW()
+		WHERE USER_ID = #{userId}
+		  AND MANPW_NO = #{manpwNo}
+	</update>
+</mapper> 

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.UserManageMapper">
+	
+	<!-- 사용자등록(유료) 목록 조회 -->
+	<select id="selectUserInfoList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* mapper.sy.userManageMapper : selectUserInfoList */
+		SELECT OU.USER_ID
+			 , OU.ACCOUNT_ID
+			 , OU.LOGIN_ID
+			 , "**********" AS LOGIN_PWD
+			 , OU.USER_NM
+			 , OU.USER_TYPE
+			 , OU.USER_PHONE
+			 , OU.USER_EMAIL
+			 , OU.USER_CPCD
+			 , OU.COMPANY
+			 , OU.COMPKEY
+		  	 , OU.OWNRKY
+		  	 , OU.PTNRKEY
+			 , OU.BIZ_NO
+			 , OU.BIZ_TYPE
+			 , OU.BIZ_COND
+			 , OU.DEPT
+			 , OU.SMS_YN
+			 , OU.EMAIL_YN
+			 , OU.POL_TERMS_YN
+			 , OU.POL_PSN_YN
+			 , OU.POL_GPS_YN
+			 , OU.CONFIRM_YN
+			 , OU.USE_YN
+			 , OURG.RGROUP_ID
+			 , OURG.URGROUP_ID
+			 , OU.RS_TYPE
+		  FROM GJ_OP.OP_USER OU
+		  LEFT OUTER JOIN GJ_OP.OP_USER_ROLE_GROUP OURG
+		    ON OU.USER_ID = OURG.USER_ID
+		   AND OURG.USE_YN != 'S'
+	     WHERE OU.USE_YN != 'S'
+	     	AND OU.LOGIN_ID != 'admin'
+		<if test='schLoginId != null and schLoginId != ""'>
+			AND OU.LOGIN_ID LIKE CONCAT('%', #{schLoginId}, '%')
+		</if>
+		<if test='schUserNm != null and schUserNm != ""'>
+			AND OU.USER_NM LIKE CONCAT('%', #{schUserNm}, '%')
+		</if>
+		<if test='schCompanyNm != null and schCompanyNm != ""'>
+			AND OU.COMPANY LIKE CONCAT('%', #{schCompanyNm}, '%')
+		</if>
+		<if test='schUserType != null and schUserType != ""'>
+			AND OU.USER_TYPE = #{schUserType}
+		</if>
+		<if test='schRoleGrp != null and schRoleGrp != ""'>
+			AND OURG.RGROUP_ID = #{schRoleGrp}
+		</if>
+		<if test='schRsType != null and schRsType != ""'>
+			AND OU.RS_TYPE = #{schRsType}
+		</if>
+	</select>
+	
+	<!-- 사용자 등록 정보 수정 -->
+	<update id="updateUserInfo"  parameterType="java.util.HashMap">
+		/*mapper.sy.userManageMapper : updateUserInfo */
+		UPDATE GJ_OP.OP_USER 
+		   SET USER_NM = #{USER_NM}
+		     , USER_TYPE = #{USER_TYPE}
+		     , USER_PHONE = #{USER_PHONE}
+		     , USER_EMAIL = #{USER_EMAIL}
+		     , COMPANY = #{COMPANY}
+		  	 , OWNRKY = #{OWNRKY}
+		  	 , PTNRKEY = #{PTNRKEY}
+		     , USE_YN = #{USE_YN}
+		     , SMS_YN = #{SMS_YN}
+		     , MOD_DT = now()
+		     , MOD_USER_ID = #{mod_id}
+		     , RS_TYPE = #{RS_TYPE}
+		 WHERE USER_ID = #{USER_ID}		   
+	</update>
+	
+	<!-- 사용자 등록 - 사용자 권한정보 수정 -->
+	<update id="updateUserRoleGrp" parameterType="java.util.HashMap">
+		/*mapper.sy.userManageMapper : updateUserRoleGrp */
+		UPDATE GJ_OP.OP_USER_ROLE_GROUP 
+		   SET RGROUP_ID = #{RGROUP_ID}
+		     , USE_YN = #{USE_YN}
+		     , MOD_DT = now()
+		     , MOD_USER_ID = #{mod_id}
+		 WHERE USER_ID = #{USER_ID}
+		   AND URGROUP_ID = #{URGROUP_ID}
+	</update>
+	
+	<!-- 신규 사용자 등록시 USER ID 조회 -->
+	<select id="selectNewUserId" resultType="String">
+		SELECT CONCAT('US', LPAD(NEXTVAL(GJ_OP.op_user_seq), 8, 0)) as user_id
+	</select>
+	
+	<!-- 사용자 등록 정보 신규 추가 -->
+	<insert id="userInsertInfo" parameterType="java.util.HashMap">
+		/*mapper.sy.userManageMapper : userInsertInfo */
+		INSERT INTO GJ_OP.OP_USER 
+		(
+			USER_ID
+		  , ACCOUNT_ID
+		  , LOGIN_ID
+		  , LOGIN_PWD
+		  , USER_NM
+		  , USER_TYPE
+		  , USER_PHONE
+		  , USER_EMAIL
+		  , COMPANY
+		  , COMPKEY
+		  , OWNRKY
+		  , PTNRKEY
+		  , BIZ_NO
+		  , BIZ_TYPE
+		  , BIZ_COND
+		  , DEPT
+		  , SMS_YN
+		  , EMAIL_YN
+		  , POL_TERMS_YN
+		  , POL_PSN_YN
+		  , POL_GPS_YN
+		  , USE_YN
+		  , CRE_DT
+		  , CRE_USER_ID
+		  , MOD_DT
+		  , MOD_USER_ID
+		  , RS_TYPE
+		)
+		VALUES (
+			#{user_id},
+			#{edit_cp_id},
+			#{edit_user_id},
+			#{edit_user_pw},
+			#{edit_user_nm},
+			#{edit_user_type},
+			#{edit_user_phone},
+			#{edit_user_email},
+			#{edit_cp_nm},
+			'100',
+			#{edit_ownrky},
+			#{edit_ptnrkey},
+			#{edit_biz_no},
+			#{edit_biz_type},
+			#{edit_biz_cond},
+			#{edit_user_dept},
+			#{edit_sms_yn},
+			#{edit_email_yn},
+			#{edit_terms_yn},
+			#{edit_psn_yn},
+			#{edit_gps_yn},
+			#{edit_use_yn},
+			now(),
+			#{reg_id},
+			now(),
+			#{reg_id},
+			#{edit_rs_type}
+		)
+	</insert>
+	
+	<!-- 사용자 등록 - 사용자 권한 신규 추가 -->
+	<insert id="insertUserRoleGrp" parameterType="java.util.HashMap">
+		/*mapper.sy.userManageMapper : insertUserRoleGrp */
+		INSERT INTO GJ_OP.OP_USER_ROLE_GROUP 
+		(
+			URGROUP_ID
+		  , USER_ID
+		  , RGROUP_ID
+		  , USE_YN
+		  , CRE_DT
+		  , CRE_USER_ID
+		  , MOD_DT
+		  , MOD_USER_ID
+		)
+		VALUES (
+			CONCAT('UG', LPAD(NEXTVAL(GJ_OP.op_user_role_group_seq), 8, 0))
+		  , #{user_id} 
+		  , #{edit_role_grp}
+		  , 'Y'
+		  , now()
+		  , #{reg_id}
+		  , now()
+		  , #{reg_id}
+		)
+	</insert>
+	
+	<!-- 사용자 등록 - 회사구분코드 목록 -->
+	<select id="selectCompkeyList" resultType="java.util.HashMap"> 
+		SELECT 
+			COMPKEY
+			, CONAMLC 
+		FROM 
+			GJ_WM.MCOMMA M 
+		WHERE 
+			M.COUSEYN ='Y' 
+			AND COMPKEY = '100'
+	</select>
+	
+	<!-- 사용자 등록 - 화주 키 목록 -->
+	<select id="selectOwnerkyList" resultType="java.util.HashMap"> 
+		 SELECT 
+		 	OWNERKY
+		 	, OWNAMLC 
+		 FROM 
+		 	GJ_WM.MOWRMA M 
+		 WHERE 
+		 	COMPKEY = '100'
+		 	AND M.OWUSEYN ='Y'
+	</select>
+	
+	<!-- 사용자 등록 - 협력업체 키 목록 -->
+	<select id="selectPtnrkeyList" resultType="java.util.HashMap"> 
+		  SELECT 
+		      M.PTNRKEY, 
+		      M.PTNAMLC,
+		      M.PTNRTYP,
+		      CASE WHEN M.PTNRTYP = 'DRIVER'  THEN 'CARRIER'
+		            WHEN M.PTNRTYP = 'CARRIER' THEN 'CARRIER'
+		            WHEN M.PTNRTYP = 'VENDER'  THEN 'VENDER'
+		            WHEN M.PTNRTYP = 'CUSTOMER' THEN 'CUSTOMER' ELSE ' '
+		       END AS USER_TYPE   
+		 FROM GJ_WM.MPTNMA M
+		 WHERE M.PTUSEYN ='Y'
+		 	AND M.COMPKEY = '100'
+	</select>
+	
+	<select id="selectUserInfoDetail" parameterType="String" resultType="java.util.HashMap">
+		/* mapper.sy.userManageMapper : selectUserInfoDetail */
+		SELECT 
+			 GU.LOGIN_ID
+			 , GU.USER_NM
+			 , GU.COMPANY
+			 , GU.COMPKEY as compkey
+			 , GU.USER_TYPE as usertyp
+			 , GU.OWNRKY as ownerky
+			 , GU.PTNRKEY as ptnrkey
+			 , GU.LAST_URL as lasturl
+			 , GU.LAST_URL_ADMIN as lasturladmin
+			 , OURG.RGROUP_ID as rgroup_id
+		  FROM GJ_OP.OP_USER GU LEFT JOIN GJ_OP.OP_USER_ROLE_GROUP OURG
+			ON GU.USER_ID = OURG.USER_ID
+	     WHERE
+	     	GU.LOGIN_ID = #{loginId}
+	</select>
+	
+	<select id="selectUserLastUrl" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			<choose>
+			<when test='admin != null and admin == "Y"'>
+			 LAST_URL_ADMIN as lasturl
+			</when>
+			<otherwise>
+			 LAST_URL as lasturl
+			</otherwise>
+			</choose>
+		  FROM GJ_OP.OP_USER
+	     WHERE
+	     	USER_ID = #{userId}
+	</select>
+	
+	<update id="updLastUrl" parameterType="java.util.HashMap">
+		UPDATE GJ_OP.OP_USER
+			SET
+			<choose>
+			<when test='admin != null and admin == "Y"'>
+			LAST_URL_ADMIN = #{url}
+			</when>
+			<otherwise>
+			LAST_URL = #{url}
+			</otherwise>
+			</choose>
+		WHERE
+			 USER_ID = #{userId}
+	</update>
+</mapper>

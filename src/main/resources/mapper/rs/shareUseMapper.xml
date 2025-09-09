@@ -1,0 +1,1511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rs.mapper.ShareUseMapper">
+
+	<!-- SEQ 조회 -->
+	<select id="getSeq" parameterType="String" resultType="String">
+		SELECT LPAD(NEXTVAL(${value}), 8, '0')
+	</select>
+	
+	<!-- 공유자원사용신청 - 창고정보 조회 -->
+	<select id="getWhouseList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'W' AS MAT_CD
+		     , 'WHOUSE' AS SH_USE_TYPE
+			 , CW.WH_ID
+			 , CW.WH_ID AS SH_USE_REQ_ID
+			 , CW.WH_NM AS SH_USE_REQ_NM
+			 , FN_COMMCD_CMNM('CARTEMPCD', CW.WH_KN_CD) AS WH_KN_CD_NM
+			 , CW.CH_NM
+			 , CW.TEL_NO
+			 , CW.MAIL_ADDR
+			 , CW.AREA_NM2
+			 , CW.DT_ADDR
+			 , CW.DT_ADDR2
+			 , CW.TL_FL_NUM
+			 , CW.LONGI_NO
+			 , CW.LATI_NO
+			 , CW.LOT_AREA
+			 , FN_COMMCD_CMNM('VHCTYPE', CW.CAR_ENT_CD) AS CAR_ENT_CD_NM
+			 , AW.PHOTO
+			 , AW.PHOTO2
+			 , AW.PHOTO3
+			 , AW.FARM_YN
+			 , AW.FISH_YN
+			 , AW.MEAT_YN
+			 , AW.FOOD_YN
+			 , AW.FASHION_YN
+			 , AW.MACH_YN
+			 , AW.MEDI_YN
+			 , AW.FURN_YN
+			 , AW.ELEC_YN
+			 , AW.METAL_YN
+			 , AW.ETC_YN
+			 , AW.ISO_YN
+			 , AW.AEO_YN
+			 , AW.KGSP_YN
+			 , AW.TAPA_YN
+			 , AW.LOGI_YN
+			 , AW.DOCK_YN
+			 , AW.CANOPY_YN
+			 , AW.CARGO_YN
+			 , AW.PLAT_YN
+			 , AW.AUTO_YN
+			 , AW.RACK_YN
+			 , AW.VERTICAL_YN
+			 , FN_COMMCD_CMNM('SH_RNG_CLS', SW.SH_RNG_CLS) AS SH_RNG_CLS_NM
+			 , COALESCE(FN_COMMCD_CMNM('SH_PRD_CLS', SW.SH_PRD_CLS), '') AS SH_PRD_CLS_NM
+		     , SW.SH_NO
+		     , SW.SH_USE_YN
+		     , SW.MOD_USER_ID AS SH_USER_ID
+			 , COALESCE(SW.SH_FLR, '0') AS SH_FLR
+			 , COALESCE(SW.SH_SQU, '0') AS SH_SQU
+			 , COALESCE(SW.SH_PRC, '') AS SH_PRC
+			 , COALESCE(SW.SH_LT_DT, '-') AS SH_LT_DT
+			 , FN_WHOUSE_STATE(CW.WH_ID) AS SH_USE_YN_NM
+		  FROM GJ_DS.CM_WHOUSE CW
+		  LEFT JOIN GJ_DS.AD_WHOUSE AW
+		    ON CW.WH_ID = AW.WH_ID
+		  LEFT JOIN (
+			SELECT SW.WH_ID
+				 , SW.SH_USE_YN
+				 , SW.SH_NO
+				 , SW.SH_RNG_CLS
+				 , SW.SH_PRD_CLS
+				 , SW.SH_FLR
+				 , SW.SH_SQU
+				 , SW.SH_PRC
+				 , SW.SH_LT_DT
+				 , SW.MOD_USER_ID
+			  FROM SH_WHOUSE SW
+			  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_WHOUSE GROUP BY WH_ID) SW2
+				ON SW.SH_NO = SW2.SH_NO
+			   ) SW
+			ON CW.WH_ID = SW.WH_ID
+		 WHERE CW.USE_YN = 'Y'
+		   AND CW.LATI_NO IS NOT NULL
+		   AND CW.LONGI_NO IS NOT NULL
+		<if test='whNm != null and !whNm.equals("")'>
+		   AND CW.WH_NM LIKE CONCAT ('%', #{whNm}, '%')
+		</if>
+		<if test='whKnCd != null and !whKnCd.equals("")'>
+		   AND CW.WH_KN_CD = #{whKnCd}
+		</if>
+		<if test='minShSqu != null and !minShSqu.equals("")'>
+		   AND CAST(SW.SH_SQU AS INTEGER) <![CDATA[>=]]> CAST(#{minShSqu} AS INTEGER)
+		</if>
+		<if test='maxShSqu != null and !maxShSqu.equals("")'>
+		   AND CAST(SW.SH_SQU AS INTEGER) <![CDATA[<=]]> CAST(#{maxShSqu} AS INTEGER)
+		</if>
+		<if test='shPrdCls != null and !shPrdCls.equals("")'>
+		   AND SW.SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test='minShPrd != null and !minShPrd.equals("")'>
+		   AND SW.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+		</if>
+		<if test='maxShPrd != null and !maxShPrd.equals("")'>
+		   AND SW.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+		</if>
+		<if test='minShPrc != null and !minShPrc.equals("")'>
+		   AND SW.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+		</if>
+		<if test='maxShPrc != null and !maxShPrc.equals("")'>
+		   AND SW.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+		</if>
+	</select>
+	
+	<!-- 공유자원사용신청 - 차량정보 조회 -->
+	<select id="getCarList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'C' AS MAT_CD
+		     , 'CAR' AS SH_USE_TYPE
+			 , CC.CAR_ID
+			 , CC.CAR_ID AS SH_USE_REQ_ID
+			 , CC.CAR_FULL_NO AS SH_USE_REQ_NM
+			 , CC.CAR_CP_NM
+			 , CC.DRIVER_NM
+			 , CC.LONGI_NO
+			 , CC.LATI_NO
+			 , FN_COMMCD_CMNM('VHCOPTY', CC.CAR_CLS_CD) AS CAR_CLS_CD_NM
+			 , FN_COMMCD_CMNM('SKUGR01', CC.CAR_TEMP_CD) AS CAR_TEMP_CD_NM
+		     , COALESCE(CC.TEL_NO, '') AS TEL_NO
+			 , CC.DT_ADDR
+			 , CC.DT_ADDR2
+			 , AC.GERA_YN
+			 , AC.CAR_TEMP_YN
+			 , AC.CAR_PHOT  AS PHOTO
+			 , AC.CAR_PHOT2 AS PHOTO2
+			 , AC.CAR_PHOT3 AS PHOTO3
+		     , MC.CAR_TYPE
+			 , SC.SH_NO
+			 , SC.SH_USE_YN
+			 , COALESCE(FN_COMMCD_CMNM('SH_PRD_CLS', SC.SH_PRD_CLS), '') AS SH_PRD_CLS_NM
+			 , SC.SH_PRD
+			 , COALESCE(SC.SH_PRC, '') AS SH_PRC
+			 , SC.SH_LT_DT
+			 , FN_CAR_STATE(CC.CAR_ID) AS SH_USE_YN_NM
+			 , SC.MOD_USER_ID AS SH_USER_ID
+		  FROM GJ_DS.CM_CAR CC
+		  LEFT JOIN GJ_DS.AD_CAR AC
+			ON CC.CAR_ID = AC.CAR_ID
+		  LEFT JOIN GJ_DS.MD_CAR MC
+			ON CC.CAR_TYPE = MC.OID
+		  LEFT JOIN (
+			SELECT SC.CAR_ID
+				 , SC.SH_NO
+				 , SC.SH_PRD_CLS
+				 , SC.SH_PRD
+				 , SC.SH_PRC
+				 , SC.SH_LT_DT
+				 , SC.SH_USE_YN
+				 , SC.USE_YN
+				 , SC.MOD_USER_ID
+			FROM SH_CAR SC
+			JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_CAR GROUP BY CAR_ID) SC2
+			  ON SC.SH_NO = SC2.SH_NO
+				 ) SC
+			  ON CC.CAR_ID = SC.CAR_ID
+			 AND SC.USE_YN = 'Y'
+		   WHERE CC.USE_YN = 'Y'
+			 AND CC.LATI_NO IS NOT NULL
+			 AND CC.LONGI_NO IS NOT NULL
+		<if test='carClsCd != null and !carClsCd.equals("")'>
+			 AND CC.CAR_CLS_CD = #{carClsCd}
+		</if>
+		<if test='carOprCd != null and !carOprCd.equals("")'>
+			 AND CC.CAR_OPR_CD = #{carOprCd}
+		</if>
+		<if test='carModCd != null and !carModCd.equals("")'>
+			 AND CC.CAR_MOD_CD = #{carModCd}
+		</if>
+		<if test='carTempCd != null and !carTempCd.equals("")'>
+			 AND CC.CAR_TEMP_CD = #{carTempCd}
+		</if>
+		<if test='minCarLodWgt != null and !minCarLodWgt.equals("")'>
+			 AND CC.CAR_LOD_WGT <![CDATA[>=]]> CAST(#{minCarLodWgt} AS INTEGER)
+		</if>
+		<if test='maxCarLodWgt != null and !maxCarLodWgt.equals("")'>
+			 AND CC.CAR_LOD_WGT <![CDATA[<=]]> CAST(#{maxCarLodWgt} AS INTEGER)
+		</if>
+		<if test='shPrdCls != null and !shPrdCls.equals("")'>
+			 AND SC.SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test='minShPrd != null and !minShPrd.equals("")'>
+			 AND SC.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+		</if>
+		<if test='maxShPrd != null and !maxShPrd.equals("")'>
+			 AND SC.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+		</if>
+		<if test='minShPrc != null and !minShPrc.equals("")'>
+			 AND SC.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+		</if>
+		<if test='maxShPrc != null and !maxShPrc.equals("")'>
+			 AND SC.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+		</if>
+	</select>
+
+	<!-- 공유자원사용신청 - 차량정보 조회 -->
+	<select id="getFkliftList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'E' AS MAT_CD
+			 , 'EQUIP' AS SH_USE_TYPE
+			 , CF.EQUIP_CD
+			 , CF.EQUIP_ID
+			 , CF.EQUIP_ID AS SH_USE_REQ_ID
+			 , CF.EQUIP_NM AS SH_USE_REQ_NM
+			 , CF.FKLIFT_WGT
+			 , CF.FKLIFT_HGT
+			 , CF.FKLIFT_MODEL
+			 , FN_COMMCD_CMNM('FKLIFT_CD', CF.FKLIFT_CD) AS FKLIFT_CD_NM
+			 , FN_COMMCD_CMNM('FKLIFT_MST', CF.FKLIFT_MST) AS FKLIFT_MST_NM
+			 , FN_COMMCD_CMNM('CHGR_YN', CF.CHGR_YN) AS CHGR_YN_NM
+			 , FN_COMMCD_CMNM('DRIVER_YN', CF.DRIVER_YN) AS DRIVER_YN_NM
+		     , CF.MAKE_YEAR
+			 , CF.DT_ADDR
+			 , CF.DT_ADDR2
+		     , CF.LATI_NO
+		     , CF.LONGI_NO
+		     , CF.TEL_NO
+			 , AE.PHOTO_FILE  AS PHOTO
+			 , AE.PHOTO_FILE2 AS PHOTO2
+			 , AE.PHOTO_FILE3 AS PHOTO3
+			 , SE.SH_NO
+			 , COALESCE(SE.SH_PRC, '') AS SH_PRC
+			 , COALESCE(SE.SH_LT_DT, '-') AS SH_LT_DT
+			 , SE.SH_PRD
+			 , FN_COMMCD_CMNM('SH_PRD_CLS', SE.SH_PRD_CLS ) AS SH_PRD_CLS_NM
+			 , SE.SH_SQU
+			 , SE.SH_LK_CLS
+			 , SE.SH_USE_YN
+			 , FN_EQUIP_STATE(CF.EQUIP_ID) AS SH_USE_YN_NM
+			 , SE.MOD_USER_ID AS SH_USER_ID
+		FROM GJ_DS.CM_FKLIFT CF
+		LEFT JOIN GJ_DS.AD_EQUIP AE
+		  ON CF.EQUIP_ID = AE.EQUIP_ID
+		LEFT JOIN (
+			SELECT SE.SH_NO
+				 , SE.EQUIP_ID
+				 , SE.SH_PRD
+				 , SE.SH_PRD_CLS
+				 , SE.SH_SQU
+				 , SE.SH_LK_CLS
+				 , SE.SH_PRC
+				 , SE.SH_LT_DT
+				 , SE.SH_USE_YN
+				 , SE.MOD_USER_ID
+			FROM SH_EQUIP SE
+		    JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+			  ON SE.SH_NO = SE2.SH_NO
+			 ) SE
+		  ON CF.EQUIP_ID = SE.EQUIP_ID
+	   WHERE CF.USE_YN = 'Y'
+	     AND CF.LATI_NO IS NOT NULL
+	     AND CF.LONGI_NO IS NOT NULL
+	  <if test='equipNm != null and !equipNm.equals("")'>
+	     AND CF.EQUIP_NM LIKE CONCAT ('%',#{equipNm},'%')
+	  </if>
+	  <if test='fkliftCd != null and !fkliftCd.equals("")'>
+	     AND CF.FKLIFT_CD = #{fkliftCd}
+	  </if>
+	  <if test='fkliftMst != null and !fkliftMst.equals("")'>
+	     AND CF.FKLIFT_MST = #{fkliftMst}
+	  </if>
+	  <if test='minFkliftWgt != null and !minFkliftWgt.equals("")'>
+	     AND CF.FKLIFT_WGT <![CDATA[>=]]> CAST(#{minFkliftWgt} AS INTEGER)
+	  </if>
+	  <if test='maxFkliftWgt != null and !maxFkliftWgt.equals("")'>
+	     AND CF.FKLIFT_WGT <![CDATA[<=]]> CAST(#{maxFkliftWgt} AS INTEGER)
+	  </if>
+	  <if test='shPrdCls != null and !shPrdCls.equals("")'>
+	     AND SE.SH_PRD_CLS = #{shPrdCls}
+	  </if>
+	  <if test='minShPrd != null and !minShPrd.equals("")'>
+	     AND SE.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+	  </if>
+	  <if test='maxShPrd != null and !maxShPrd.equals("")'>
+	     AND SE.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+	  </if>
+	  <if test='minShPrc != null and !minShPrc.equals("")'>
+	     AND SE.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+	  </if>
+	  <if test='maxShPrc != null and !maxShPrc.equals("")'>
+	     AND SE.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+	  </if>
+	</select>
+
+	<!-- 공유자원사용신청 - 차량정보 조회 -->
+	<select id="getKartList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'E' AS MAT_CD
+			 , 'EQUIP' AS SH_USE_TYPE
+			 , CK.EQUIP_CD
+			 , CK.EQUIP_ID
+			 , CK.EQUIP_ID AS SH_USE_REQ_ID
+			 , CK.EQUIP_NM AS SH_USE_REQ_NM
+			 , FN_COMMCD_CMNM('KART_CD', CK.KART_CD) AS KART_CD_NM
+			 , FN_COMMCD_CMNM('KART_TYP', CK.KART_TYP) AS KART_TYP_NM
+			 , CK.KART_WGT
+			 , CK.KART_STD
+			 , CK.MAKE_YEAR
+			 , CK.DT_ADDR
+			 , CK.DT_ADDR2
+			 , CK.LATI_NO
+			 , CK.LONGI_NO
+			 , AE.PHOTO_FILE  AS PHOTO
+			 , AE.PHOTO_FILE2 AS PHOTO2
+			 , AE.PHOTO_FILE3 AS PHOTO3
+			 , SE.SH_NO
+			 , SE.SH_SQU
+			 , COALESCE(SE.SH_PRC, '') AS SH_PRC
+			 , COALESCE(SE.SH_LT_DT, '-') AS SH_LT_DT
+			 , SE.SH_PRD
+			 , FN_COMMCD_CMNM('SH_PRD_CLS', SE.SH_PRD_CLS ) AS SH_PRD_CLS_NM
+			 , SE.SH_LK_CLS
+			 , SE.SH_USE_YN
+			 , SE.SH_QTY
+			 , FN_EQUIP_STATE(CK.EQUIP_ID) AS SH_USE_YN_NM
+			 , SE.MOD_USER_ID AS SH_USER_ID
+		FROM GJ_DS.CM_KART CK
+		LEFT JOIN GJ_DS.AD_EQUIP AE
+		  ON CK.EQUIP_ID = AE.EQUIP_ID
+		LEFT JOIN (
+			SELECT SE.SH_NO
+				 , SE.EQUIP_ID
+				 , SE.SH_PRD
+				 , SE.SH_PRD_CLS
+				 , SE.SH_SQU
+				 , SE.SH_LK_CLS
+				 , SE.SH_PRC
+				 , SE.SH_LT_DT
+				 , SE.SH_QTY
+				 , SE.SH_USE_YN
+				 , SE.MOD_USER_ID
+			FROM SH_EQUIP SE
+		    JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+			  ON SE.SH_NO = SE2.SH_NO
+		      ) SE
+		  ON CK.EQUIP_ID = SE.EQUIP_ID
+	   WHERE CK.USE_YN = 'Y'
+	     AND CK.LATI_NO IS NOT NULL
+	     AND CK.LONGI_NO IS NOT NULL
+	  <if test='equipNm != null and !equipNm.equals("")'>
+	     AND CK.EQUIP_NM LIKE CONCAT ('%',#{equipNm},'%')
+	  </if>
+	  <if test='kartCd != null and !kartCd.equals("")'>
+	     AND CK.KART_CD = #{kartCd}
+	  </if>
+	  <if test='kartTyp != null and !kartTyp.equals("")'>
+	     AND CK.KART_TYP = #{kartTyp}
+	  </if>
+	  <if test='minKartShQty != null and !minKartShQty.equals("")'>
+	     AND SE.SH_QTY <![CDATA[>=]]> CAST(#{minKartShQty} AS INTEGER)
+	  </if>
+	  <if test='maxKartShQty != null and !maxKartShQty.equals("")'>
+	     AND SE.SH_QTY <![CDATA[<=]]> CAST(#{maxKartShQty} AS INTEGER)
+	  </if>
+	  <if test='shPrdCls != null and !shPrdCls.equals("")'>
+	     AND SE.SH_PRD_CLS = #{shPrdCls}
+	  </if>
+	  <if test='minShPrd != null and !minShPrd.equals("")'>
+	     AND SE.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+	  </if>
+	  <if test='maxShPrd != null and !maxShPrd.equals("")'>
+	     AND SE.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+	  </if>
+	  <if test='minShPrc != null and !minShPrc.equals("")'>
+	     AND SE.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+	  </if>
+	  <if test='maxShPrc != null and !maxShPrc.equals("")'>
+	     AND SE.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+	  </if>
+	</select>
+
+	<!-- 공유자원사용신청 - 차량정보 조회 -->
+	<select id="getPltList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'E' AS MAT_CD
+			 , 'EQUIP' AS SH_USE_TYPE
+			 , CP.EQUIP_CD
+			 , CP.EQUIP_ID
+			 , CP.EQUIP_ID AS SH_USE_REQ_ID
+			 , CP.EQUIP_NM AS SH_USE_REQ_NM
+			 , FN_COMMCD_CMNM('PLT_CD', CP.PLT_CD) AS PLT_CD_NM
+			 , FN_COMMCD_CMNM('PLT_TYP_CD', CP.PLT_TYP_CD) AS PLT_TYP_CD_NM
+			 , FN_COMMCD_CMNM('PLT_STD', CP.PLT_STD) AS PLT_STD_NM
+			 , CP.PLT_WGT
+			 , CP.MAKE_YEAR
+			 , CP.TEL_NO
+			 , CP.DT_ADDR
+			 , CP.DT_ADDR2
+			 , CP.LATI_NO
+			 , CP.LONGI_NO
+			 , AE.PHOTO_FILE  AS PHOTO
+			 , AE.PHOTO_FILE2 AS PHOTO2
+			 , AE.PHOTO_FILE3 AS PHOTO3
+			 , SE.SH_NO
+			 , SE.SH_SQU
+			 , COALESCE(SE.SH_PRC, '') AS SH_PRC
+			 , COALESCE(SE.SH_LT_DT, '-') AS SH_LT_DT
+			 , SE.SH_PRD
+			 , FN_COMMCD_CMNM('SH_PRD_CLS', SE.SH_PRD_CLS ) AS SH_PRD_CLS_NM
+			 , SE.SH_LK_CLS
+			 , SE.SH_QTY
+			 , SE.SH_USE_YN
+			 , FN_EQUIP_STATE(CP.EQUIP_ID) AS SH_USE_YN_NM
+			 , SE.MOD_USER_ID AS SH_USER_ID
+		FROM GJ_DS.CM_PLT CP
+		LEFT JOIN GJ_DS.AD_EQUIP AE
+		  ON CP.EQUIP_ID = AE.EQUIP_ID
+		LEFT JOIN (
+			SELECT SE.SH_NO
+				 , SE.EQUIP_ID
+				 , SE.SH_PRD
+				 , SE.SH_PRD_CLS
+				 , SE.SH_SQU
+				 , SE.SH_LK_CLS
+				 , SE.SH_PRC
+				 , SE.SH_LT_DT
+				 , SE.SH_QTY
+				 , SE.SH_USE_YN
+				 , SE.MOD_USER_ID
+			FROM SH_EQUIP SE
+			JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+			  ON SE.SH_NO = SE2.SH_NO
+				 ) SE
+		  ON CP.EQUIP_ID = SE.EQUIP_ID
+	   WHERE CP.USE_YN = 'Y'
+	     AND CP.LATI_NO IS NOT NULL
+	     AND CP.LONGI_NO IS NOT NULL
+	  <if test='equipNm != null and !equipNm.equals("")'>
+	     AND CP.EQUIP_NM LIKE CONCAT ('%',#{equipNm},'%')
+	  </if>
+	  <if test='pltCd != null and !pltCd.equals("")'>
+	     AND CP.PLT_CD = #{pltCd}
+	  </if>
+	  <if test='pltTypCd != null and !pltTypCd.equals("")'>
+	     AND CP.PLT_TYP_CD = #{pltTypCd}
+	  </if>
+	  <if test='minPltShQty != null and !minPltShQty.equals("")'>
+	     AND SE.SH_QTY <![CDATA[>=]]> CAST(#{minPltShQty} AS INTEGER)
+	  </if>
+	  <if test='maxPltShQty != null and !maxPltShQty.equals("")'>
+	     AND SE.SH_QTY <![CDATA[<=]]> CAST(#{maxPltShQty} AS INTEGER)
+	  </if>
+	  <if test='shPrdCls != null and !shPrdCls.equals("")'>
+	     AND SE.SH_PRD_CLS = #{shPrdCls}
+	  </if>
+	  <if test='minShPrd != null and !minShPrd.equals("")'>
+	     AND SE.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+	  </if>
+	  <if test='maxShPrd != null and !maxShPrd.equals("")'>
+	     AND SE.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+	  </if>
+	  <if test='minShPrc != null and !minShPrc.equals("")'>
+	     AND SE.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+	  </if>
+	  <if test='maxShPrc != null and !maxShPrc.equals("")'>
+	     AND SE.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+	  </if>
+	</select>
+
+
+	<!-- 공유자원사용신청 - 창고 사용신청 -->
+	<update id="updateShWhouseApply" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_WHOUSE
+		   SET SH_USE_YN = 'A'
+		 WHERE WH_ID = #{whId}
+		   AND SH_USE_YN = 'R'
+	</update>
+
+	<!-- 공유자원사용신청 - 차량 사용신청 -->
+	<update id="updateShCarApply" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_CAR
+		   SET SH_USE_YN = 'A'
+		 WHERE CAR_ID = #{carId}
+		   AND SH_USE_YN = 'R'
+	</update>
+
+	<!-- 공유자원사용신청 - 기자재 사용신청 -->
+	<update id="updateShEquipApply" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_EQUIP
+		   SET SH_USE_YN = 'A'
+		 WHERE EQUIP_ID = #{equipId}
+		   AND SH_USE_YN = 'R'
+	</update>
+
+	<!-- 공유자원사용신청 - 매칭 입력 -->
+	<insert id="insertShMatch" parameterType="java.util.HashMap">
+		INSERT INTO GJ_DS.SH_MATCH
+		(	  MAT_NO
+			, MAT_REQ_DT
+			, MAT_CD
+			, MAT_YN
+			, SH_NO
+			, SUP_ID
+			, CON_ID
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+		)
+		VALUES
+		(	  CONCAT('MC',LPAD(NEXTVAL(sh_match_seq), 8, '0'))
+			, NOW()
+			, #{matCd}
+			, 'A'
+			, #{shNo}
+			, #{shUserId}
+			, #{userId}
+			, NOW()
+			, #{userId}
+			, NOW()
+			, #{userId}
+		)
+	</insert>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<!-- 공유자원사용신청 - 기자재(지게차) 정보 조회 -->
+	<select id="getEquipFList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CMF.EQUIP_ID
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'EQUIP_CD' AND CC.CMCD = CMF.EQUIP_CD) AS EQUIP_CD_NM
+			,CMF.EQUIP_NM
+			,(SELECT CPNM FROM MASTER.CORPMASTER WHERE CPCD = CMF.CP_CD) AS CP_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'FKLIFT_CD' AND CC.CMCD = CMF.FKLIFT_CD) AS FKLIFT_CD_NM
+			,CMF.FKLIFT_WGT
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'FKLIFT_MST' AND CC.CMCD = CMF.FKLIFT_MST) AS FKLIFT_MST_NM
+			,FORMAT(CMF.FKLIFT_HGT,0) AS FKLIFT_HGT
+			,CMF.MAKE_YEAR
+			,CMF.MAKE_CP_NM
+			,CMF.FKLIFT_MODEL
+			,CMF.FKLIFT_SERIAL_NO
+			,CMF.CHGR_YN
+			,CMF.DRIVER_YN
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = SHE.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,SHE.SH_PRD
+			,SHE.SH_SQU
+			,SHE.SH_LK_CLS
+			,FORMAT(SHE.SH_PRC,0) AS SH_PRC
+			,SHE.SH_LT_DT
+		 	,ADE.PHOTO_FILE AS PHOTO
+			,SHE.USER_ID AS SH_USER_ID
+			,SHE.SH_NO
+			,SHM.MAT_NO
+		FROM GJ_DS.CM_FKLIFT CMF
+		LEFT OUTER JOIN GJ_DS.SH_EQUIP SHE
+		 ON SHE.USER_ID = CMF.USER_ID
+		AND SHE.EQUIP_ID  = CMF.EQUIP_ID
+		AND SHE.USE_YN  = 'Y'
+		LEFT OUTER JOIN GJ_DS.AD_EQUIP ADE
+		 ON ADE.USER_ID = CMF.USER_ID
+		AND ADE.EQUIP_ID  = CMF.EQUIP_ID
+		LEFT OUTER JOIN GJ_DS.SH_MATCH SHM
+		 ON SHM.SH_NO = SHE.SH_NO
+		WHERE 1=1
+		AND CMF.USE_YN = 'Y'
+		AND CMF.SH_YN = 'R'
+		AND SHE.SH_USE_YN = 'R'
+		AND CMF.USER_ID != #{userId}
+		<if test='condEquipCd != null and condEquipCd != ""'>
+		AND CMF.EQUIP_CD = #{condEquipCd}
+		</if>
+		<if test='condEquipNm != null and condEquipNm != ""'>
+		AND CMF.EQUIP_NM LIKE CONCAT('%',#{condEquipNm},'%')
+		</if>
+		<if test='condFkliftCd != null and condFkliftCd != ""'>
+		AND CMF.FKLIFT_CD = #{condFkliftCd}
+		</if>
+		<if test='condFkliftWgtStart != null and condFkliftWgtStart != ""'>
+		AND CMF.FKLIFT_WGT >= REPLACE(#{condFkliftWgtStart},",","")
+		</if>
+		<if test='condFkliftWgtEnd != null and condFkliftWgtEnd != ""'>
+		AND CMF.FKLIFT_WGT <![CDATA[<=]]> REPLACE(#{condFkliftWgtEnd},",","")
+		</if>
+		<if test='condFkliftMst != null and condFkliftMst != ""'>
+		AND CMF.FKLIFT_MST = #{condFkliftMst}
+		</if>
+		<if test='condShPrdCls != null and condShPrdCls != ""'>
+		AND SHE.SH_PRD_CLS = #{condShPrdCls}
+		</if>
+		<if test='condShPrd != null and condShPrd != ""'>
+		AND SHE.SH_PRD = #{condShPrd}
+		</if>
+		<if test='condShPrcStart != null and condShPrcStart != ""'>
+		AND SHE.SH_PRC >= REPLACE(#{condShPrcStart},",","")
+		</if>
+		<if test='condShPrcEnd != null and condShPrcEnd != ""'>
+		AND SHE.SH_PRC <![CDATA[<=]]> REPLACE(#{condShPrcEnd},",","")
+		</if>
+		ORDER BY CMF.CRE_DT DESC
+	</select>
+
+	<!-- 공유자원사용신청 - 기자재(대차) 정보 조회 -->
+	<select id="getEquipKList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CMK.EQUIP_ID
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'EQUIP_CD' AND CC.CMCD = CMK.EQUIP_CD) AS EQUIP_CD_NM
+			,CMK.EQUIP_NM
+			,(SELECT CPNM FROM MASTER.CORPMASTER WHERE CPCD = CMK.CP_CD) AS CP_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'KART_CD' AND CC.CMCD = CMK.KART_CD) AS KART_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'KART_TYP' AND CC.CMCD = CMK.KART_TYP) AS KART_TYP_NM
+			,FORMAT(CMK.KART_WGT,0) AS KART_WGT
+			,CMK.KART_STD
+			,CMK.MAKE_YEAR
+		 	,CMK.MAKE_CP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = SHE.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,SHE.SH_PRD
+		 	,SHE.SH_QTY
+		 	,SHE.SH_SQU
+		 	,SHE.SH_LK_CLS
+		 	,FORMAT(SHE.SH_PRC,0) AS SH_PRC
+		 	,SHE.SH_LT_DT
+		 	,ADE.PHOTO_FILE AS PHOTO
+			,SHE.USER_ID AS SH_USER_ID
+			,SHE.SH_NO
+			,SHM.MAT_NO
+		FROM GJ_DS.CM_KART CMK
+		LEFT OUTER JOIN GJ_DS.SH_EQUIP SHE
+		 ON SHE.USER_ID = CMK.USER_ID
+		AND SHE.EQUIP_ID  = CMK.EQUIP_ID
+		AND SHE.USE_YN  = 'Y'
+		LEFT OUTER JOIN GJ_DS.AD_EQUIP ADE
+		 ON ADE.USER_ID = CMK.USER_ID
+		AND ADE.EQUIP_ID  = CMK.EQUIP_ID
+		LEFT OUTER JOIN GJ_DS.SH_MATCH SHM
+		 ON SHM.SH_NO = SHE.SH_NO
+		WHERE 1=1
+		AND CMK.USE_YN = 'Y'
+		AND CMK.SH_YN = 'R'
+		AND SHE.SH_USE_YN = 'R'
+		AND CMK.USER_ID != #{userId}
+		<if test='condEquipCd != null and condEquipCd != ""'>
+		AND CMK.EQUIP_CD = #{condEquipCd}
+		</if>
+		<if test='condEquipNm != null and condEquipNm != ""'>
+		AND CMK.EQUIP_NM LIKE CONCAT('%',#{condEquipNm},'%')
+		</if>
+		<if test='condKartCd != null and condKartCd != ""'>
+		AND CMK.KART_CD = #{condKartCd}
+		</if>
+		<if test='condKartTyp != null and condKartTyp != ""'>
+		AND CMK.KART_TYP = #{condKartTyp}
+		</if>
+		<if test='condShQtyStart != null and condShQtyStart != ""'>
+		AND SHE.SH_QTY >= #{condShQtyStart}
+		</if>
+		<if test='condShQtyEnd != null and condShQtyEnd != ""'>
+		AND SHE.SH_QTY <![CDATA[<=]]> #{condShQtyEnd}
+		</if>
+		<if test='condShPrcStart != null and condShPrcStart != ""'>
+		AND SHE.SH_PRC >= REPLACE(#{condShPrcStart},",","")
+		</if>
+		<if test='condShPrdCls != null and condShPrdCls != ""'>
+		AND SHE.SH_PRD_CLS = #{condShPrdCls}
+		</if>
+		<if test='condShPrd != null and condShPrd != ""'>
+		AND SHE.SH_PRD = #{condShPrd}
+		</if>
+		<if test='condShPrcStart != null and condShPrcStart != ""'>
+		AND SHE.SH_PRC >= REPLACE(#{condShPrcStart},",","")
+		</if>
+		<if test='condShPrcEnd != null and condShPrcEnd != ""'>
+		AND SHE.SH_PRC <![CDATA[<=]]> REPLACE(#{condShPrcEnd},",","")
+		</if>
+		ORDER BY CMK.CRE_DT DESC
+	</select>
+
+	<!-- 공유자원사용신청 - 기자재(파레트) 정보 조회 -->
+	<select id="getEquipPList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CMP.EQUIP_ID
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'EQUIP_CD' AND CC.CMCD = CMP.EQUIP_CD) AS EQUIP_CD_NM
+			,CMP.EQUIP_NM
+			,(SELECT CPNM FROM MASTER.CORPMASTER WHERE CPCD = CMP.CP_CD) AS CP_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'PLT_CD' AND CC.CMCD = CMP.PLT_CD) AS PLT_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'PLT_TYP_CD' AND CC.CMCD = CMP.PLT_TYP_CD) AS PLT_TYP_CD_NM
+			,FORMAT(CMP.PLT_WGT,0) AS PLT_WGT
+			,CMP.PLT_STD
+			,CMP.MAKE_YEAR
+		 	,CMP.MAKE_CP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = SHE.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,SHE.SH_PRD
+		 	,FORMAT(SHE.SH_QTY,0) AS SH_QTY
+		 	,SHE.SH_SQU
+		 	,SHE.SH_LK_CLS
+		 	,FORMAT(SHE.SH_PRC,0) AS SH_PRC
+		 	,SHE.SH_LT_DT
+		 	,ADE.PHOTO_FILE AS PHOTO
+			,SHE.USER_ID AS SH_USER_ID
+			,SHE.SH_NO
+			,SHM.MAT_NO
+		FROM GJ_DS.CM_PLT CMP
+		LEFT OUTER JOIN GJ_DS.SH_EQUIP SHE
+		 ON SHE.USER_ID = CMP.USER_ID
+		AND SHE.EQUIP_ID  = CMP.EQUIP_ID
+		AND SHE.USE_YN  = 'Y'
+		LEFT OUTER JOIN GJ_DS.AD_EQUIP ADE
+		 ON ADE.USER_ID = CMP.USER_ID
+		AND ADE.EQUIP_ID  = CMP.EQUIP_ID
+		LEFT OUTER JOIN GJ_DS.SH_MATCH SHM
+		 ON SHM.SH_NO = SHE.SH_NO
+		WHERE 1=1
+		AND CMP.USE_YN = 'Y'
+		AND CMP.SH_YN = 'R'
+		AND SHE.SH_USE_YN = 'R'
+		AND CMP.USER_ID != #{userId}
+		<if test='condEquipCd != null and condEquipCd != ""'>
+		AND CMP.EQUIP_CD = #{condEquipCd}
+		</if>
+		<if test='condEquipNm != null and condEquipNm != ""'>
+		AND CMP.EQUIP_NM LIKE CONCAT('%',#{condEquipNm},'%')
+		</if>
+		<if test='condPltCd != null and condPltCd != ""'>
+		AND CMP.PLT_CD = #{condPltCd}
+		</if>
+		<if test='condPltTypCd != null and condPltTypCd != ""'>
+		AND CMP.PLT_TYP_CD = #{condPltTypCd}
+		</if>
+		<if test='condShPrdCls != null and condShPrdCls != ""'>
+		AND SHE.SH_PRD_CLS = #{condShPrdCls}
+		</if>
+		<if test='condShPrd != null and condShPrd != ""'>
+		AND SHE.SH_PRD = #{condShPrd}
+		</if>
+		<if test='condShQtyStart != null and condShQtyStart != ""'>
+		AND SHE.SH_QTY >= #{condShQtyStart}
+		</if>
+		<if test='condShQtyEnd != null and condShQtyEnd != ""'>
+		AND SHE.SH_QTY <![CDATA[<=]]> #{condShQtyEnd}
+		</if>
+		<if test='condShPrcStart != null and condShPrcStart != ""'>
+		AND SHE.SH_PRC >= REPLACE(#{condShPrcStart},",","")
+		</if>
+		<if test='condShPrcEnd != null and condShPrcEnd != ""'>
+		AND SHE.SH_PRC <![CDATA[<=]]> REPLACE(#{condShPrcEnd},",","")
+		</if>
+		ORDER BY CMP.CRE_DT DESC
+	</select>
+	
+	<!-- 공유자원사용신청 - 인력정보 조회 -->
+	<select id="getManpwList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 CMM.MANPW_NO
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_CD' AND CC.CMCD = CMM.WRK_CD) AS WRK_CD_NM
+			,CMM.MANPW_NM
+			,(SELECT CPNM FROM MASTER.CORPMASTER WHERE CPCD = CMM.CP_CD) AS CP_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_TYP' AND CC.CMCD = CMM.WRK_TYP) AS WRK_TYP_NM
+			,CMM.WRK_TIME1
+			,CMM.WRK_TIME2
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = CMM.WRK_GRP) AS WRK_GRP_NM
+			,CMM.NGT_YN
+			,CMM.LICN_YN
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_AREA' AND CC.CMCD = CMM.WRK_AREA) AS WRK_AREA_NM
+		 	,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = SHP.SH_PRD_CLS) AS SH_PRD_CLS_NM
+			,SHP.SH_PRD	
+			,SHP.SH_PRC_STD
+			,FORMAT(SHP.SH_PRC,0) AS SH_PRC
+			,SHP.SH_LT_DT
+			,ADM.WRK_PHTO AS PHOTO
+			,SHP.USER_ID AS SH_USER_ID
+			,SHP.SH_NO
+			,SHM.MAT_NO
+			,CMM.MANPW_NO
+		FROM GJ_DS.CM_MANPW CMM
+		LEFT OUTER JOIN GJ_DS.SH_MANPW SHP
+		 ON SHP.USER_ID = CMM.USER_ID
+		AND SHP.MANPW_NO = CMM.MANPW_NO
+		AND SHP.USE_YN  = 'Y'
+		LEFT OUTER JOIN GJ_DS.AD_MANPW ADM
+		 ON ADM.USER_ID = CMM.USER_ID
+		AND ADM.MANPW_NO  = CMM.MANPW_NO
+		LEFT OUTER JOIN GJ_DS.SH_MATCH SHM
+		 ON SHM.SH_NO = SHP.SH_NO
+		WHERE 1=1
+		AND CMM.USE_YN = 'Y'
+		AND CMM.SH_YN = 'R'
+		AND SHP.SH_USE_YN = 'R'
+		AND CMM.USER_ID != #{userId}
+		<if test='condWrkCd != null and condWrkCd != ""'>
+		AND CMM.WRK_CD = #{condWrkCd}
+		</if>
+		<if test='condCpCd != null and condCpCd != ""'>
+		AND CMM.CP_CD = #{condCpCd}
+		</if>
+		<if test='condWrkTyp != null and condWrkTyp != ""'>
+		AND CMM.WRK_TYP = #{condWrkTyp}
+		</if>
+		<if test='condWrkGrp != null and condWrkGrp != ""'>
+		AND CMM.WRK_GRP = #{condWrkGrp}
+		</if>
+		<if test='condWrkTimeStart != null and condWrkTimeStart != ""'>
+		AND CMM.WRK_TIME1 >= #{condWrkTimeStart}
+		AND CMM.WRK_TIME2 >= #{condWrkTimeStart}
+		</if>
+		<if test='condWrkTimeEnd != null and condWrkTimeEnd != ""'>
+		AND CMM.WRK_TIME1 <![CDATA[<=]]> #{condWrkTimeEnd}
+		AND CMM.WRK_TIME2 <![CDATA[<=]]> #{condWrkTimeEnd}
+		</if>
+		<if test='condShPrdCls != null and condShPrdCls != ""'>
+		AND SHP.SH_PRD_CLS = #{condShPrdCls}
+		</if>
+		<if test='condShPrd != null and condShPrd != ""'>
+		AND SHP.SH_PRD = #{condShPrd}
+		</if>
+		<if test='condShPrcStart != null and condShPrcStart != ""'>
+		AND SHP.SH_PRC >= REPLACE(#{condShPrcStart},",","")
+		</if>
+		<if test='condShPrcEnd != null and condShPrcEnd != ""'>
+		AND SHP.SH_PRC <![CDATA[<=]]> REPLACE(#{condShPrcEnd},",","")
+		</if>
+		ORDER BY CMM.CRE_DT DESC
+	</select>
+	
+	<!-- 공유자원사용신청 - 사용자 정보 조회 -->
+	<select id="getUserInfo" parameterType="String" resultType="java.util.HashMap">
+		SELECT
+			 USR.LOGIN_ID
+			,USR.USER_NM
+			,USR.USER_PHONE
+		FROM GJ_OP.OP_USER USR
+		WHERE 1=1
+		AND USR.SMS_YN = 'Y'
+		AND USR.USE_YN = 'Y'
+		AND USR.USER_ID = #{userId}
+	</select>
+	
+	<!-- 공유자원사용신청 - 창고 사용신청 -->
+	<update id="setWhouseUse" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_WHOUSE SET
+			SH_USE_YN = 'A'
+		WHERE 1=1
+		AND USER_ID = #{shUserId}
+		AND WH_ID = #{whId}
+		AND SH_USE_YN = 'R'
+	</update>
+	
+	<!-- 공유자원사용신청 - 차량 사용신청 -->
+	<update id="setCarUse" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_CAR SET
+			SH_USE_YN = 'A'
+		WHERE 1=1
+		AND USER_ID = #{shUserId}
+		AND CAR_ID = #{carId}
+		AND SH_USE_YN = 'R'
+	</update>
+	
+	<!-- 공유자원사용신청 - 기자재 사용신청 -->
+	<update id="setEquipUse" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_EQUIP
+		   SET SH_USE_YN = 'A'
+		 WHERE USER_ID = #{shUserId}
+		   AND EQUIP_ID = #{equipId}
+		   AND SH_USE_YN = 'R'
+	</update>
+	
+	<!-- 공유자원사용신청 - 인력 사용신청 -->
+	<update id="setManpwUse" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_MANPW SET
+			SH_USE_YN = 'A'
+		WHERE 1=1
+		AND USER_ID = #{shUserId}
+		AND MANPW_NO = #{manpwNo}
+		AND SH_USE_YN = 'R'
+	</update>
+	
+	<!-- 공유자원사용신청 - 매칭 입력 -->
+	<insert id="saveMatch" parameterType="java.util.HashMap">
+		INSERT INTO GJ_DS.SH_MATCH
+		(
+			 MAT_NO
+			,MAT_REQ_DT
+			,MAT_CD
+			,MAT_YN
+			,SH_NO
+			,SUP_ID
+			,CON_ID
+			,MAT_CON_DT
+			,MAT_END_DT
+			,SH_ST_DT
+			,SH_END_DT
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)VALUES(
+			 #{matNo}
+			,NOW()
+			,#{matCd}
+			,#{matYn}
+			,#{shNo}
+			,#{shUserId}
+			,#{userId}
+			,#{matConDt}
+			,#{matEndDt}
+			,#{shStDt}
+			,#{shEndDt}
+			,NOW()
+			,#{userId}
+			,NOW()
+			,#{userId}
+		)
+	</insert>
+	
+	<!-- 공유자원사용신청 - 매칭 이력 입력 -->
+	<insert id="saveMatchHist" parameterType="java.util.HashMap">
+		INSERT INTO GJ_DS.SH_MATCH_HIST
+		(
+			 HIST_NO
+			,MAT_NO
+			,MAT_YN
+			,CRE_DT
+			,CRE_USER_ID
+		)
+		SELECT
+			 CONCAT('MH',LPAD(NEXTVAL(sh_match_hist_seq), 8, '0'))
+			,MAT_NO
+			,MAT_YN
+			,NOW()
+			,#{userId}
+		FROM GJ_DS.SH_MATCH
+		WHERE MAT_NO = #{matNo}
+	</insert>
+
+	<!-- 모바일 공유자원사용신청 - 창고정보 조회 -->
+	<select id="getMoWhouseList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'W' AS matCd
+			 , 'WHOUSE'AS shUseType
+			 , CW.WH_ID AS whId
+			 , CW.WH_ID AS shUseReqId
+			 , CW.WH_NM AS whNm
+			 , CW.WH_NM AS shUseReqIdNm
+			 , FN_COMMCD_CMNM('CARTEMPCD', CW.WH_KN_CD) AS whKnCdNm
+			 , CW.CH_NM AS chNm
+			 , CW.TEL_NO AS telNo
+			 , CW.MAIL_ADDR AS mailAddr
+			 , CW.AREA_NM1 AS areaNm1
+			 , CW.AREA_NM2 AS areaNm2
+			 , CW.DT_ADDR AS dtAddr
+			 , CW.DT_ADDR2 AS dtAddr2
+			 , CW.TL_FL_NUM AS tlFlNum
+			 , CW.LONGI_NO AS longiNo
+			 , CW.LATI_NO AS latiNo
+			 , CW.LOT_AREA AS lotArea
+			 , FN_COMMCD_CMNM('VHCTYPE', CW.CAR_ENT_CD) AS carEntCdNm
+			 , AW.PHOTO AS photo
+			 , AW.PHOTO2 AS photo2
+			 , AW.PHOTO3 AS photo3
+			 , AW.FARM_YN AS farmYn
+			 , AW.FISH_YN AS fishYn
+			 , AW.MEAT_YN AS meatYn
+			 , AW.FOOD_YN AS foodYn
+			 , AW.FASHION_YN AS fashionYn
+			 , AW.MACH_YN AS machYn
+			 , AW.MEDI_YN AS mediYn
+			 , AW.FURN_YN AS furnYn
+			 , AW.ELEC_YN AS elecYn
+			 , AW.METAL_YN AS metalYn
+			 , AW.ETC_YN AS etcYn
+			 , AW.ISO_YN AS isoYn
+			 , AW.AEO_YN AS aeoYn
+			 , AW.KGSP_YN AS kgspYn
+			 , AW.TAPA_YN AS tapaYn
+			 , AW.LOGI_YN AS logiYn
+			 , AW.DOCK_YN AS dockYn
+			 , AW.CANOPY_YN AS canopyYn
+			 , AW.CARGO_YN AS cargoYn
+			 , AW.PLAT_YN AS platYn
+			 , AW.AUTO_YN AS autoYn
+			 , AW.RACK_YN AS rackYn
+			 , AW.VERTICAL_YN AS verticalYn
+			 , FN_COMMCD_CMNM('SH_RNG_CLS', SW.SH_RNG_CLS) AS shRngClsNm
+			 , COALESCE(FN_COMMCD_CMNM('SH_PRD_CLS', SW.SH_PRD_CLS), '') AS shPrdClsNm
+			 , SW.SH_NO AS shNo
+			 , SW.SH_USE_YN AS shUseYn
+			 , SW.MOD_USER_ID AS shUserId
+			 , COALESCE(SW.SH_FLR, '0') AS shFlr
+			 , COALESCE(SW.SH_SQU, '0') AS shSqu
+			 , COALESCE(SW.SH_PRC, '') AS shPrc
+			 , COALESCE(SW.SH_LT_DT, '-') AS shLtDt
+			 , FN_WHOUSE_STATE(CW.WH_ID) AS shUseYnNm
+		  FROM GJ_DS.CM_WHOUSE CW
+		  LEFT JOIN GJ_DS.AD_WHOUSE AW
+		    ON CW.WH_ID = AW.WH_ID
+		  LEFT JOIN (
+			SELECT SW.WH_ID
+				 , SW.SH_USE_YN
+				 , SW.SH_NO
+				 , SW.SH_RNG_CLS
+				 , SW.SH_PRD_CLS
+				 , SW.SH_FLR
+				 , SW.SH_SQU
+				 , SW.SH_PRC
+				 , SW.SH_LT_DT
+				 , SW.MOD_USER_ID
+			  FROM SH_WHOUSE SW
+			  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_WHOUSE GROUP BY WH_ID) SW2
+				ON SW.SH_NO = SW2.SH_NO
+				   ) SW
+			ON CW.WH_ID = SW.WH_ID
+		 WHERE CW.USE_YN = 'Y'
+		   AND CW.LATI_NO IS NOT NULL
+		   AND CW.LONGI_NO IS NOT NULL
+		<if test='whNm != null and !whNm.equals("")'>
+			AND CW.WH_NM LIKE CONCAT ('%', #{whNm}, '%')
+		</if>
+		<if test='whKnCd != null and !whKnCd.equals("")'>
+			AND CW.WH_KN_CD = #{whKnCd}
+		</if>
+		<if test='minShSqu != null and !minShSqu.equals("")'>
+			AND CAST(SW.SH_SQU AS INTEGER) <![CDATA[>=]]> CAST(#{minShSqu} AS INTEGER)
+		</if>
+		<if test='maxShSqu != null and !maxShSqu.equals("")'>
+			AND CAST(SW.SH_SQU AS INTEGER) <![CDATA[<=]]> CAST(#{maxShSqu} AS INTEGER)
+		</if>
+		<if test='shPrdCls != null and !shPrdCls.equals("")'>
+			AND SW.SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test='minShPrd != null and !minShPrd.equals("")'>
+			AND SW.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+		</if>
+		<if test='maxShPrd != null and !maxShPrd.equals("")'>
+			AND SW.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+		</if>
+		<if test='minShPrc != null and !minShPrc.equals("")'>
+			AND SW.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+		</if>
+		<if test='maxShPrc != null and !maxShPrc.equals("")'>
+			AND SW.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+		</if>
+	</select>
+
+	<!-- 모바일 공유자원사용신청 - 차량정보 조회 -->
+	<select id="getMoCarList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'C' AS matCd
+			 , 'CAR' AS shUseType
+			 , CC.CAR_ID AS carId
+			 , CC.CAR_ID AS shUseReqId
+			 , CC.CAR_FULL_NO AS carFullNo
+			 , CC.CAR_FULL_NO AS shUseReqNm
+			 , CC.CAR_CP_NM AS carCpNm
+			 , CC.DRIVER_NM AS driverNm
+			 , CC.LONGI_NO AS longiNo
+			 , CC.LATI_NO AS latiNo
+			 , FN_COMMCD_CMNM('VHCOPTY', CC.CAR_CLS_CD) AS carClsCdNm
+			 , FN_COMMCD_CMNM('SKUGR01', CC.CAR_TEMP_CD) AS carTempCdNm
+			 , COALESCE(CC.TEL_NO, '') AS telNo
+			 , CC.DT_ADDR AS dtAddr
+			 , CC.DT_ADDR2 AS dtAddr2
+			 , CC.AREA_NM1 AS areaNm1
+			 , CC.AREA_NM2 AS areaNm2
+			 , AC.GERA_YN AS geraYn
+			 , AC.CAR_TEMP_YN AS carTempYn
+			 , AC.CAR_PHOT  AS photo
+			 , AC.CAR_PHOT2 AS photo2
+			 , AC.CAR_PHOT3 AS photo3
+			 , MC.CAR_TYPE AS carType
+			 , SC.SH_NO AS shNo
+			 , SC.SH_USE_YN AS shUseYn
+			 , COALESCE(FN_COMMCD_CMNM('SH_PRD_CLS', SC.SH_PRD_CLS), '') AS shPrdClsNm
+			 , SC.SH_PRD AS shPrd
+			 , COALESCE(SC.SH_PRC, '') AS shPrc
+			 , SC.SH_LT_DT AS shLtDt
+			 , FN_CAR_STATE(CC.CAR_ID) AS shUseYnNm
+			 , SC.MOD_USER_ID AS shUserId
+		  FROM GJ_DS.CM_CAR CC
+		  LEFT JOIN GJ_DS.AD_CAR AC
+			ON CC.CAR_ID = AC.CAR_ID
+		  LEFT JOIN GJ_DS.MD_CAR MC
+			ON CC.CAR_TYPE = MC.OID
+		  LEFT JOIN (
+			SELECT SC.CAR_ID
+				 , SC.SH_NO
+				 , SC.SH_PRD_CLS
+				 , SC.SH_PRD
+				 , SC.SH_PRC
+				 , SC.SH_LT_DT
+				 , SC.SH_USE_YN
+				 , SC.USE_YN
+				 , SC.MOD_USER_ID
+			  FROM SH_CAR SC
+			  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_CAR GROUP BY CAR_ID) SC2
+				ON SC.SH_NO = SC2.SH_NO
+				   ) SC
+			ON CC.CAR_ID = SC.CAR_ID
+		   AND SC.USE_YN = 'Y'
+		 WHERE CC.USE_YN = 'Y'
+		   AND CC.LATI_NO IS NOT NULL
+		   AND CC.LONGI_NO IS NOT NULL
+		<if test='carClsCd != null and !carClsCd.equals("")'>
+			AND CC.CAR_CLS_CD = #{carClsCd}
+		</if>
+		<if test='carOprCd != null and !carOprCd.equals("")'>
+			AND CC.CAR_OPR_CD = #{carOprCd}
+		</if>
+		<if test='carModCd != null and !carModCd.equals("")'>
+			AND CC.CAR_MOD_CD = #{carModCd}
+		</if>
+		<if test='carTempCd != null and !carTempCd.equals("")'>
+			AND CC.CAR_TEMP_CD = #{carTempCd}
+		</if>
+		<if test='minCarLodWgt != null and !minCarLodWgt.equals("")'>
+			AND CC.CAR_LOD_WGT <![CDATA[>=]]> CAST(#{minCarLodWgt} AS INTEGER)
+		</if>
+		<if test='maxCarLodWgt != null and !maxCarLodWgt.equals("")'>
+			AND CC.CAR_LOD_WGT <![CDATA[<=]]> CAST(#{maxCarLodWgt} AS INTEGER)
+		</if>
+		<if test='shPrdCls != null and !shPrdCls.equals("")'>
+			AND SC.SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test='minShPrd != null and !minShPrd.equals("")'>
+			AND SC.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+		</if>
+		<if test='maxShPrd != null and !maxShPrd.equals("")'>
+			AND SC.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+		</if>
+		<if test='minShPrc != null and !minShPrc.equals("")'>
+			AND SC.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+		</if>
+		<if test='maxShPrc != null and !maxShPrc.equals("")'>
+			AND SC.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+		</if>
+	</select>
+
+	<!-- 모바일 공유자원사용신청 - 기자재(지게차) 정보 조회 -->
+	<select id="getMoEquipFList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'E' AS matCd
+			 , 'EQUIP' AS shUseType
+			 , CF.EQUIP_CD AS equipCd
+			 , CF.EQUIP_ID AS equipId
+			 , CF.EQUIP_ID AS shUseReqId
+			 , CF.EQUIP_NM AS equipNm
+			 , CF.EQUIP_NM AS shUseReqNm
+			 , CF.FKLIFT_WGT AS fkliftWgt
+			 , CF.FKLIFT_HGT AS fkliftHgt
+			 , CF.FKLIFT_MODEL AS fkliftModel
+			 , FN_COMMCD_CMNM('FKLIFT_CD', CF.FKLIFT_CD) AS fkliftCdNm
+			 , FN_COMMCD_CMNM('FKLIFT_MST', CF.FKLIFT_MST) AS fkliftMstNm
+			 , FN_COMMCD_CMNM('CHGR_YN', CF.CHGR_YN) AS chgrYnNm
+			 , FN_COMMCD_CMNM('DRIVER_YN', CF.DRIVER_YN) AS driverYnNm
+			 , CF.MAKE_YEAR AS makeYear
+			 , CF.AREA_NM1 AS areaNm1
+			 , CF.AREA_NM2 AS areaNm2
+			 , CF.DT_ADDR AS dtAddr
+			 , CF.DT_ADDR2 AS dtAddr2
+			 , CF.LATI_NO AS latiNo
+			 , CF.LONGI_NO AS longiNo
+			 , CF.TEL_NO AS telNo
+			 , AE.PHOTO_FILE  AS photo
+			 , AE.PHOTO_FILE2 AS photo2
+			 , AE.PHOTO_FILE3 AS photo3
+			 , SE.SH_NO AS shNo
+			 , COALESCE(SE.SH_PRC, '') AS shPrc
+			 , COALESCE(SE.SH_LT_DT, '-') AS shLtDt
+			 , SE.SH_PRD AS shPrd
+			 , FN_COMMCD_CMNM('SH_PRD_CLS', SE.SH_PRD_CLS ) AS shPrdClsNm
+			 , SE.SH_SQU AS shSqu
+			 , SE.SH_LK_CLS AS shLkCls
+			 , SE.SH_USE_YN AS shUseYn
+			 , FN_EQUIP_STATE(CF.EQUIP_ID) AS shUseYnNm
+			 , SE.MOD_USER_ID AS shUserId
+		  FROM GJ_DS.CM_FKLIFT CF
+		  LEFT JOIN GJ_DS.AD_EQUIP AE
+			ON CF.EQUIP_ID = AE.EQUIP_ID
+		  LEFT JOIN (
+			SELECT SE.SH_NO
+				 , SE.EQUIP_ID
+				 , SE.SH_PRD
+				 , SE.SH_PRD_CLS
+				 , SE.SH_SQU
+				 , SE.SH_LK_CLS
+				 , SE.SH_PRC
+				 , SE.SH_LT_DT
+				 , SE.SH_USE_YN
+				 , SE.MOD_USER_ID
+			  FROM SH_EQUIP SE
+			  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+				ON SE.SH_NO = SE2.SH_NO
+				   ) SE
+			ON CF.EQUIP_ID = SE.EQUIP_ID
+		 WHERE CF.USE_YN = 'Y'
+		   AND CF.LATI_NO IS NOT NULL
+		   AND CF.LONGI_NO IS NOT NULL
+		<if test='equipNm != null and !equipNm.equals("")'>
+			AND CF.EQUIP_NM LIKE CONCAT ('%',#{equipNm},'%')
+		</if>
+		<if test='fkliftCd != null and !fkliftCd.equals("")'>
+			AND CF.FKLIFT_CD = #{fkliftCd}
+		</if>
+		<if test='fkliftMst != null and !fkliftMst.equals("")'>
+			AND CF.FKLIFT_MST = #{fkliftMst}
+		</if>
+		<if test='minFkliftWgt != null and !minFkliftWgt.equals("")'>
+			AND CF.FKLIFT_WGT <![CDATA[>=]]> CAST(#{minFkliftWgt} AS INTEGER)
+		</if>
+		<if test='maxFkliftWgt != null and !maxFkliftWgt.equals("")'>
+			AND CF.FKLIFT_WGT <![CDATA[<=]]> CAST(#{maxFkliftWgt} AS INTEGER)
+		</if>
+		<if test='shPrdCls != null and !shPrdCls.equals("")'>
+			AND SE.SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test='minShPrd != null and !minShPrd.equals("")'>
+			AND SE.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+		</if>
+		<if test='maxShPrd != null and !maxShPrd.equals("")'>
+			AND SE.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+		</if>
+		<if test='minShPrc != null and !minShPrc.equals("")'>
+			AND SE.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+		</if>
+		<if test='maxShPrc != null and !maxShPrc.equals("")'>
+			AND SE.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+		</if>
+	</select>
+
+	<!-- 모바일 공유자원사용신청 - 기자재(대차) 정보 조회 -->
+	<select id="getMoEquipKList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'E' AS matCd
+			 , 'EQUIP' AS shUseType
+			 , CK.EQUIP_CD AS equipCd
+			 , CK.EQUIP_ID AS equipId
+			 , CK.EQUIP_ID AS shUseReqId
+			 , CK.EQUIP_NM AS shUseReqNm
+			 , FN_COMMCD_CMNM('KART_CD', CK.KART_CD) AS kartCdNm
+			 , FN_COMMCD_CMNM('KART_TYP', CK.KART_TYP) AS kartTypNm
+			 , CK.KART_WGT AS kartWgt
+			 , CK.KART_STD AS kartStd
+			 , CK.MAKE_YEAR AS makeYear
+			 , CK.DT_ADDR AS dtAddr
+			 , CK.DT_ADDR2 AS dtAddr2
+			 , CK.AREA_NM1 AS areaNm1
+			 , CK.AREA_NM2 AS areaNm2
+			 , CK.LATI_NO AS latiNo
+			 , CK.LONGI_NO AS longiNo
+			 , AE.PHOTO_FILE  AS photo
+			 , AE.PHOTO_FILE2 AS photo2
+			 , AE.PHOTO_FILE3 AS photo3
+			 , SE.SH_NO AS shNo
+			 , SE.SH_SQU AS shSqu
+			 , COALESCE(SE.SH_PRC, '') AS shPrc
+			 , COALESCE(SE.SH_LT_DT, '-') AS shLtDt
+			 , SE.SH_PRD AS shPrd
+			 , FN_COMMCD_CMNM('SH_PRD_CLS', SE.SH_PRD_CLS ) AS shPrdClsNm
+			 , SE.SH_LK_CLS AS shLkCls
+			 , SE.SH_USE_YN AS shUseYn
+			 , SE.SH_QTY AS shQty
+			 , FN_EQUIP_STATE(CK.EQUIP_ID) AS shUseYnNm
+			 , SE.MOD_USER_ID AS shUserId
+		  FROM GJ_DS.CM_KART CK
+		  LEFT JOIN GJ_DS.AD_EQUIP AE
+			ON CK.EQUIP_ID = AE.EQUIP_ID
+		  LEFT JOIN (
+			SELECT SE.SH_NO
+				 , SE.EQUIP_ID
+				 , SE.SH_PRD
+				 , SE.SH_PRD_CLS
+				 , SE.SH_SQU
+				 , SE.SH_LK_CLS
+				 , SE.SH_PRC
+				 , SE.SH_LT_DT
+				 , SE.SH_QTY
+				 , SE.SH_USE_YN
+				 , SE.MOD_USER_ID
+			  FROM SH_EQUIP SE
+			  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+				ON SE.SH_NO = SE2.SH_NO
+				   ) SE
+			ON CK.EQUIP_ID = SE.EQUIP_ID
+		 WHERE CK.USE_YN = 'Y'
+		   AND CK.LATI_NO IS NOT NULL
+		   AND CK.LONGI_NO IS NOT NULL
+		<if test='equipNm != null and !equipNm.equals("")'>
+			AND CK.EQUIP_NM LIKE CONCAT ('%',#{equipNm},'%')
+		</if>
+		<if test='kartCd != null and !kartCd.equals("")'>
+			AND CK.KART_CD = #{kartCd}
+		</if>
+		<if test='kartTyp != null and !kartTyp.equals("")'>
+			AND CK.KART_TYP = #{kartTyp}
+		</if>
+		<if test='minKartShQty != null and !minKartShQty.equals("")'>
+			AND SE.SH_QTY <![CDATA[>=]]> CAST(#{minKartShQty} AS INTEGER)
+		</if>
+		<if test='maxKartShQty != null and !maxKartShQty.equals("")'>
+			AND SE.SH_QTY <![CDATA[<=]]> CAST(#{maxKartShQty} AS INTEGER)
+		</if>
+		<if test='shPrdCls != null and !shPrdCls.equals("")'>
+			AND SE.SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test='minShPrd != null and !minShPrd.equals("")'>
+			AND SE.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+		</if>
+		<if test='maxShPrd != null and !maxShPrd.equals("")'>
+			AND SE.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+		</if>
+		<if test='minShPrc != null and !minShPrc.equals("")'>
+			AND SE.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+		</if>
+		<if test='maxShPrc != null and !maxShPrc.equals("")'>
+			AND SE.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+		</if>
+	</select>
+
+	<!-- 모바일 공유자원사용신청 - 기자재(파레트) 정보 조회 -->
+	<select id="getMoEquipPList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 'E' AS matCd
+			 , 'EQUIP' AS shUseType
+			 , CP.EQUIP_CD AS equipCd
+			 , CP.EQUIP_ID AS equipId
+			 , CP.EQUIP_ID AS shUseReqId
+			 , CP.EQUIP_NM AS shUseReqNm
+			 , FN_COMMCD_CMNM('PLT_CD', CP.PLT_CD) AS pltCdNm
+			 , FN_COMMCD_CMNM('PLT_TYP_CD', CP.PLT_TYP_CD) AS pltTypCdNm
+			 , FN_COMMCD_CMNM('PLT_STD', CP.PLT_STD) AS pltStdNm
+			 , CP.PLT_WGT AS pltWgt
+			 , CP.MAKE_YEAR AS makeYear
+			 , CP.TEL_NO AS telNo
+			 , CP.DT_ADDR AS dtAddr
+			 , CP.DT_ADDR2 AS dtAddr2
+			 , CP.AREA_NM1 AS areaNm1
+			 , CP.AREA_NM2 AS areaNm2
+			 , CP.LATI_NO AS latiNo
+			 , CP.LONGI_NO AS longiNo
+			 , AE.PHOTO_FILE  AS photo
+			 , AE.PHOTO_FILE2 AS photo2
+			 , AE.PHOTO_FILE3 AS photo3
+			 , SE.SH_NO AS shNo
+			 , SE.SH_SQU AS shSqu
+			 , COALESCE(SE.SH_PRC, '') AS shPrc
+			 , COALESCE(SE.SH_LT_DT, '-') AS shLtDt
+			 , SE.SH_PRD AS shPrd
+			 , FN_COMMCD_CMNM('SH_PRD_CLS', SE.SH_PRD_CLS ) AS shPrdClsNm
+			 , SE.SH_LK_CLS AS shLkCls
+			 , SE.SH_QTY AS shQty
+			 , SE.SH_USE_YN AS shUseYn
+			 , FN_EQUIP_STATE(CP.EQUIP_ID) AS shUseYnNm
+			 , SE.MOD_USER_ID AS shUserId
+		  FROM GJ_DS.CM_PLT CP
+		  LEFT JOIN GJ_DS.AD_EQUIP AE
+			ON CP.EQUIP_ID = AE.EQUIP_ID
+		  LEFT JOIN (
+			SELECT SE.SH_NO
+				 , SE.EQUIP_ID
+				 , SE.SH_PRD
+				 , SE.SH_PRD_CLS
+				 , SE.SH_SQU
+				 , SE.SH_LK_CLS
+				 , SE.SH_PRC
+				 , SE.SH_LT_DT
+				 , SE.SH_QTY
+				 , SE.SH_USE_YN
+				 , SE.MOD_USER_ID
+			  FROM SH_EQUIP SE
+			  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+				ON SE.SH_NO = SE2.SH_NO
+				   ) SE
+			ON CP.EQUIP_ID = SE.EQUIP_ID
+		 WHERE CP.USE_YN = 'Y'
+		   AND CP.LATI_NO IS NOT NULL
+		   AND CP.LONGI_NO IS NOT NULL
+		<if test='equipNm != null and !equipNm.equals("")'>
+			AND CP.EQUIP_NM LIKE CONCAT ('%',#{equipNm},'%')
+		</if>
+		<if test='pltCd != null and !pltCd.equals("")'>
+			AND CP.PLT_CD = #{pltCd}
+		</if>
+		<if test='pltTypCd != null and !pltTypCd.equals("")'>
+			AND CP.PLT_TYP_CD = #{pltTypCd}
+		</if>
+		<if test='minPltShQty != null and !minPltShQty.equals("")'>
+			AND SE.SH_QTY <![CDATA[>=]]> CAST(#{minPltShQty} AS INTEGER)
+		</if>
+		<if test='maxPltShQty != null and !maxPltShQty.equals("")'>
+			AND SE.SH_QTY <![CDATA[<=]]> CAST(#{maxPltShQty} AS INTEGER)
+		</if>
+		<if test='shPrdCls != null and !shPrdCls.equals("")'>
+			AND SE.SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test='minShPrd != null and !minShPrd.equals("")'>
+			AND SE.SH_PRD <![CDATA[>=]]> CAST(#{minShPrd} AS INTEGER)
+		</if>
+		<if test='maxShPrd != null and !maxShPrd.equals("")'>
+			AND SE.SH_PRD <![CDATA[<=]]> CAST(#{maxShPrd} AS INTEGER)
+		</if>
+		<if test='minShPrc != null and !minShPrc.equals("")'>
+			AND SE.SH_PRC <![CDATA[>=]]> CAST(#{minShPrc} AS INTEGER)
+		</if>
+		<if test='maxShPrc != null and !maxShPrc.equals("")'>
+			AND SE.SH_PRC <![CDATA[<=]]> CAST(#{maxShPrc} AS INTEGER)
+		</if>
+	</select>
+
+	<!-- 공유정보 - 창고 공유상태 업데이트 -->
+	<update id="saveMoShareWhouseShUseYn" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_WHOUSE
+		   SET SH_USE_YN = #{shUseYn}
+		     , MOD_USER_ID = #{userId}
+		     , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND SH_NO = #{shNo}
+		   AND SH_USE_YN = 'R'
+	</update>
+
+	<!-- 공유정보 - 차량 공유상태 업데이트 -->
+	<update id="saveMoShareCarShUseYn" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_CAR
+		   SET SH_USE_YN = #{shUseYn}
+		     , MOD_USER_ID = #{userId}
+		     , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND SH_NO = #{shNo}
+		   AND SH_USE_YN = 'R'
+	</update>
+
+	<!-- 공유정보 - 기자재 공유상태 업데이트 -->
+	<update id="saveMoShareManpwShUseYn" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_EQUIP
+		   SET SH_USE_YN = #{shUseYn}
+		     , MOD_USER_ID = #{userId}
+		     , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND SH_NO = #{shNo}
+		   AND SH_USE_YN = 'R'
+	</update>
+
+	<!-- 공유정보 - 인력 공유상태 업데이트 -->
+	<update id="saveMoShareEquipShYn" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.SH_MANPW
+		   SET SH_USE_YN = #{shUseYn}
+		     , MOD_USER_ID = #{userId}
+		     , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND SH_NO = #{shNo}
+		   AND SH_USE_YN = 'R'
+	</update>
+
+	<!-- 공유정보 - 창고 마스터 공유정보 업데이트 -->
+	<update id="saveMoCmWhouseShYn" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_WHOUSE
+		   SET SH_YN = 'N'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND WH_ID = #{whId}
+	</update>
+	<!-- 공유정보 - 차량 마스터 공유정보 업데이트 -->
+	<update id="saveMoCmCarShYn" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_CAR
+		   SET SH_YN = 'N'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND CAR_ID = #{carId}
+	</update>
+	<!-- 공유정보 - 기자재 마스터 공유정보 업데이트 -->
+	<update id="saveMoCmManpwShYn" parameterType="java.util.HashMap">
+		<choose>
+			<when test='shUseType != null and !shUseType.equals("F")'>
+				UPDATE GJ_DS.CM_FKLIFT
+				   SET SH_YN = 'N'
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE USER_ID = #{userId}
+				   AND EQUIP_ID = #{equipId}
+			</when>
+			<when test='shUseType != null and !shUseType.equals("K")'>
+				UPDATE GJ_DS.CM_KART
+				   SET SH_YN = 'N'
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE USER_ID = #{userId}
+				   AND EQUIP_ID = #{equipId}
+			</when>
+			<when test='shUseType != null and !shUseType.equals("P")'>
+				UPDATE GJ_DS.CM_PLT
+				   SET SH_YN = 'N'
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE USER_ID = #{userId}
+				   AND EQUIP_ID = #{equipId}
+			</when>
+		</choose>
+	</update>
+	<!-- 공유정보 - 인력 마스터 공유정보 업데이트 -->
+	<update id="saveMoCmEquipShYn" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.CM_MANPW
+		   SET SH_YN = 'N'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+</mapper>

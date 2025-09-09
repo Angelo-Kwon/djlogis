@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rs.mapper.WhouseMapper">
+
+	<!-- SEQ 조회 -->
+	<select id="getSeq" parameterType="String" resultType="String">
+		SELECT LPAD(NEXTVAL(${value}), 8, '0')
+	</select>
+
+	<!-- 창고 기본정보 목록 조회 -->
+	<select id="getWhouseBasicInfoList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* mapper.rs.whouseMapper : getWhouseBasicInfoList */
+		SELECT #{userNm}           AS userNm 
+			 , CW.USER_ID	AS userId
+		     , CW.SH_YN		AS shYn
+			 , FN_WHOUSE_STATE(CW.WH_ID) AS SH_USE_YN_NM
+		     , CW.USE_YN	AS useYn
+		     , CW.WH_ID as whId
+		     , CW.WH_NM as whNm
+		     , CONCAT(SUBSTR(CW.BR_NO,1,3),'-',SUBSTR(CW.BR_NO,4,2),'-',SUBSTR(CW.BR_NO,6)) as brNo
+		     , CW.CEO_NM as ceoNm
+		     , CW.USE_YN as useYn
+		     , CW.CH_NM as chNm
+		     , CW.TEL_NO as telNo
+		     , CW.MAIL_ADDR as mailAddr
+		     , CW.AREA_NM1 as areaNm1
+		     , CW.AREA_NM2 as areaNm2
+		     , CW.DT_ADDR as dtAddr
+		     , CW.DT_ADDR2 as dtAddr2
+		     , CW.TL_FL_NUM as tlFlNum
+		     , CW.UD_FL_NUM as udFlNum
+		     , CW.LONGI_NO as longiNo
+		     , CW.LATI_NO as latiNo
+		     , CW.LOT_AREA as lotArea
+		     , CW.TL_AREA as tlArea
+		     , CW.WH_KN_CD as whKnCd
+		     , CW.CAR_ENT_CD as carEntCd
+		     , CW.CM_PRICE as cmPrice
+		     , SW.SH_USE_YN as shUseYn
+		     , AW.FARM_YN AS farmYn
+			 , AW.FISH_YN AS fishYn
+			 , AW.MEAT_YN AS meatYn
+			 , AW.FOOD_YN AS foodYn
+			 , AW.FASHION_YN AS fashionYn
+			 , AW.MACH_YN AS machYn
+			 , AW.MEDI_YN AS mediYn
+			 , AW.FURN_YN AS furnYn
+			 , AW.ELEC_YN AS elecYn
+			 , AW.METAL_YN AS metalYn
+			 , AW.ETC_YN AS etcYn
+			 , AW.ISO_YN AS isoYn
+			 , AW.AEO_YN AS aeoYn
+			 , AW.KGSP_YN AS kgspYn
+			 , AW.TAPA_YN AS tapaYn
+			 , AW.LOGI_YN AS logiYn
+			 , AW.FIRE_INSU_YN AS fireInsuYn
+			 , AW.SALE_INSU_YN AS saleInsuYn
+			 , AW.DOCK_YN AS dockYn
+			 , AW.CANOPY_YN AS canopyYn
+			 , AW.CARGO_YN AS cargoYn
+			 , AW.PLAT_YN AS platYn
+			 , AW.AUTO_YN AS autoYn
+			 , AW.RACK_YN AS rackYn
+			 , AW.VERTICAL_YN AS verticalYn
+			 , AW.MEMO AS memo
+			 , AW.PHOTO AS photo
+			 , AW.PHOTO2 AS photo2
+			 , AW.PHOTO3 AS photo3
+			  FROM GJ_DS.CM_WHOUSE CW
+			  LEFT JOIN GJ_DS.AD_WHOUSE AW
+				ON CW.WH_ID = AW.WH_ID
+		  		LEFT JOIN (
+				SELECT SW.WH_ID
+				 , SW.SH_USE_YN
+				 , SW.SH_NO
+			  FROM SH_WHOUSE SW
+			  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_WHOUSE GROUP BY WH_ID) SW2
+				ON SW.SH_NO = SW2.SH_NO) SW
+				ON AW.WH_ID = SW.WH_ID
+		 	WHERE CW.USER_ID = #{user_id}
+		   		AND CW.USE_YN != 'D'
+		<if test='schWhNm != null and schWhNm != ""'>
+			AND CW.WH_NM like concat('%', #{schWhNm}, '%')
+		</if>
+		<if test='schUseYn != null and schUseYn != ""'>
+			AND CW.USE_YN = #{schUseYn}
+		</if>
+		<if test='schUseYn == null or schUseYn == ""'>
+			AND CW.USE_YN!= 'D'
+		</if>
+		<if test='schShYn != null and schShYn != ""'>
+    		AND SW.SH_USE_YN = #{schShYn}
+			</if>
+		<if test='schDtAddr != null and schDtAddr != ""'>
+    		AND CW.DT_ADDR like concat('%', #{schDtAddr}, '%')
+			</if>
+		<if test='schChNm != null and schChNm != ""'>
+    		AND CW.CH_NM like concat('%', #{schChNm}, '%')
+			</if>
+	</select>
+	
+	<insert id="insertCmWhouse" parameterType="java.util.HashMap"  useGeneratedKeys="true" keyProperty="whId" keyColumn="WH_ID">
+		/* mapper.rs.whouseMapper : insertCmWhouse */
+		<selectKey order="BEFORE" keyProperty="whId" resultType="String">
+			SELECT CONCAT('CW', LPAD(CAST(NEXTVAL(cm_whouse_seq) AS VARCHAR(8)), 8, '0'))
+		</selectKey>
+		INSERT INTO GJ_DS.CM_WHOUSE
+		(     USER_ID
+			, WH_ID
+			, WH_NM
+			, BR_NO
+			, CEO_NM
+			, USE_YN
+			, SH_YN
+			, CH_NM
+			, TEL_NO
+			, MAIL_ADDR
+			, AREA_NM1
+			, AREA_NM2
+			, DT_ADDR
+			, DT_ADDR2
+			, TL_FL_NUM
+			, UD_FL_NUM
+			, LONGI_NO
+			, LATI_NO
+			, LOT_AREA
+			, TL_AREA
+			, WH_KN_CD
+			, CAR_ENT_CD
+			, CM_PRICE
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+		) VALUES (
+				   #{userId}
+				 , #{whId}
+				 , #{whNm}
+				 , REPLACE(#{brNo}, '-', '')
+				 , #{ceoNm}
+				 , #{useYn}
+				 , 'N'
+				 , #{chNm}
+				 , REPLACE(#{telNo}, '-', '')
+				 , #{mailAddr}
+				 , #{areaNm1}
+				 , #{areaNm2}
+				 , #{dtAddr}
+				 , #{dtAddr2}
+				 , REPLACE(#{tlFlNum}, ',', '')
+				 , REPLACE(#{udFlNum}, ',', '')
+				 , #{longiNo}
+				 , #{latiNo}
+				 , REPLACE(#{lotArea}, ',', '')
+				 , REPLACE(#{tlArea}, ',', '')
+				 , #{whKnCd}
+				 , #{carEntCd}
+				 , REPLACE(NULLIF(#{cmPrice}, ''), ',', '')
+				 , NOW()
+				 , #{userId}
+				 , NOW()
+				 , #{userId}
+				 )
+	</insert>
+
+
+	<update id="updateCmWhouse" parameterType="java.util.HashMap" >
+		/* mapper.rs.whouseMapper : updateCmWhouse */
+		UPDATE CM_WHOUSE
+		   SET USER_ID = #{userId}
+		     , WH_NM = #{whNm}
+			 , BR_NO = REPLACE(#{brNo}, '-', '')
+			 , CEO_NM = #{ceoNm}
+			 , USE_YN = #{useYn}
+			 , CH_NM = #{chNm}
+			 , TEL_NO = REPLACE(#{telNo}, '-', '')
+			 , MAIL_ADDR = #{mailAddr}
+			 , AREA_NM1 = #{areaNm1}
+			 , AREA_NM2 = #{areaNm2}
+			 , DT_ADDR = #{dtAddr}
+			 , DT_ADDR2 = #{dtAddr2}
+			 , TL_FL_NUM = REPLACE(#{tlFlNum}, ',', '')
+			 , UD_FL_NUM = REPLACE(#{udFlNum}, ',', '')
+			 , LONGI_NO = #{longiNo}
+			 , LATI_NO = #{latiNo}
+			 , LOT_AREA = REPLACE(#{lotArea}, ',', '')
+			 , TL_AREA = REPLACE(#{tlArea}, ',', '')
+			 , WH_KN_CD = #{whKnCd}
+			 , CAR_ENT_CD = #{carEntCd}
+			 , CM_PRICE = CAST(REPLACE(NULLIF(#{cmPrice}, ''), ',', '') AS UNSIGNED)
+			 , MOD_DT = NOW()
+			 , MOD_USER_ID = #{userId}
+		WHERE USER_ID = #{userId}
+		 AND WH_ID = #{whId}
+	</update>
+
+	<update id="deleteCmWhouse" parameterType="java.util.HashMap" >
+		/* mapper.rs.whouseMapper : deleteCmWhouse */
+		UPDATE CM_WHOUSE
+		   SET USE_YN = 'D'
+			 , MOD_DT = NOW()
+			 , MOD_USER_ID = #{userId}
+		WHERE USER_ID = #{userId}
+		 AND WH_ID = #{whId}
+	</update>
+
+	<!-- 창고 부가정보 저장 -->
+	<insert id="insertAdWhouse" parameterType="java.util.HashMap" >
+		/* mapper.rs.whouseMapper : insertAdWhouse */
+		INSERT INTO GJ_DS.AD_WHOUSE
+		(     USER_ID
+			, WH_ID
+			, FARM_YN
+			, FISH_YN
+			, MEAT_YN
+			, FOOD_YN
+			, FASHION_YN
+			, MACH_YN
+			, MEDI_YN
+			, FURN_YN
+			, ELEC_YN
+			, METAL_YN
+			, ETC_YN
+			, ISO_YN
+			, AEO_YN
+			, KGSP_YN
+			, TAPA_YN
+			, LOGI_YN
+			, FIRE_INSU_YN
+			, SALE_INSU_YN
+			, DOCK_YN
+			, CANOPY_YN
+			, CARGO_YN
+			, PLAT_YN
+			, AUTO_YN
+			, RACK_YN
+			, VERTICAL_YN
+			, MEMO
+			, PHOTO
+			, PHOTO2
+			, PHOTO3
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+		)
+		VALUES
+		(	  #{userId}
+			, #{whId}
+			, #{farmYn}
+			, #{fishYn}
+			, #{meatYn}
+			, #{foodYn}
+			, #{fashionYn}
+			, #{machYn}
+			, #{mediYn}
+			, #{furnYn}
+			, #{elecYn}
+			, #{metalYn}
+			, #{etcYn}
+			, #{isoYn}
+			, #{aeoYn}
+			, #{kgspYn}
+			, #{tapaYn}
+			, #{logiYn}
+			, #{fireInsuYn}
+			, #{saleInsuYn}
+			, #{dockYn}
+			, #{canopyYn}
+			, #{cargoYn}
+			, #{platYn}
+			, #{autoYn}
+			, #{rackYn}
+			, #{verticalYn}
+			, #{memo}
+			, #{photo}
+			, #{photo2}
+			, #{photo3}
+			, NOW()
+			, #{userId}
+			, NOW()
+			, #{userId}
+		)
+	</insert>
+
+	<!-- 창고 부가정보 생성 -->
+	<update id="updateAdWhouse" parameterType="java.util.HashMap" >
+		/* mapper.rs.whouseMapper : updateAdWhouse */
+		UPDATE GJ_DS.AD_WHOUSE
+		SET USER_ID = #{userId}
+		, FARM_YN		= #{farmYn}
+		, FISH_YN		= #{fishYn}
+		, MEAT_YN		= #{meatYn}
+		, FOOD_YN		= #{foodYn}
+		, FASHION_YN	= #{fashionYn}
+		, MACH_YN		= #{machYn}
+		, MEDI_YN		= #{mediYn}
+		, FURN_YN		= #{furnYn}
+		, ELEC_YN		= #{elecYn}
+		, METAL_YN		= #{metalYn}
+		, ETC_YN		= #{etcYn}
+		, ISO_YN		= #{isoYn}
+		, AEO_YN		= #{aeoYn}
+		, KGSP_YN		= #{kgspYn}
+		, TAPA_YN		= #{tapaYn}
+		, LOGI_YN		= #{logiYn}
+		, FIRE_INSU_YN	= #{fireInsuYn}
+		, SALE_INSU_YN	= #{saleInsuYn}
+		, DOCK_YN		= #{dockYn}
+		, CANOPY_YN		= #{canopyYn}
+		, CARGO_YN		= #{cargoYn}
+		, PLAT_YN		= #{platYn}
+		, AUTO_YN		= #{autoYn}
+		, RACK_YN		= #{rackYn}
+		, VERTICAL_YN	= #{verticalYn}
+		, PHOTO			= #{photo}
+		, PHOTO2		= #{photo2}
+		, PHOTO3		= #{photo3}
+		, MEMO			= #{memo}
+		, MOD_DT		= NOW()
+		, MOD_USER_ID	= #{userId}
+		WHERE USER_ID = #{userId}
+		 AND WH_ID = #{whId}
+	</update>
+
+
+	<!-- 창고 공유정보 상세 조회 -->
+	<select id="selectShWhouseDetailInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* mapper.rs.whouseMapper : selectShWhouseDetailInfo */
+		SELECT CW.WH_ID AS WH_ID
+			 , CCC.CMGRPCD
+			 , CW.WH_NM AS WH_NM
+			 , CW.AREA_NM1 AS AREA_NM1
+			 , CW.AREA_NM2 AS AREA_NM2
+			 , CW.DT_ADDR  AS DT_ADDR
+			 , CW.CH_NM	   AS CH_NM
+			 , FN_WHOUSE_STATE(CW.WH_ID) AS SH_USE_YN_NM
+			 , FORMAT(CW.TL_FL_NUM, N'#,0') AS TL_FL_NUM
+			 , FORMAT(CW.UD_FL_NUM, N'#,0') AS UD_FL_NUM
+			 , FORMAT(CW.LOT_AREA, N'#,0') AS LOT_AREA
+			 , FORMAT(CW.TL_AREA, N'#,0') AS TL_AREA
+			 , AW.PHOTO AS WRK_PHTO
+			 , SW.SH_NO AS SH_NO
+			 , COALESCE(SW.SH_USE_YN, '') as sh_use_yn
+			 , COALESCE(SW.SH_RNG_CLS, '') AS edit_sh_rng_cls
+			 , COALESCE(SW.SH_FLR, '') AS edit_sh_flr
+			 , COALESCE(SW.SH_SQU, '') AS edit_sh_squ
+			 , COALESCE(SW.SH_LK_CLS, '') AS edit_sh_lk_cls
+			 , COALESCE(SW.SH_PRD_CLS, '') AS edit_sh_prd_cls
+			 , COALESCE(SW.SH_PRD, '') AS edit_sh_prd
+			 , COALESCE(SW.SH_PRC, CW.CM_PRICE) AS edit_sh_prc
+			 , COALESCE(SW.SH_LT_DT, DATE_FORMAT(ADDDATE(NOW(), INTERVAL 6 MONTH), '%Y-%m-%d')) AS edit_sh_lt_dt
+			 , COALESCE(SW.SH_USE_YN, '') as edit_sh_use_yn
+			 , COALESCE(CCC.CMNM, '미등록') as sh_use_yn_nm
+		  FROM GJ_DS.CM_WHOUSE CW
+		  LEFT JOIN (
+			  SELECT SW.SH_NO
+				   , SW.CRE_DT
+				   , SH_USE_YN
+				   , SW.WH_ID
+				   , SW.SH_RNG_CLS
+				   , SW.SH_FLR
+				   , SW.SH_SQU
+				   , SW.SH_LK_CLS
+				   , SW.SH_PRD_CLS
+				   , SW.SH_PRD
+				   , SW.SH_PRC
+				   , SW.SH_LT_DT
+			    FROM SH_WHOUSE SW
+			    JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_WHOUSE GROUP BY WH_ID) SW2
+				  ON SW.SH_NO = SW2.SH_NO
+		  	   ) SW
+			ON CW.WH_ID = SW.WH_ID
+		  LEFT JOIN GJ_DS.AD_WHOUSE AW
+		    ON CW.WH_ID = AW.WH_ID
+		  LEFT JOIN (
+			SELECT CG.CMGRPCD
+				 , CC.CMCD
+				 , CC.CMNM
+			  FROM GJ_OP.COMMGRP CG
+			  JOIN GJ_OP.COMMCD CC
+			WHERE CG.CMGRPCD = 'SH_USE_YN'
+			  AND CG.CMGRPCD = CC.CMGRPCD
+			  AND CG.ACTYN = 'Y'
+			  AND CC.ACTYN = 'Y'
+		    ) CCC
+		   ON SW.SH_USE_YN = CCC.CMCD
+		WHERE CW.USER_ID = #{user_id}
+		  AND CW.USE_YN = 'Y'
+		  
+		 <if test='schWhNm != null and schWhNm != ""'>
+			AND CW.WH_NM like concat('%', #{schWhNm}, '%')
+		</if>
+		<if test='schBrNo != null and schBrNo != ""'>
+			AND CW.BR_NO like concat('%', #{schBrNo}, '%')
+		</if>
+		<if test='schCeoNm != null and schCeoNm != ""'>
+			AND CW.CEO_NM like concat('%', #{schCeoNm}, '%')
+		</if>
+		<if test='schUseYn != null and schUseYn != ""'>
+			AND CW.USE_YN = #{schUseYn}
+		</if>
+		<if test='schUseYn == null or schUseYn == ""'>
+			AND CW.USE_YN != 'D'
+		</if>
+		<if test='schShYn != null and schShYn != ""'>
+    		AND SW.SH_USE_YN = #{schShYn}
+			</if>
+		<if test='schDtAddr != null and schDtAddr != ""'>
+    		AND CW.DT_ADDR like concat('%', #{schDtAddr}, '%')
+			</if>
+		<if test='schChNm != null and schChNm != ""'>
+    		AND CW.CH_NM like concat('%', #{schChNm}, '%')
+			</if>
+	</select>
+
+	<!-- SEQ 조회 -->
+	<select id="getShSeq" resultType="String">
+		SELECT CONCAT('SW',LPAD(NEXTVAL(sh_whouse_seq), 8, 0))
+	</select>
+
+
+	<!-- 창고 공유정보 생성 -->
+	<update id="saveShWhouseDetailInfo" parameterType="java.util.HashMap" >
+		/* mapper.rs.whouseMapper : saveShWhouseDetailInfo */
+		INSERT INTO GJ_DS.SH_WHOUSE
+		(
+			SH_NO
+		, SH_DT
+		, USER_ID
+		, WH_ID
+		, SH_RNG_CLS
+		, SH_FLR
+		, SH_SQU
+		, SH_LK_CLS
+		, SH_PRD_CLS
+		, SH_PRD
+		, SH_PRC
+		, SH_LT_DT
+		, SH_USE_YN
+		, USE_YN
+		, CRE_DT
+		, CRE_USER_ID
+		, MOD_DT
+		, MOD_USER_ID
+		)
+		VALUES
+			(
+			  #{SH_NO}
+			, DATE_FORMAT(NOW(),'%Y%m%d')
+			, #{user_id}
+			, #{WH_ID}
+			, #{edit_sh_rng_cls}
+			, REPLACE(#{edit_sh_flr}, ',', '')
+			, REPLACE(#{edit_sh_squ}, ',', '')
+			, #{edit_sh_lk_cls}
+			, #{edit_sh_prd_cls}
+			, REPLACE(#{edit_sh_prd}, ',', '')
+			, REPLACE(#{edit_sh_prc}, ',', '')
+			, #{edit_sh_lt_dt}
+			, 'R'
+			, 'Y'
+			, NOW()
+			, #{user_id}
+			, NOW()
+			, #{user_id}
+			)
+			ON DUPLICATE KEY UPDATE
+								 SH_RNG_CLS = #{edit_sh_rng_cls}
+								 , SH_FLR = REPLACE(#{edit_sh_flr}, ',', '')
+								 , SH_SQU = REPLACE(#{edit_sh_squ}, ',', '')
+								 , SH_LK_CLS = #{edit_sh_lk_cls}
+								 , SH_PRD_CLS = #{edit_sh_prd_cls}
+								 , SH_PRD = REPLACE(#{edit_sh_prd}, ',', '')
+								 , SH_PRC = REPLACE(#{edit_sh_prc}, ',', '')
+								 , SH_LT_DT = #{edit_sh_lt_dt}
+								 , MOD_DT = NOW()
+								 , MOD_USER_ID = #{user_id}
+	</update>
+
+	<!-- 창고 공유정보 등록에 따른 기본정보의 공유 상태 수정 -->
+	<update id="updateShRegCmWhouse" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : updateShRegCmWhouse */
+		UPDATE GJ_DS.CM_WHOUSE
+		SET SH_YN = 'Y'
+		  , MOD_USER_ID = #{user_id}
+		  , MOD_DT = NOW()
+		WHERE USER_ID = #{user_id}
+		  AND WH_ID = #{WH_ID}
+	</update>
+
+	<!-- 창고 공유정보 생성 -->
+	<insert id="insertMoShWhouse" parameterType="java.util.HashMap" >
+		/* mapper.rs.whouseMapper : insertShWhouse */
+		INSERT INTO GJ_DS.SH_WHOUSE
+		(
+			  SH_NO
+			, SH_DT
+			, USER_ID
+			, WH_ID
+			, SH_RNG_CLS
+			, SH_FLR
+			, SH_SQU
+			, SH_LK_CLS
+			, SH_PRD_CLS
+			, SH_PRD
+			, SH_LT_DT
+			, SH_USE_YN
+			, USE_YN
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+		)
+		VALUES (
+			  CONCAT('SW',LPAD(NEXTVAL(sh_whouse_seq), 8, 0))
+			, DATE_FORMAT(NOW(),'%Y%m%d')
+			, #{userId}
+			, #{whId}
+			, #{shRngCls}
+			, REPLACE(#{shFlr}, ',', '')
+			, REPLACE(#{shSqu}, ',', '')
+			, #{shLkCls}
+			, #{shPrdCls}
+			, REPLACE(#{shPrd}, ',', '')
+			, #{shLtDt}
+			, #{shUseYn}
+			, 'Y'
+			, NOW()
+			, #{userId}
+			, NOW()
+			, #{userId}
+		)
+	</insert>
+	<!-- 창고 공유정보 등록에 따른 기본정보의 공유 상태 수정 -->
+	<update id="updateMoShWhouse" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : updateMoShRegWhouse */
+		UPDATE GJ_DS.SH_WHOUSE
+		   SET SH_RNG_CLS = #{shRngCls}
+			 , SH_FLR = REPLACE(#{shFlr}, ',', '')
+			 , SH_SQU = REPLACE(#{shSqu}, ',', '')
+			 , SH_LK_CLS = #{shLkCls}
+			 , SH_PRD_CLS = #{shPrdCls}
+			 , SH_PRD = REPLACE(#{shPrd}, ',', '')
+			 , SH_LT_DT = #{shLtDt}
+			 , SH_USE_YN = #{shUseYn}
+		  	 , MOD_DT = NOW()
+		  	 , MOD_USER_ID = #{userId}
+		 WHERE USER_ID = #{userId}
+		   AND SH_NO = #{shNo}
+	</update>
+	<!-- 창고 공유정보 등록에 따른 기본정보의 공유 상태 수정 -->
+	<update id="updateMoWhouseShYn" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : updateMoShRegWhouse */
+		UPDATE GJ_DS.CM_WHOUSE
+		   SET SH_YN = 'Y'
+		  	 , MOD_USER_ID = #{userId}
+		  	 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND WH_ID = #{whId}
+	</update>
+
+	<!-- 창고 공유정보 종료 화면의 상세 조회 -->
+	<select id="selectShWhouseEndlInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* mapper.rs.whouseMapper : selectShWhouseEndlInfo */
+		SELECT
+		CW.WH_ID as WH_ID
+		, CW.WH_NM as WH_NM
+		, CW.SH_YN as SH_YN
+		, SW.SH_NO as SH_NO
+		, CW.DT_ADDR  AS DT_ADDR
+		, CW.CH_NM
+		,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_RNG_CLS' AND CC.CMCD = SW.SH_RNG_CLS) as SH_RNG_CLS_NM
+		, FORMAT(SW.SH_FLR, N'#,0')	as SH_FLR
+		, FORMAT(SW.SH_SQU, N'#,0')	AS SH_SQU
+		,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_LK_CLS' AND CC.CMCD = SW.SH_LK_CLS) as SH_LK_CLS_NM
+		,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_PRD_CLS' AND CC.CMCD = SW.SH_PRD_CLS) as SH_PRD_CLS_NM
+		, FORMAT(SW.SH_PRD, N'#,0') as SH_PRD
+		, FORMAT(SW.SH_PRC, N'#,0') as SH_PRC
+		, SW.SH_LT_DT as SH_LT_DT
+		, SW.SH_USE_YN as SH_USE_YN
+		, COALESCE((SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = SW.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+		, SW.USE_YN as USE_YN
+		FROM GJ_DS.CM_WHOUSE CW
+		INNER JOIN GJ_DS.SH_WHOUSE SW
+		ON CW.WH_ID = SW.WH_ID
+		WHERE CW.USE_YN = 'Y'
+		AND CW.USER_ID = #{user_id}
+		<if test='schWhNm != null and schWhNm != ""'>
+			AND CW.WH_NM like concat('%', #{schWhNm}, '%')
+		</if>
+		<if test='schShYn != null and schShYn != ""'>
+    		AND SW.SH_USE_YN = #{schShYn}
+			</if>
+		<if test='schDtAddr != null and schDtAddr != ""'>
+    		AND CW.DT_ADDR like concat('%', #{schDtAddr}, '%')
+			</if>
+		<if test='schChNm != null and schChNm != ""'>
+    		AND CW.CH_NM like concat('%', #{schChNm}, '%')
+			</if>
+	</select>
+
+	<!-- 창고 공유정보 종료에 따른 기본정보의 공유 상태 수정 -->
+	<update id="updateShEndWhouseInfo" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : updateShEndWhouseInfo */
+		UPDATE GJ_DS.SH_WHOUSE
+		SET SH_USE_YN = 'E'
+		, MOD_USER_ID = #{user_id}
+		, MOD_DT = NOW()
+		WHERE USER_ID = #{user_id}
+		AND SH_NO IN
+		<foreach item="item" collection="dataList" separator="," open="(" close=")">
+			#{item.SH_NO}
+		</foreach>
+	</update>
+
+
+	<!-- 창고 공유정보 삭제/종료에 따른 기본정보의 공유 상태 수정 -->
+	<update id="updateShChangCmWhouse" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : updateShChangCmWhouse */
+		UPDATE GJ_DS.CM_WHOUSE
+		SET SH_YN = 'E'
+		, MOD_USER_ID = #{user_id}
+		, MOD_DT = NOW()
+		WHERE USER_ID = #{user_id}
+		AND WH_ID IN
+		<foreach item="item" collection="dataList" separator="," open="(" close=")">
+			#{item.WH_ID}
+		</foreach>
+	</update>
+
+	<!-- 모바일 창고 기본정보 목록 건 수 -->
+	<select id="selectMoWhouseCnt" parameterType="java.util.HashMap" resultType="int">
+		/*mapper.rs.whouseMapper : selectMoWhouseCnt */
+		SELECT COUNT(*)
+		FROM GJ_DS.CM_WHOUSE CW
+		LEFT OUTER JOIN GJ_DS.SH_WHOUSE SW
+		ON CW.WH_ID = SW.WH_ID
+		LEFT OUTER JOIN GJ_DS.AD_WHOUSE AW
+		ON CW.WH_ID = AW.WH_ID
+		WHERE CW.USER_ID = #{user_id}
+		<if test='schWhNm != null and schWhNm != ""'>
+			AND CW.WH_NM LIKE CONCAT('%', #{schWhNm}, '%')
+		</if>
+		<if test='schBrNo != null and schBrNo != ""'>
+			AND CW.BR_NO LIKE CONCAT('%', #{schBrNo}, '%')
+		</if>
+		<if test='schCeoNm != null and schCeoNm != ""'>
+			AND CW.CEO_NM LIKE CONCAT('%', #{schCeoNm}, '%')
+		</if>
+		<choose>
+			<when test='schUseYn != null and schUseYn != ""'>
+				AND CW.USE_YN = #{schUseYn}
+			</when>
+			<otherwise>
+				AND CW.USE_YN != 'D'
+			</otherwise>
+		</choose>
+		<if test='schShYn != null and schShYn != ""'>
+			AND CW.SH_YN = #{schShYn}
+		</if>
+	</select>
+
+	<!-- 모바일 창고 기본정보 목록 조회 -->
+	<select id="selectMoWhouseList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : selectMoWhouseList */
+		SELECT CW.USER_ID	AS userId
+			 , CW.WH_ID 	as whId
+			 , CW.USE_YN	AS useYn
+			 , CW.WH_NM as whNm
+			 , CONCAT(SUBSTR(CW.BR_NO,1,3),'-',SUBSTR(CW.BR_NO,4,2),'-',SUBSTR(CW.BR_NO,6)) as brNo
+			 , CW.CEO_NM as ceoNm
+			 , CW.USE_YN as useYn
+			 , CW.CH_NM as chNm
+			 , CW.TEL_NO as telNo
+			 , CW.MAIL_ADDR as mailAddr
+			 , CW.AREA_NM1 as areaNm1
+			 , CW.AREA_NM2 as areaNm2
+			 , CW.DT_ADDR as dtAddr
+			 , CW.DT_ADDR2 as dtAddr2
+			 , CW.TL_FL_NUM as tlFlNum
+			 , CW.UD_FL_NUM as udFlNum
+			 , CW.LONGI_NO as longiNo
+			 , CW.LATI_NO as latiNo
+			 , CW.LOT_AREA as lotArea
+			 , CW.TL_AREA as tlArea
+			 , CW.WH_KN_CD as whKnCd
+			 , CW.CAR_ENT_CD as carEntCd
+			 , CW.CM_PRICE as cmPrice
+			 , SW.SH_USE_YN as shUseYn
+			 , FN_WHOUSE_STATE(CW.WH_ID) AS shUseYnNm
+			 , AW.FARM_YN AS farmYn
+			 , AW.FISH_YN AS fishYn
+			 , AW.MEAT_YN AS meatYn
+			 , AW.FOOD_YN AS foodYn
+			 , AW.FASHION_YN AS fashionYn
+			 , AW.MACH_YN AS machYn
+			 , AW.MEDI_YN AS mediYn
+			 , AW.FURN_YN AS furnYn
+			 , AW.ELEC_YN AS elecYn
+			 , AW.METAL_YN AS metalYn
+			 , AW.ETC_YN AS etcYn
+			 , AW.ISO_YN AS isoYn
+			 , AW.AEO_YN AS aeoYn
+			 , AW.KGSP_YN AS kgspYn
+			 , AW.TAPA_YN AS tapaYn
+			 , AW.LOGI_YN AS logiYn
+			 , AW.FIRE_INSU_YN AS fireInsuYn
+			 , AW.SALE_INSU_YN AS saleInsuYn
+			 , AW.DOCK_YN AS dockYn
+			 , AW.CANOPY_YN AS canopyYn
+			 , AW.CARGO_YN AS cargoYn
+			 , AW.PLAT_YN AS platYn
+			 , AW.AUTO_YN AS autoYn
+			 , AW.RACK_YN AS rackYn
+			 , AW.VERTICAL_YN AS verticalYn
+			 , AW.MEMO AS memo
+			 , AW.PHOTO AS photo
+			 , AW.PHOTO2 AS photo2
+			 , AW.PHOTO3 AS photo3
+			 , SW.SH_NO AS shNo
+			 , SW.SH_RNG_CLS AS shRngCls
+			 , SW.SH_FLR AS shFlr
+			 , SW.SH_SQU AS shSqu
+			 , SW.SH_LK_CLS AS shLkCls
+			 , SW.SH_PRD_CLS AS shPrdCls
+			 , SW.SH_PRD AS shPrd
+			 , SW.SH_LT_DT AS shLtDt
+			 , SW.CRE_USER_ID AS shUserId
+			 , SM.MAT_NO AS matNo
+			 , SM.CON_ID AS manConId
+			 , SB.COM_NO AS comNo
+			 , SB.REQ_MARK AS reqMark
+			 , SB.CON_ID AS comConId
+		  FROM GJ_DS.CM_WHOUSE CW
+		  LEFT JOIN GJ_DS.AD_WHOUSE AW
+		    ON CW.WH_ID = AW.WH_ID
+		  LEFT JOIN (
+			SELECT SW.WH_ID
+				 , SW.SH_USE_YN
+				 , SW.CRE_USER_ID
+				 , SW.SH_NO
+				 , SW.SH_RNG_CLS
+				 , SW.SH_FLR
+				 , SW.SH_SQU
+				 , SW.SH_LK_CLS
+				 , SW.SH_PRD_CLS
+				 , SW.SH_PRD
+				 , SW.SH_LT_DT
+			 FROM SH_WHOUSE SW
+			 JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_WHOUSE GROUP BY WH_ID) SW2
+			   ON SW.SH_NO = SW2.SH_NO
+			   ) SW
+		    ON AW.WH_ID = SW.WH_ID
+		  LEFT JOIN SH_MATCH SM
+			ON SW.SH_NO = SM.SH_NO
+		   AND SM.MAT_CD = 'W'
+		   AND SM.MAT_YN = 'A'
+		  LEFT JOIN (
+			  SELECT SB.COM_NO
+				   , SB.CON_ID
+				   , SB.SH_NO
+				   , SB.REQ_MARK
+			  FROM SH_BOARD SB
+			  JOIN (SELECT MAX(COM_NO) AS COM_NO FROM SH_BOARD WHERE RES_MARK IS NULL) SB2
+				ON SB.COM_NO = SB2.COM_NO) SB
+			ON SW.SH_NO = SB.SH_NO
+		 WHERE CW.USER_ID = #{userId}
+		   AND CW.USE_YN != 'D'
+	</select>
+
+
+	<update id="saveMoShareWhouseShUseYn" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : saveMoShareWhouseShUseYn */
+		UPDATE GJ_DS.SH_WHOUSE
+		   SET SH_USE_YN = 'E'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND SH_NO = #{shNo}
+	</update>
+
+	<update id="saveMoCmWhouseShYn" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : saveMoCmWhouseShYn */
+		UPDATE GJ_DS.CM_WHOUSE
+		   SET SH_YN = 'N'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND WH_ID = #{whId}
+	</update>
+
+	<update id="saveMoCmCarShYn" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : saveMoCmWhouseShYn */
+		UPDATE GJ_DS.CM_WHOUSE
+		   SET SH_YN = 'N'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND CAR_ID = #{carId}
+	</update>
+
+	<update id="saveMoCmManpwShYn" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : saveMoCmWhouseShYn */
+		UPDATE GJ_DS.CM_WHOUSE
+		   SET SH_YN = 'N'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND EQUIP_ID = #{equipId}
+	</update>
+
+	<update id="saveMoCmEquipShYn" parameterType="java.util.HashMap">
+		/*mapper.rs.whouseMapper : saveMoCmWhouseShYn */
+		UPDATE GJ_DS.CM_WHOUSE
+		   SET SH_YN = 'N'
+			 , MOD_USER_ID = #{userId}
+			 , MOD_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND MANPW_NO = #{manpwNo}
+	</update>
+</mapper> 

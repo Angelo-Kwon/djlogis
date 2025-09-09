@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcSafestausMapper">
+	
+	<select id="selectSafestausList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+			SERIAL_NO 					-- 시리얼번호
+			, WHNAMLC 					-- 센터
+			, WAREKEY 					-- 창고
+			, SENSOR_TYPE 				-- 센서종류
+			, SENSOR_NM 				-- 센서명
+			, CASE WHEN USE_YN = 'Y' THEN '사용' ELSE '미사용' END AS USE_YN	-- 사용여부
+			, FLOOR_PLAN_FILE 			-- 도면파일
+			, WARNING_DETECTION_TYPE 	-- 이상 감지 구분
+			, SENSOR_LOCATION 			-- 위치
+			, TO_CHAR(WARNING_DT, 'YYYY-MM-DD HH24:MI:SS') AS WARNING_DT-- 감지 일시
+			, MNG_NM 					-- 담당자 이름
+			, PROP_MEDIUM 				-- 전파 매체
+			, TO_CHAR(PROP_DT, 'YYYY-MM-DD HH24:MI:SS') AS PROP_DT -- 전파 일시
+			, PROP_DESC 				-- 전파 내용
+		FROM GJ_OP.SENSOR_TEMP
+		WHERE IFNULL(WARNING_DETECTION_TYPE, '') != ''		  
+		  <if test='schWHNAMLC != null and schWHNAMLC != ""'>
+          AND WHNAMLC LIKE CONCAT('%', #{schWHNAMLC} ,'%')
+          </if>
+          <if test='schWAREKEY != null and schWAREKEY != ""'>
+          AND WAREKEY LIKE CONCAT('%', #{schWAREKEY} ,'%')
+          </if>
+          <if test='schUseYn != null and schUseYn != ""'>
+          AND USE_YN LIKE CONCAT('%', #{schUseYn} ,'%')
+          </if>
+        ORDER BY CRE_DT DESC
+	</select>
+	
+	<select id="getStoreData" resultType="java.util.HashMap">
+        SELECT 
+        	M.DOCTYPE,
+			M.DOCTYNM,
+			SUM(S.RCHSQTY) AS "S_QTY"
+		FROM
+			GJ_WM.VINBST_TMP S
+			INNER JOIN GJ_WM.MDOCMA M ON
+			S.COMPKEY = M.COMPKEY
+			AND S.WAREKEY = M.WAREKEY
+			AND S.DOCCATE = M.DOCCATE
+			AND S.DOCTYPE = M.DOCTYPE
+		WHERE
+			S.COMPKEY = '100'
+			AND S.WAREKEY = 'WH01'
+			AND S.STATDUR = 'R'
+			AND S.STACATE = 'DOC'
+			AND S.DOCTYPE NOT IN ('780', '790')
+		GROUP BY
+			M.DOCTYPE,M.DOCTYNM
+	</select>
+	
+	<select id="getReleaseData" resultType="java.util.HashMap">
+        SELECT 
+        	M.DOCTYPE,
+			M.DOCTYNM, SUM(S.TCMPQTY) AS "DEL_QTY"
+		FROM 
+			GJ_WM.VOUBST_TMP S
+			INNER JOIN GJ_WM.MDOCMA M 
+			ON S.COMPKEY = M.COMPKEY
+			AND S.WAREKEY = M.WAREKEY
+			AND S.DOCCATE = M.DOCCATE
+			AND S.DOCTYPE = M.DOCTYPE
+		WHERE 
+			S.COMPKEY = '100'
+			AND S.WAREKEY = 'WH01'
+			AND S.STATDUR = 'R'
+			AND S.STACATE = 'DOC'
+		GROUP BY 
+			M.DOCTYPE, M.DOCTYNM
+	</select>
+	
+	<select id="getProductInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			 S.WAREKEY -- 센터
+		     , L.LOCAKEY -- "로케이션"
+		     , S.OWNERKY -- "화주"
+		     , S.SKUMKEY -- "SKU"
+		     , SUM(S.STOTQTY) as STOTQTY-- "재고수량"
+		     , DATE_FORMAT(S.EXPIDAT, '%Y-%m-%d') as EXPIDAT -- "유통기간"
+		     -- , S.RCVDCDT -- "입고일자"
+		     , S.SKUDESC -- "제품명"
+		 FROM
+		 	GJ_WM.WSTKKY S
+		 	INNER JOIN GJ_WM.MLOCMA L ON S.COMPKEY = L.COMPKEY
+			                          AND S.WAREKEY = L.WAREKEY
+			                          AND S.AREAKEY = L.AREAKEY
+			                          AND S.ZONEKEY = L.ZONEKEY
+		 WHERE
+		 	S.COMPKEY = '100' -- 로그링 사용자 토큰의 어카운트
+		    AND S.WAREKEY = 'WH01' -- 화면에서 선택 (WH01 광성)
+		    AND S.AREAKEY = 'STG'
+		    AND S.STOTQTY > 0
+		    AND L.LOCAKEY = '00-00-01-03'
+		 GROUP BY S.COMPKEY, S.WAREKEY
+		        , S.LOCAKEY, L.LOCANAM
+		        , S.OWNERKY, S.SKUMKEY
+		 ORDER by RAND()
+		 LIMIT 1
+	</select>
+	
+	<insert id="insertSafeEvent" parameterType="java.util.List">
+		INSERT INTO GJ_OP.SENSOR_TEMP(
+			SENSOR_NO
+			, WHNAMLC
+			, WAREKEY
+			, SENSOR_TYPE
+			, SENSOR_NM
+			, SERIAL_NO
+			, USE_YN
+			, WARNING_DETECTION_TYPE
+			, SENSOR_LOCATION
+			, WARNING_DT
+			, MNG_NM
+			, PROP_MEDIUM
+			, PROP_DT
+			, PROP_DESC
+			, CRE_DT
+			, CRE_USER_ID
+		) VALUES (
+			(SELECT CONCAT(TO_CHAR(NOW(), 'YYYYMMDD'), LPAD(IFNULL(CAST(SUBSTR(MAX(T.SENSOR_NO), 9) AS UNSIGNED), 0) + 1, 7, '0')) FROM GJ_OP.SENSOR_TEMP AS T)
+			, #{WHNAMLC}
+			, #{WAREKEY}
+			, #{SENSOR_TYPE}
+			, #{SENSOR_NM}
+			, #{SERIAL_NO}
+			, 'Y'
+			, #{WARNING_DETECTION_TYPE}
+			, #{SENSOR_LOCATION}
+			, NOW()
+			, #{MNG_NM}
+			, #{PROP_MEDIUM}
+			, DATE_ADD(NOW(), INTERVAL 1 MINUTE)
+			, #{PROP_DESC}
+			, NOW()
+			, #{userId}
+		)
+	</insert>
+	
+</mapper>

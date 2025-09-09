@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.RoleMapper">
+
+	<select id="getRoleList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+				RGROUP_ID,
+				ACCOUNT_ID,
+				RGROUP_KEY,
+				RGROUP_NM,
+				USE_YN
+		FROM
+				GJ_OP.OP_ROLE_GROUP
+		WHERE
+				USE_YN = 'Y'
+		<if test='rgroupNm != null and rgroupNm != ""'>
+				AND RGROUP_NM like CONCAT('%', #{rgroupNm}, '%')
+		</if>
+		ORDER	BY RGROUP_KEY
+	</select>
+	
+	<insert id="insRole" parameterType="java.util.HashMap">
+		INSERT
+				INTO
+				GJ_OP.OP_ROLE_GROUP
+		(	
+				RGROUP_ID,
+				ACCOUNT_ID,
+				RGROUP_KEY,
+				RGROUP_NM,
+				USE_YN,
+				CRE_DT,
+				CRE_USER_ID,
+				MOD_DT,
+				MOD_USER_ID
+		)
+		VALUES
+		(
+				CONCAT('RG', LPAD(CAST(nextVAL(GJ_OP.op_role_group_seq) AS CHAR(8)), 8, '0')),
+				'',
+				#{RGROUP_KEY},
+				#{RGROUP_NM},
+				'Y',
+				now(),
+				#{userId},
+				now(),
+				#{userId}
+		)
+	</insert>
+	
+	<update id="updRole" parameterType="java.util.HashMap">
+		UPDATE
+				GJ_OP.OP_ROLE_GROUP
+		SET
+				RGROUP_KEY = #{RGROUP_KEY},
+				RGROUP_NM = #{RGROUP_NM},
+				MOD_DT = now(),
+				MOD_USER_ID = #{userId}
+		WHERE
+				RGROUP_ID = #{RGROUP_ID}
+	</update>
+	
+	<update id="delRole" parameterType="java.util.HashMap">
+		UPDATE
+				GJ_OP.OP_ROLE_GROUP
+		SET
+				USE_YN = 'N',
+				MOD_DT = now(),
+				MOD_USER_ID = #{userId}
+		WHERE
+				RGROUP_ID = #{RGROUP_ID}
+	</update>
+
+	<select id="getRoleMenuList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+				#{rid} AS RGROUP_ID,
+				M.MENU_ID,
+				M.SYSTEM_ID,
+				M.MENU_KEY,
+				M.MENU_PID,
+				M.MENU_GBN,
+				M.MENU_NM,
+				M.MENU_SEQ,
+				M.PRGM_URL,
+				RM.RMENU_ID,
+				CASE
+		        WHEN RM.RMENU_ID IS NULL THEN 0
+		        ELSE 1
+		    	END AS STATE
+		FROM
+				GJ_OP.OP_MENU M
+		LEFT OUTER JOIN
+				GJ_OP.OP_ROLE_MENU RM
+		ON
+				M.MENU_ID = RM.MENU_ID AND RM.USE_YN = 'Y' AND RM.RGROUP_ID = #{rid}
+		WHERE 	M.USE_YN = 'Y'
+		<if test='sid != null and sid != ""'>
+		AND		SYSTEM_ID = #{sid}
+		</if>
+		ORDER 	BY SYSTEM_ID, MENU_PID, MENU_SEQ
+	</select>
+	
+	<select id="getRoleWhouseList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			IFNULL(R.USE_YN, 'N') AS USE_YN
+		    , W.WAREKEY
+		    , W.WHNAMLC
+		    ,CASE
+		        WHEN R.USE_YN = 'Y' THEN 1
+		        ELSE 0
+		    END AS STATE
+		FROM GJ_WM.MWARMA W 
+		LEFT JOIN GJ_OP.OP_WH_ROLE_GROUP R ON W.WAREKEY = R.WAREKEY 
+		     AND R.URGROUP_ID = #{rid}
+		WHERE W.COMPKEY = '100'
+		ORDER BY W.WAREKEY
+	</select>
+	
+	<insert id="insRoleMenu" parameterType="java.util.List">
+		INSERT
+				INTO
+				GJ_OP.OP_ROLE_MENU
+		(
+				RMENU_ID,
+				RGROUP_ID,
+				MENU_ID,
+				USE_YN,
+				CRE_DT,
+				CRE_USER_ID,
+				MOD_DT,
+				MOD_USER_ID
+		)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+		(
+				CONCAT('RM', LPAD(CAST(nextVAL(GJ_OP.op_role_menu_seq) AS CHAR(8)), 8, '0')),
+				#{item.RGROUP_ID},
+				#{item.MENU_ID},
+				'Y',
+				now(),
+				#{item.userId},
+				now(),
+				#{item.userId}
+		)
+		</foreach>
+	</insert>
+	
+	<insert id="insRoleWhouse" parameterType="java.util.HashMap">
+		INSERT INTO GJ_OP.OP_WH_ROLE_GROUP(
+			URGROUP_ID, 
+			WAREKEY, 
+			USE_YN, 
+			CRE_DT, 
+			CRE_USER_ID, 
+			MOD_DT, 
+			MOD_USER_ID
+		) VALUES 
+		<foreach collection="updateList" item="item" separator=",">
+		(
+		    #{rid} 
+			,#{item.WAREKEY} 
+			,IF(#{item.STATE} = true, 'Y', 'N') 
+			,now() 
+			,#{userId} 
+			,now() 
+			,#{userId}
+		) 
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+							USE_YN = VALUES(USE_YN) 
+							,MOD_DT = now()
+							,MOD_USER_ID = #{userId}
+	</insert>
+	
+	<update id="delRoleMenu" parameterType="java.util.List">
+		DELETE
+				FROM
+				GJ_OP.OP_ROLE_MENU
+		WHERE
+				(RGROUP_ID, MENU_ID) IN
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+	        	(#{item.RGROUP_ID}, #{item.MENU_ID})
+	    </foreach>
+	</update>
+	
+	<select id="getRgroupId" parameterType="String" resultType="String">
+		SELECT 
+				RGROUP_ID 
+		FROM 
+				GJ_OP.OP_USER_ROLE_GROUP 
+		WHERE 
+				USER_ID = #{userId}
+	</select>
+</mapper>
+

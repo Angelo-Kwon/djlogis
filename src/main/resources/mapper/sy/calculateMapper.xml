@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.CalculateMapper">
+	<sql id="base">
+		WITH REFERENCE AS (
+			SELECT 
+				 #{condMonth} AS condMonth
+				,CONCAT(#{condMonth}, '-01') AS S_DAY -- 당월 시작일
+				,LAST_DAY(CONCAT(#{condMonth}, '-01')) AS L_DAY -- 당월 말일
+				,LAST_DAY(CONCAT(#{condMonth}, '-01') - INTERVAL 1 MONTH) AS PL_DAY -- 전월 말일
+				,(SELECT CC.FLD1 FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'CALPARAM' AND CC.CMCD = 'DEADLINE') AS DEADLINE 
+			FROM DUAL
+		)
+		, CONTRACT AS (
+			SELECT 
+				 T1.CONTRACT_ID
+				,T1.CP_CD
+				,T1.CP_NM
+				,(SELECT RPNM FROM GJ_OP.CUSTTB WHERE (CUSTCD COLLATE UTF8MB4_GENERAL_CI) = T1.CP_CD) AS RPNM
+				,(SELECT REGNO FROM GJ_OP.CUSTTB WHERE (CUSTCD COLLATE UTF8MB4_GENERAL_CI) = T1.CP_CD) AS BIZ_NO
+				,T1.CRE_DT
+				,T2.CONTRACT_SEQ
+				,T2.CLOUD_FEE -- 클라우드 사용료 
+				,T2.SYSTEM_FEE -- 시스템 사용료
+				,T2.CONTRACT_START_TERM AS CS_DAY -- 계약 시작일
+				,T2.CONTRACT_END_TERM AS CE_DAY -- 계약 종료일
+				/*
+				,TRUNCATE((T2.CLOUD_FEE / DATEDIFF(T2.CONTRACT_END_TERM, T2.CONTRACT_START_TERM)), 0) AS DAY_C_FEE -- 일별 클라우드 사용료
+				,TRUNCATE((T2.SYSTEM_FEE / DATEDIFF(T2.CONTRACT_END_TERM, T2.CONTRACT_START_TERM)), 0) AS DAY_S_FEE -- 일별 시스템 사용료
+				*/
+				,TRUNCATE((T2.CLOUD_FEE / TIMESTAMPDIFF(MONTH, T2.CONTRACT_START_TERM, T2.CONTRACT_END_TERM)), 0) AS DAY_C_FEE -- 월별 클라우드 사용료
+                ,TRUNCATE((T2.SYSTEM_FEE / TIMESTAMPDIFF(MONTH, T2.CONTRACT_START_TERM, T2.CONTRACT_END_TERM)), 0) AS DAY_S_FEE -- 월별 시스템 사용료
+				,T2.MNG_NM
+				,T2.MNG_TEL
+				,T2.MNG_EMAIL
+				,T2.SYSTEM_NM
+				,T2.CONTRACT_YN
+			FROM GJ_OP.OP_CONTRACT T1
+				,GJ_OP.OP_CONTRACT_DETAIL T2
+				,REFERENCE T3
+			WHERE T1.CONTRACT_ID = T2.CONTRACT_ID
+			  AND T2.CONTRACT_YN IN ('Y', 'C')
+			  AND T2.CONTRACT_START_TERM <![CDATA[<=]]> T3.L_DAY 
+			  AND T2.CONTRACT_END_TERM <![CDATA[>=]]> T3.S_DAY
+			  <if test="condCpNm != null and condCpNm != ''">
+	 		  AND T1.CP_NM LIKE CONCAT('%', #{condCpNm}, '%')
+	 		  </if>
+	 		  <if test="condBizNo != null and condBizNo != ''">
+	 		  AND REPLACE((SELECT REGNO FROM GJ_OP.CUSTTB WHERE (CUSTCD COLLATE UTF8MB4_GENERAL_CI) = T1.CP_CD), '-', '') LIKE CONCAT('%', REPLACE(#{condBizNo}, '-' ,''), '%')
+	 		  </if>
+	 		  <if test="CP_CD != null and CP_CD != ''">
+	 		  AND T1.CP_CD = #{CP_CD}
+	 		  </if>
+		)
+		, CALCULATION AS (
+			SELECT 
+				T1.*, T2.*
+		            , CLOUD_FEE AS MON_C_FEE
+		            , SYSTEM_FEE AS MON_S_FEE
+		            , CASE WHEN CS_DAY  <![CDATA[>=]]> S_DAY THEN CS_DAY ELSE S_DAY END AS CALCU_START_DT
+		            , CASE WHEN CE_DAY  <![CDATA[<=]]> L_DAY THEN CE_DAY ELSE L_DAY END AS CALCU_END_DT
+			/*
+			SELECT 
+				 T1.*, T2.*
+				,CASE 
+					WHEN CE_DAY <![CDATA[<=]]> L_DAY THEN
+						CASE 
+							WHEN CS_DAY >= S_DAY THEN CLOUD_FEE
+							ELSE CLOUD_FEE - ((DATEDIFF(PL_DAY, CS_DAY) + 1) * DAY_C_FEE)
+						END
+					ELSE  
+						CASE 
+							WHEN CS_DAY >= S_DAY THEN (DATEDIFF(L_DAY, CS_DAY) + 1) * DAY_C_FEE
+							ELSE (DATEDIFF(L_DAY, S_DAY) + 1) * DAY_C_FEE
+						END
+				 END AS MON_C_FEE
+				,CASE 
+					WHEN CE_DAY <![CDATA[<=]]> L_DAY THEN
+						CASE 
+							WHEN CS_DAY >= S_DAY THEN SYSTEM_FEE
+							ELSE SYSTEM_FEE - ((DATEDIFF(PL_DAY, CS_DAY) + 1) * DAY_S_FEE)
+						END
+					ELSE  
+						CASE 
+							WHEN CS_DAY >= S_DAY THEN (DATEDIFF(L_DAY, CS_DAY) + 1) * DAY_S_FEE
+							ELSE (DATEDIFF(L_DAY, S_DAY) + 1) * DAY_S_FEE
+						END
+				 END AS MON_S_FEE
+				,CASE WHEN CS_DAY <![CDATA[>=]]> S_DAY THEN CS_DAY ELSE S_DAY END CALCU_START_DT
+				,CASE WHEN CE_DAY <![CDATA[<=]]> L_DAY THEN CE_DAY ELSE L_DAY END CALCU_END_DT
+				*/
+			FROM REFERENCE AS T1
+				,CONTRACT AS T2
+		)
+	</sql>
+	
+	<select id="getCalTarget" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getCalTarget */
+		<include refid="base"></include>
+		SELECT
+			 CP_NM, CP_CD, BIZ_NO, RPNM, condMonth, FORMAT(MON_TOT_FEE, N'#, 0') AS MON_TOT_FEE, CONTRACT_YN
+		FROM (
+				SELECT 
+				  	 CP_NM, CP_CD, BIZ_NO, RPNM, condMonth
+				  	,SUM(MON_S_FEE) + SUM(MON_C_FEE) AS MON_TOT_FEE -- 월 총사용료
+					,CASE 
+						WHEN SUM(MON_C_FEE + MON_S_FEE) <![CDATA[>]]> IFNULL(SUM(T2.CAL_FEE), 0) THEN 'Y'
+						ELSE 'C'
+					 END AS CONTRACT_YN -- 정산여부
+					,MIN(T1.CRE_DT) AS CRE_DT
+				FROM CALCULATION T1
+				LEFT JOIN (
+					SELECT 
+						 CONTRACT_ID, CONTRACT_SEQ, SUM(SYSTEM_FEE) + CLOUD_FEE AS CAL_FEE -- 월 정산 처리된 사용료
+					FROM GJ_OP.OP_CALCULATION
+					WHERE DATE_FORMAT(CALCU_START_DT, '%Y-%m') = #{condMonth}
+					GROUP BY CONTRACT_ID, CONTRACT_SEQ
+				) T2
+				ON T1.CONTRACT_ID = T2.CONTRACT_ID
+				AND T1.CONTRACT_SEQ = T2.CONTRACT_SEQ
+				GROUP BY T1.CP_CD
+			) T
+		<where>
+			<if test="cpcd != null and cpcd != ''">
+			AND CP_CD = #{cpcd}
+			</if>
+			<if test="condContractYn != null and condContractYn != ''">
+			AND CONTRACT_YN = #{condContractYn}
+			</if>
+		</where>
+		ORDER BY T.CRE_DT DESC
+	</select>
+	
+	<insert id="saveCalculate" parameterType="java.util.HashMap">
+		/* saveCalculate */
+		<selectKey keyProperty="CALCULATION_ID" resultType="String" order="BEFORE">
+	    	SELECT CONCAT('CL', LPAD(CAST(NEXTVAL(GJ_OP.op_calculate_seq) AS VARCHAR(8)), 8, '0')) FROM DUAL
+		</selectKey>
+		INSERT INTO GJ_OP.OP_CALCULATION
+		(
+			 CALCULATION_ID
+			,CALCULATION_SEQ
+			,CONTRACT_ID
+			,CONTRACT_SEQ
+			,CALCU_START_DT
+			,CALCU_END_DT
+			,CALCU_DT
+			,CLOUD_FEE
+			,SYSTEM_FEE
+			,CP_CD
+			,CP_NM
+			,BIZ_NO
+			,PAY_DEADLINE_DT
+			,CALCU_EMAIL
+			,CALCU_SMS_TELNO
+			,CRE_DT
+			,CRE_USER_ID
+			,MOD_DT
+			,MOD_USER_ID
+		)
+		<include refid="base"></include>
+		SELECT 
+			 #{CALCULATION_ID}
+			,ROW_NUMBER() OVER(ORDER BY CONTRACT_ID, CONTRACT_SEQ)
+			,T1.CONTRACT_ID
+			,T1.CONTRACT_SEQ
+			,T1.CALCU_START_DT
+			,T1.CALCU_END_DT
+			,NOW() AS CALCU_DT
+			,T1.MON_C_FEE AS CLOUD_FEE
+			,T1.MON_S_FEE AS SYSTEM_FEE
+			,T1.CP_CD
+			,T1.CP_NM
+			,T1.BIZ_NO
+			,DATE_ADD(NOW(), INTERVAL T1.DEADLINE MONTH) AS PAY_DEADLINE_DT
+			,T1.MNG_EMAIL AS CALCU_EMAIL
+			,T1.MNG_TEL AS CALCU_SMS_TELNO
+			,NOW()
+			,#{userId}
+			,NOW() 
+			,#{userId}
+		FROM CALCULATION T1
+		LEFT JOIN (
+			SELECT 
+				 CONTRACT_ID, CONTRACT_SEQ, SUM(CLOUD_FEE + SYSTEM_FEE) AS CAL_FEE -- 월 정산 처리된 사용료
+			FROM GJ_OP.OP_CALCULATION
+			WHERE DATE_FORMAT(CALCU_START_DT, '%Y-%m') = #{condMonth}
+			GROUP BY CONTRACT_ID, CONTRACT_SEQ
+		) T2
+		ON T1.CONTRACT_ID = T2.CONTRACT_ID
+		AND T1.CONTRACT_SEQ = T2.CONTRACT_SEQ
+		WHERE T2.CONTRACT_ID IS NULL
+	</insert>
+	
+	<update id="updateContractStatus" parameterType="java.util.HashMap">
+		UPDATE 
+			 GJ_OP.OP_CONTRACT_DETAIL T1
+			,(
+				SELECT 
+					CONTRACT_ID
+					, CONTRACT_SEQ
+					, SUM(CLOUD_FEE + SYSTEM_FEE) AS CAL_FEE 
+				FROM GJ_OP.OP_CALCULATION 
+				GROUP BY 
+					CONTRACT_ID
+					, CONTRACT_SEQ
+			) T2
+		SET CONTRACT_YN  = 'C'
+		WHERE T1.CONTRACT_YN = 'Y'
+		  AND T1.CONTRACT_ID = T2.CONTRACT_ID
+		  AND T1.CONTRACT_ID = T2.CONTRACT_ID
+		  AND (T1.CLOUD_FEE + T1.SYSTEM_FEE) <![CDATA[<=]]> T2.CAL_FEE
+	</update>
+	
+	<select id="getCalculate" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getCalculate */
+		SELECT 
+			 CP_CD
+			,CP_NM
+			,CONCAT(SUBSTRING(BIZ_NO, 1, 3), '-', SUBSTRING(BIZ_NO, 4, 2), '-', SUBSTRING(BIZ_NO, 6, 5)) AS BIZ_NO
+			,PAY_DEADLINE_DT
+			,MIN(CALCU_EMAIL) OVER(ORDER BY CONTRACT_ID, CONTRACT_SEQ) AS CALCU_EMAIL
+			,MONTH(CALCU_START_DT) AS MONTH
+			<!-- ,FORMAT(CLOUD_FEE, N'#, 0') AS CLOUD_FEE -->
+			,FORMAT(SUM(CLOUD_FEE), N'#, 0') AS CLOUD_FEE
+			,FORMAT(SUM(SYSTEM_FEE), N'#, 0') AS SYSTEM_FEE
+			<!-- ,FORMAT(SUM(SYSTEM_FEE) + CLOUD_FEE, N'#, 0') AS TOT_FEE -->
+			,FORMAT(SUM(SYSTEM_FEE) + SUM(CLOUD_FEE), N'#, 0') AS TOT_FEE
+			<!-- ,FORMAT((SUM(SYSTEM_FEE) + CLOUD_FEE) * T2.VATRATE, N'#, 0') AS VAT -->
+			,FORMAT(TRUNCATE((SUM(SYSTEM_FEE) + CLOUD_FEE) * T2.VATRATE, 0), N'#,0') AS VAT
+			,DATE_FORMAT(MAX(CALCU_START_DT), '%Y') AS YEAR
+			,DATE_FORMAT(MAX(CALCU_START_DT), '%Y년 %m월') AS INVOICE_TITLE
+		FROM GJ_OP.OP_CALCULATION T1
+		LEFT JOIN (
+				SELECT CC.FLD1 AS VATRATE 
+				FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC 
+				WHERE CG.CMGRPCD = CC.CMGRPCD 
+				  AND CG.ACTYN = 'Y' 
+				  AND CC.ACTYN = 'Y' 
+				  AND CG.CMGRPCD = 'CALPARAM' 
+				  AND CC.CMCD = 'VATRATE'
+			) T2
+			ON 1 = 1
+		<where>
+			<if test="CP_CD != null and CP_CD != ''">
+			AND CP_CD = #{CP_CD}
+			</if>
+			<if test="dtlCondCpCd != null and dtlCondCpCd != ''">
+			AND CP_CD = #{dtlCondCpCd}
+			</if>
+			<if test="condYear != null and condYear != ''">
+			AND DATE_FORMAT(CALCU_START_DT, '%Y') = #{condYear}
+			</if>
+		</where>
+		GROUP BY 
+			 CP_CD, CP_NM, BIZ_NO, PAY_DEADLINE_DT, MONTH(CALCU_START_DT)
+		ORDER BY MONTH(CALCU_START_DT)
+	</select>
+</mapper>

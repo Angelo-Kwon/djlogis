@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.NoticeBoardMapper">
+	<!-- 공지사항 정보 목록 조회 건 수 -->
+	<select id="selectNoticeCnt" parameterType="java.util.HashMap" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM 
+			GJ_OP.OP_NOTICS_BOARD nb LEFT JOIN GJ_OP.OP_USER ou ON nb.CRE_USER_ID = ou.LOGIN_ID
+			<if test='accountCode != null and boardId.equals("1")'>
+				AND ou.ACCOUNT_CODE = #{accountCode}
+			</if>
+		WHERE 
+			nb.BOARD_ID = #{boardId}
+		<if test='accountCode != null and boardId.equals("1")'>
+			AND nb.ACCOUNT_CODE = #{accountCode}
+		</if>
+		<if test='schUseYn != null and schUseYn != ""'>
+			AND nb.USE_YN = #{schUseYn}
+		</if>
+		<if test='schUserNm != null and schUserNm != ""'>
+			AND ou.USER_NM LIKE CONCAT('%', #{schUserNm} ,'%')
+		</if>
+		<if test='schTitle != null and schTitle != ""'>
+			AND nb.TITLE LIKE CONCAT('%', #{schTitle} ,'%')
+		</if>
+		<if test='schNoticsYn != null and schNoticsYn != ""'>
+			AND nb.NOTICS_YN = #{schNoticsYn}
+		</if>
+	</select>
+	
+	<!-- 공지사항 정보 목록 조회 -->
+	<select id="selectNoticeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY nb.CRE_DT DESC) as rowNum
+			, nb.BOARD_ID
+			, nb.BOARD_SEQ
+			, nb.PAR_BOARD_ID
+			, nb.TITLE
+			, nb.CONTENTS
+			, (SELECT CMNM FROM GJ_OP.COMMCD WHERE CMGRPCD = 'NOTICS_YN' AND CMCD = nb.NOTICS_YN) as NOTICS_YN
+			, nb.USE_YN
+			, nb.HIT_CNT
+			, nb.ATTACH_FILE1
+			, nb.ATTACH_FILE1_NM
+			, nb.ATTACH_FILE2
+			, nb.ATTACH_FILE2_NM
+			, nb.ATTACH_FILE3
+			, nb.ATTACH_FILE3_NM
+			, DATE_FORMAT(nb.CRE_DT, '%Y-%m-%d %H:%i:%s') as CRE_DT
+			, nb.CRE_USER_ID
+			, ou.USER_NM
+			, DATE_FORMAT(nb.MOD_DT, '%Y-%m-%d %H:%i:%s') as MOD_DT
+			, nb.MOD_USER_ID
+			, nb.WRITER
+		FROM 
+			GJ_OP.OP_NOTICS_BOARD nb LEFT JOIN GJ_OP.OP_USER ou
+			ON nb.CRE_USER_ID = ou.LOGIN_ID
+		WHERE 
+			nb.BOARD_ID = #{boardId}
+		<if test='schUserNm != null and schUserNm != ""'>
+			AND ou.USER_NM LIKE CONCAT('%', #{schUserNm} ,'%')
+		</if>
+		<if test='schTitle != null and schTitle != ""'>
+			AND nb.TITLE LIKE CONCAT('%', #{schTitle} ,'%')
+		</if>
+		<if test='schNoticsYn != null and schNoticsYn != ""'>
+			AND nb.NOTICS_YN = #{schNoticsYn}
+		</if>
+		<if test='schWriter != null and schWriter != ""'>			
+			AND nb.WRITER LIKE CONCAT('%', #{schWriter} ,'%')
+		</if>
+		<if test='limit != null and limit !="" '>
+			LIMIT #{limit}, 10
+		</if>
+		ORDER BY nb.CRE_DT DESC
+	</select>
+	
+	<!-- 공지사항 정보 목록 조회 -->
+	<!-- <select id="selectNoticeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			nb.BOARD_ID
+			, nb.BOARD_SEQ
+			, nb.PAR_BOARD_ID
+			, nb.TITLE
+			, nb.CONTENTS
+			, (SELECT CMNM FROM COMMCD WHERE CMGRPCD = 'NOTICS_YN' AND CMCD = nb.NOTICS_YN) as NOTICS_YN
+			, nb.PHONE
+			, nb.
+			, nb.EMAIL
+			, nb.USE_YN
+			, nb.HIT_CNT
+			, nb.ATTACH_FILE1
+			, nb.ATTACH_FILE1_NM
+			, nb.ATTACH_FILE2
+			, nb.ATTACH_FILE2_NM
+			, nb.ATTACH_FILE3
+			, nb.ATTACH_FILE3_NM
+			, DATE_FORMAT(nb.CRE_DT, '%Y-%m-%d %H:%i:%s') as CRE_DT
+			, nb.CRE_USER_ID
+			, ou.USER_NM
+			, DATE_FORMAT(nb.MOD_DT, '%Y-%m-%d %H:%i:%s') as MOD_DT
+			, nb.MOD_USER_ID
+		FROM 
+			OP_NOTICS_BOARD nb LEFT JOIN  OP_USER ou
+			ON nb.CRE_USER_ID = ou.LOGIN_ID
+		WHERE 
+			nb.BOARD_ID = #{boardId}
+		<if test='schUserNm != null and schUserNm != ""'>
+			AND ou.USER_NM LIKE CONCAT('%', #{schUserNm} ,'%')
+		</if>
+		<if test='schTitle != null and schTitle != ""'>
+			AND nb.TITLE LIKE CONCAT('%', #{schTitle} ,'%')
+		</if>
+		<if test='schNoticsYn != null and schNoticsYn != ""'>
+			AND nb.NOTICS_YN = #{schNoticsYn}
+		</if>
+		ORDER BY nb.CRE_DT DESC
+	</select> -->
+	
+	<!-- 공지사항 정보 상세 조회 -->
+	<select id="selectNoticeDetailInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			nb.BOARD_ID
+			, nb.BOARD_SEQ
+			, nb.PAR_BOARD_ID
+			, nb.TITLE
+			, nb.CONTENTS
+			, nb.NOTICS_YN
+			, nb.USE_YN
+			, nb.ATTACH_FILE1
+			, nb.ATTACH_FILE1_NM
+			, nb.ATTACH_FILE2
+			, nb.ATTACH_FILE2_NM
+			, nb.ATTACH_FILE3
+			, nb.ATTACH_FILE3_NM
+			, nb.HIT_CNT
+			, DATE_FORMAT(nb.CRE_DT, '%Y-%m-%d %H:%i:%s') as CRE_DT
+			, nb.CRE_USER_ID
+			, ou.USER_NM
+			, nb.PHONE
+			, nb.WRITER
+		FROM 
+			GJ_OP.OP_NOTICS_BOARD nb LEFT JOIN  GJ_OP.OP_USER ou
+				ON nb.CRE_USER_ID = ou.LOGIN_ID
+		WHERE 
+			BOARD_SEQ = #{BOARD_SEQ}
+	</select>
+
+	<!-- 공지사항 정보 등록 -->
+	<insert id="insertNoticeInfo" parameterType="java.util.HashMap">
+		INSERT INTO GJ_OP.OP_NOTICS_BOARD(
+			BOARD_ID
+			, BOARD_SEQ
+			, PAR_BOARD_ID
+			, TITLE
+			, CONTENTS
+			, NOTICS_YN
+			, USE_YN
+			, HIT_CNT
+			, ATTACH_FILE1
+			, ATTACH_FILE1_NM
+			, ATTACH_FILE2
+			, ATTACH_FILE2_NM
+			, ATTACH_FILE3
+			, ATTACH_FILE3_NM
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+			, PHONE
+			, EMAIL
+			, WRITER
+		) VALUES(
+			#{boardId}
+			<choose>
+				<when test='schBoardSeq != null and !schBoardSeq.equals("")'>
+					, #{schBoardSeq}
+				</when>
+				<otherwise>
+					, CONCAT('SY', LPAD(CAST(nextVAL(GJ_OP.op_notics_board_seq) AS CHAR(8)), 8 ,'0'))
+				</otherwise>
+			</choose>
+			<choose>
+				<when test='PAR_BOARD_ID != null and !PAR_BOARD_ID.equals("")'>
+					,#{schParBoardId}
+				</when>
+				<otherwise>
+					,'0'
+				</otherwise>
+			</choose>
+			, #{schTitle}
+			, #{schContent}
+			, #{schNoticsYn}
+			, #{schUseYn}
+			, 0
+			, #{schAttachFile1}
+			, #{schAttachFile1Nm}
+			, #{schAttachFile2}
+			, #{schAttachFile2Nm}
+			, #{schAttachFile3}
+			, #{schAttachFile3Nm}
+			, #{schCreDt}
+			, #{loginId}
+			, #{schCreDt}
+			, #{loginId}
+			, #{schPhone}
+			, #{schEmail}
+			, #{schWriter}
+		) ON DUPLICATE KEY UPDATE
+							TITLE = #{schTitle} 
+							,PHONE = #{schPhone}
+							,EMAIL = #{schEmail}
+							,CONTENTS = #{schContent}
+							,NOTICS_YN = #{schNoticsYn}
+							,ATTACH_FILE1 = #{schAttachFile1}
+							,ATTACH_FILE1_NM = #{schAttachFile1Nm}
+							,ATTACH_FILE2 = #{schAttachFile2}
+							,ATTACH_FILE2_NM = #{schAttachFile2Nm}
+							,ATTACH_FILE3 = #{schAttachFile3}
+							,ATTACH_FILE3_NM = #{schAttachFile3Nm}
+							,USE_YN = #{schUseYn} 
+							,MOD_DT = now()
+							,MOD_USER_ID = #{loginId}
+	</insert>
+	
+	<!-- 공지사항 정보 등록 -->
+	<!-- <insert id="insertNoticeInfo" parameterType="java.util.HashMap">
+		INSERT INTO OP_NOTICS_BOARD(
+			BOARD_ID
+			, BOARD_SEQ
+			, PAR_BOARD_ID
+			, TITLE
+			, CONTENTS
+			, NOTICS_YN
+			, PHONE
+			, EMAIL
+			, POL_PSN_YN
+			, USE_YN
+			, HIT_CNT
+			, ATTACH_FILE1
+			, ATTACH_FILE1_NM
+			, ATTACH_FILE2
+			, ATTACH_FILE2_NM
+			, ATTACH_FILE3
+			, ATTACH_FILE3_NM
+			, CRE_DT
+			, CRE_USER_ID
+			, MOD_DT
+			, MOD_USER_ID
+		) VALUES(
+			#{boardId}
+			<choose>
+				<when test='schBoardSeq != null and !schBoardSeq.equals("")'>
+					, #{schBoardSeq}
+				</when>
+				<otherwise>
+					, CONCAT('SY', LPAD(CAST(nextVAL(op_notics_board_seq) AS CHAR(8)), 8 ,'0'))
+				</otherwise>
+			</choose>
+			<choose>
+				<when test='PAR_BOARD_ID != null and !PAR_BOARD_ID.equals("")'>
+					,#{schParBoardId}
+				</when>
+				<otherwise>
+					,'0'
+				</otherwise>
+			</choose>
+			, #{schTitle}
+			, #{schContent}
+			, #{schNoticsYn}
+			, #{schPhone}
+			, #{schEmail}
+			, #{schPolPsnYn}
+			, #{schUseYn}
+			, 0
+			, #{schAttachFile1}
+			, #{schAttachFile1Nm}
+			, #{schAttachFile2}
+			, #{schAttachFile2Nm}
+			, #{schAttachFile3}
+			, #{schAttachFile3Nm}
+			, #{schCreDt}
+			, #{loginId}
+			, #{schCreDt}
+			, #{loginId}
+		) ON DUPLICATE KEY UPDATE
+							TITLE = #{schTitle} 
+							,CONTENTS = #{schContent}
+							,NOTICS_YN = #{schNoticsYn}
+							,ATTACH_FILE1 = #{schAttachFile1}
+							,ATTACH_FILE1_NM = #{schAttachFile1Nm}
+							,ATTACH_FILE2 = #{schAttachFile2}
+							,ATTACH_FILE2_NM = #{schAttachFile2Nm}
+							,ATTACH_FILE3 = #{schAttachFile3}
+							,ATTACH_FILE3_NM = #{schAttachFile3Nm}
+							,PHONE = #{schEmail}
+							,EMAIL = #{schPolPsnYn}
+							,POL_PSN_YN = #{schUseYn}
+							,USE_YN = #{schUseYn} 
+							,MOD_DT = now()
+							,MOD_USER_ID = #{loginId}
+	</insert> -->
+	
+	<!-- 공지사항 사용 여부 수정 -->
+	<update id="updateNoticeUseYn" parameterType="java.util.HashMap">
+		UPDATE GJ_OP.OP_NOTICS_BOARD
+		SET 
+			USE_YN = #{USE_YN}
+			,MOD_DT = now()
+			,MOD_USER_ID = #{LOGIN_ID}
+		WHERE 
+			BOARD_SEQ = #{BOARD_SEQ}
+	</update>
+	
+	<!-- 공지사항 조회수 수정 -->
+	<update id="updateNoticeHitCnt" parameterType="java.util.HashMap">
+		UPDATE GJ_OP.OP_NOTICS_BOARD
+		SET 
+			HIT_CNT = HIT_CNT + 1
+			,MOD_DT = now()
+			,MOD_USER_ID = #{LOGIN_ID}
+		WHERE 
+			BOARD_SEQ = #{BOARD_SEQ}
+	</update>
+	
+	<delete id="deleteNotice"  parameterType="java.util.List">
+		DELETE FROM GJ_OP.OP_NOTICS_BOARD
+		WHERE
+			BOARD_SEQ IN (
+				<foreach collection="list" item="item" separator=",">
+					#{item}
+				</foreach>
+			)
+	</delete>
+	
+	<!-- www 공지사항 정보 목록 조회 -->
+	<select id="selectNewsList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY nb.CRE_DT DESC) as rowNum
+			, nb.BOARD_ID
+			, nb.BOARD_SEQ
+			, nb.PAR_BOARD_ID
+			, nb.TITLE
+			, nb.CONTENTS
+			, (SELECT CMNM FROM GJ_OP.COMMCD WHERE CMGRPCD = 'NOTICS_YN' AND CMCD = nb.NOTICS_YN) as NOTICS_YN
+			, nb.USE_YN
+			, nb.HIT_CNT
+			, nb.ATTACH_FILE1
+			, nb.ATTACH_FILE1_NM
+			, nb.ATTACH_FILE2
+			, nb.ATTACH_FILE2_NM
+			, nb.ATTACH_FILE3
+			, nb.ATTACH_FILE3_NM
+			, DATE_FORMAT(nb.CRE_DT, '%Y-%m-%d %H:%i:%s') as CRE_DT
+			, nb.CRE_USER_ID
+			, ou.USER_NM
+			, DATE_FORMAT(nb.MOD_DT, '%Y-%m-%d %H:%i:%s') as MOD_DT
+			, nb.MOD_USER_ID
+			, nb.WRITER
+		FROM 
+			GJ_OP.OP_NOTICS_BOARD nb LEFT JOIN GJ_OP.OP_USER ou
+			ON nb.CRE_USER_ID = ou.LOGIN_ID
+		WHERE 
+			nb.BOARD_ID = #{boardId}
+		<if test='schUserNm != null and schUserNm != ""'>
+			AND ou.USER_NM LIKE CONCAT('%', #{schUserNm} ,'%')
+		</if>
+		<if test='schTitle != null and schTitle != ""'>
+			AND nb.TITLE LIKE CONCAT('%', #{schTitle} ,'%')
+		</if>
+		<if test='schNoticsYn != null and schNoticsYn != ""'>
+			AND nb.NOTICS_YN = #{schNoticsYn}
+		</if>
+		ORDER BY nb.CRE_DT DESC
+		LIMIT 1
+	</select>
+
+</mapper>

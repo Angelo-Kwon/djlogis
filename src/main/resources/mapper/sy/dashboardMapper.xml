@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sy.mapper.DashboardMapper">
+	<select id="getWhRoleGroup" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			wrg.WAREKEY,
+			w.WHNAMLC
+		FROM GJ_OP.OP_WH_ROLE_GROUP wrg LEFT JOIN GJ_WM.MWARMA w
+			ON wrg.WAREKEY = w.WAREKEY 
+		WHERE 
+			w.COMPKEY = '100'
+			AND USE_YN = 'Y'
+			AND URGROUP_ID = #{rip}
+	</select>
+	
+	<select id="getShipGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getShipGridData */
+		  SELECT A.VHPLNKY, A.VHCSNAM /* 배차계획번호, 차량명 */
+		     , A.PLNSTAT, (SELECT COMCDTX FROM GJ_WM.V_MCODEM V WHERE V.COMPKEY = A.COMPKEY AND V.COMCDKY = 'PLNSTAT' AND V.COMCDVL = A.PLNSTAT) AS PLNSTNM /* 운행상태 */
+		     , A.VHLOLAT, A.VHLOLON /* 위도 경도 */
+		     , A.CREDATE, A.CRETIME /* 수신 날자, 시간 */
+		  FROM (  
+		    SELECT TH.COMPKEY, TH.VHPLNKY, TH.VEHICKY, TV.VHCSNAM /* 운송계획, 차량번호*/
+		         , TL.VHLOGSQ, TL.VHLOLAT, TL.VHLOLON /* 위 경도 */
+		         , TL.CREDATE, TL.CRETIME /* 위치 날자 시간 */
+		         , TH.PLNSTAT
+		         , ROW_NUMBER() OVER(PARTITION BY TH.COMPKEY, TH.VEHICKY ORDER BY TL.VHLOGSQ DESC) rnk
+		      FROM GJ_WM.TPLNHD TH 
+		     INNER JOIN GJ_WM.TVHCMA TV ON TH.COMPKEY = TV.COMPKEY 
+		       AND TH.WAREKEY = TV.WAREKEY 
+		       AND TH.VEHICKY = TV.VEHICKY 
+		     INNER JOIN GJ_WM.TVLOHI TL ON TH.COMPKEY = TL.COMPKEY 
+		       AND TH.VHPLNKY = TL.VHPLNKY 
+		     WHERE 1=1
+		       AND TH.COMPKEY = '100'      -- 로그인 사용자의 어카운트
+		       AND TH.WAREKEY IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )     -- 화면에에서 선택 (광성=WH01  대유=WH02)
+		       AND TH.VHPDATE = DATE_FORMAT(NOW(), '%Y%m%d') -- 기준일 : 오늘로 입력 
+		       AND TH.PLNSTAT NOT IN ('CANCLE')       
+		) A 
+		WHERE 1=1 
+		  AND A.rnk = 1
+	</select>
+
+	<select id="getWhouseGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getWhouseGridData */
+		SELECT
+			 CASE 
+				WHEN SH.SH_USE_YN IS NULL THEN '미등록'
+				ELSE (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = SH.SH_USE_YN)
+			 END AS SH_USE_YN_NM
+			,CM.WH_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WH_KN_CD' AND CC.CMCD = CM.WH_KN_CD) AS WH_KN_CD_NM
+			,CM.AREA_NM1
+			,SH.SH_SQU
+		FROM GJ_DS.CM_WHOUSE CM
+		LEFT JOIN GJ_DS.SH_WHOUSE SH
+		  ON CM.USER_ID = SH.USER_ID
+		  AND CM.WH_ID = SH.WH_ID
+		  AND SH.USE_YN = 'Y'
+		  AND SH.SH_USE_YN IN ('R', 'A', 'S')
+		WHERE CM.USE_YN IN ('Y', 'N')
+		ORDER BY CM.CRE_DT DESC
+		LIMIT 5
+	</select>
+	
+	<select id="getCarGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getCarGridData */
+		SELECT
+			 CASE 
+				WHEN SH.SH_USE_YN IS NULL THEN '미등록'
+				ELSE (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = SH.SH_USE_YN)
+			 END AS SH_USE_YN_NM
+			,CAR_FULL_NO
+			,CAR_CP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'CAR_CLS_CD' AND CC.CMCD = CM.CAR_CLS_CD) AS CAR_CLS_CD_NM
+			,FORMAT(CM.CAR_LOD_WGT, N'#,0') AS CAR_LOD_WGT
+		FROM GJ_DS.CM_CAR CM
+		LEFT JOIN GJ_DS.SH_CAR SH
+		  ON CM.USER_ID = SH.USER_ID
+		  AND CM.CAR_ID  = SH.CAR_ID 
+		  AND SH.USE_YN = 'Y'
+		  AND SH.SH_USE_YN IN ('R', 'A', 'S')
+		WHERE CM.USE_YN IN ('Y', 'N')
+		ORDER BY CM.CRE_DT DESC
+		LIMIT 5
+	</select>
+	
+	<select id="getEquipGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getEquipGridData */
+		SELECT 
+			 CASE 
+				WHEN SH.SH_USE_YN IS NULL THEN '미등록'
+				ELSE (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = SH.SH_USE_YN)
+			 END AS SH_USE_YN_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'EQUIP_CD' AND CC.CMCD = CM.EQUIP_CD) AS EQUIP_CD_NM
+			,CM.EQUIP_NM
+			,(SELECT CPNM FROM MASTER.CORPMASTER WHERE CPCD = CM.CP_CD) AS CP_CD_NM
+			,TYP_NM
+			,FORMAT(CM.WGT, N'#,0') AS WGT
+		FROM (
+				SELECT 
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, CP_CD
+					,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'FKLIFT_CD' AND CC.CMCD = FKLIFT_CD) AS TYP_NM
+					,FKLIFT_WGT AS WGT, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_FKLIFT
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, CP_CD
+					,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'KART_CD' AND CC.CMCD = KART_CD) AS TYP_NM
+					,KART_WGT AS WGT, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_KART
+				UNION ALL
+				SELECT
+					EQUIP_ID, EQUIP_CD, EQUIP_NM, CP_CD
+					,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'PLT_TYP_CD' AND CC.CMCD = PLT_TYP_CD) AS TYP_NM
+					,PLT_WGT AS WGT, USER_ID, USE_YN, SH_YN, CRE_DT
+				FROM GJ_DS.CM_PLT
+			) CM
+		LEFT JOIN GJ_DS.SH_EQUIP SH
+		  ON CM.USER_ID = SH.USER_ID
+		  AND CM.EQUIP_ID  = SH.EQUIP_ID 
+		  AND SH.USE_YN = 'Y'
+		  AND SH.SH_USE_YN IN ('R', 'A', 'S')
+		WHERE CM.USE_YN IN ('Y', 'N')
+		ORDER BY CM.CRE_DT DESC
+		LIMIT 5
+	</select>
+	
+	<select id="getManpwGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getManpwGridData */
+		SELECT
+			 CASE 
+				WHEN SH.SH_USE_YN IS NULL THEN '미등록'
+				ELSE (SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'SH_USE_YN' AND CC.CMCD = SH.SH_USE_YN)
+			 END AS SH_USE_YN_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_CD' AND CC.CMCD = CM.WRK_CD) AS WRK_CD_NM
+			,CM.MANPW_NM
+			,(SELECT CPNM FROM MASTER.CORPMASTER WHERE CPCD = CM.CP_CD) AS CP_CD_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_TYP' AND CC.CMCD = CM.WRK_TYP) AS WRK_TYP_NM
+			,(SELECT CC.CMNM FROM GJ_OP.COMMGRP CG, GJ_OP.COMMCD CC WHERE CG.CMGRPCD = CC.CMGRPCD AND CG.ACTYN = 'Y' AND CC.ACTYN = 'Y' AND CG.CMGRPCD = 'WRK_GRP' AND CC.CMCD = CM.WRK_GRP) AS WRK_GRP_NM
+		FROM GJ_DS.CM_MANPW CM
+		LEFT JOIN GJ_DS.SH_MANPW SH
+		  ON CM.USER_ID = SH.USER_ID
+		  AND CM.MANPW_NO = SH.MANPW_NO
+		  AND SH.USE_YN = 'Y'
+		  AND SH.SH_USE_YN IN ('R', 'A', 'S')
+		WHERE CM.USE_YN IN ('Y', 'N')
+		ORDER BY CM.CRE_DT DESC
+		LIMIT 5
+	</select>
+	
+	<select id="getNoticeGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getNoticeGridData */
+		SELECT 
+			N.TITLE
+			, U.USER_NM
+			, TO_CHAR(N.CRE_DT, 'YYYY-MM-DD HH24:MI') AS CRE_DT
+		FROM GJ_OP.OP_NOTICS_BOARD N
+			,GJ_OP.OP_USER U
+		WHERE N.CRE_USER_ID = U.LOGIN_ID
+		  AND N.BOARD_ID = '1'
+		ORDER BY N.CRE_DT DESC
+		LIMIT 5
+	</select>
+
+	<!--전체 날짜 기입빠짐 -->
+
+	<select id="selectStockBarList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+				SUM(S.CORDCNT) AS "T_ORDER",
+				SUM(CASE WHEN S.ASNSTAT = 'CMP' THEN S.CORDCNT ELSE 0 END) AS "C_ORDER",
+				SUM(S.ASNDQTY) AS "T_QTY",
+				SUM(S.RCHSQTY) AS "C_QTY",
+				COUNT(DISTINCT S.SKUMKEY) AS "T_SKU",
+				COUNT(DISTINCT CASE WHEN
+				S.ASNSTAT = 'CMP' THEN S.SKUMKEY ELSE NULL END) AS "C_SKU"
+		FROM
+			GJ_WM.VINBST S
+		WHERE
+			S.COMPKEY = '100'
+			AND S.WAREKEY IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			AND S.STATDUR = 'R'
+			AND S.STACATE = 'DOC'
+			AND S.ASNDATE = to_char(NOW() ,'YYYYMMDD')
+	</select>
+
+	<select id="selectStockDouList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select
+			M.DOCTYPE,
+			M.DOCTYNM,
+			SUM(S.RCHSQTY) AS "S_QTY"
+		from
+			GJ_WM.VINBST S
+		inner join GJ_WM.MDOCMA M ON
+			S.COMPKEY = M.COMPKEY
+			AND S.WAREKEY = M.WAREKEY
+			AND S.DOCCATE = M.DOCCATE
+			AND S.DOCTYPE = M.DOCTYPE
+		where
+			S.COMPKEY = '100'
+			and S.WAREKEY IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			and S.STATDUR = 'R'
+			and S.STACATE = 'DOC'
+			AND S.ASNDATE = to_char(NOW() ,'YYYYMMDD')
+		GROUP BY
+			M.DOCTYPE,M.DOCTYNM;
+	</select>
+
+	<select id="selectDeliveryBarList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+				SUM(S.CORDCNT) AS "T_ORDER",
+				SUM(CASE WHEN S.SHPITST = 'SHPOUT' THEN S.CORDCNT ELSE 0 END) AS "C_ORDER",
+				SUM(S.FORDQTY) AS "T_QTY",
+				SUM(S.TCMPQTY) AS "C_QTY",
+				COUNT(DISTINCT S.SKUMKEY) AS "T_SKU",
+				COUNT(DISTINCT CASE WHEN S.SHPITST = 'SHPOUT' THEN S.SKUMKEY ELSE NULL END) AS "C_SKU"
+		FROM GJ_WM.VOUBST S
+		WHERE
+			S.COMPKEY = '100'
+			AND S.WAREKEY  IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			AND S.STATDUR = 'R'
+			AND S.STACATE = 'DOC'
+			AND S.SPEIDAT = to_char(NOW() ,'YYYYMMDD');
+	</select>
+
+	<select id="selectDeliveryDouList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select M.DOCTYPE,
+			M.DOCTYNM, SUM(S.TCMPQTY) AS "DEL_QTY"
+		from GJ_WM.VOUBST S
+		inner join GJ_WM.MDOCMA M 
+			ON S.COMPKEY = M.COMPKEY
+			AND S.WAREKEY = M.WAREKEY
+			AND S.DOCCATE = M.DOCCATE
+			AND S.DOCTYPE = M.DOCTYPE
+		where S.COMPKEY = '100'
+			and S.WAREKEY  IN (
+		       <foreach item="item" collection="wareKeyList" separator=",">
+					#{item.WAREKEY}
+			   </foreach>
+		       )
+			and S.STATDUR = 'R'
+			and S.STACATE = 'DOC'
+			AND S.SPEIDAT = to_char(NOW() ,'YYYYMMDD')
+		GROUP BY M.DOCTYPE, M.DOCTYNM
+	</select>
+	
+		<select id="selectWorkerDouList"
+		parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		
+	SELECT
+	    MAN_IN_CNT + MAN_OUT_CNT AS WORKER,
+	    MAN_OUT_CNT_COM + MAN_IN_CNT_COM AS COM_WORKER,
+	    (MAN_IN_CNT + MAN_OUT_CNT) - (MAN_OUT_CNT_COM + MAN_IN_CNT_COM) AS RESULT_CNT
+	FROM
+	    GJ_OP.OP_SAFE_RSC;
+
+	</select>
+	
+		<select id="selectWorkerBarList"
+		parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			LIFT_CNT ,
+			LIFT_CNT_COM ,
+			MAN_OUT_CNT ,
+			MAN_OUT_CNT_COM ,
+			MAN_IN_CNT ,
+			MAN_IN_CNT_COM
+		FROM GJ_OP.OP_SAFE_RSC  ;
+	</select>
+	
+	<select id="getDownManual" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		 SELECT FILE_NAME,FILE_DATA 
+		 FROM GJ_DS.FILE_TEST 
+		 WHERE FILE_ID = #{file_id}
+	</select>
+	
+	<select id="getShList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			CONCAT(CLMN1, ' ', CLMN2, ' ', CLMN3) AS LI_TEXT
+		FROM (
+			SELECT
+				CONCAT('[', CASE WHEN SH.SH_USE_YN = 'A' THEN '사용신청' ELSE '승인' END, ', 창고]') AS CLMN1
+				, CM.AREA_NM1 AS CLMN2
+				, CM.WH_NM AS CLMN3
+				, SH.CRE_DT
+			FROM GJ_DS.CM_WHOUSE CM
+			INNER JOIN GJ_DS.SH_WHOUSE SH
+			  ON CM.USER_ID = SH.USER_ID
+			  AND CM.WH_ID = SH.WH_ID
+			  AND SH.USE_YN = 'Y'
+			  AND SH.SH_USE_YN IN ('A', 'S')
+			WHERE CM.USE_YN IN ('Y', 'N')
+			UNION ALL
+			SELECT
+				CONCAT('[', CASE WHEN SH.SH_USE_YN = 'A' THEN '사용신청' ELSE '승인' END, ', 차량]') AS CLMN1
+				, CM.CAR_CP_NM AS CLMN2
+				, CM.CAR_FULL_NO AS CLMN3
+				, SH.CRE_DT
+			FROM GJ_DS.CM_CAR CM
+			INNER JOIN GJ_DS.SH_CAR SH
+			  ON CM.USER_ID = SH.USER_ID
+			  AND CM.CAR_ID  = SH.CAR_ID 
+			  AND SH.USE_YN = 'Y'
+			  AND SH.SH_USE_YN IN ('A', 'S')
+			WHERE CM.USE_YN IN ('Y', 'N')
+			UNION ALL
+			SELECT
+				CONCAT('[', CASE WHEN SH.SH_USE_YN = 'A' THEN '사용신청' ELSE '승인' END, ', 기자재]') AS CLMN1
+				, CM.AREA_NM1 AS CLMN2
+				, CM.EQUIP_NM AS CLMN3
+				, SH.CRE_DT
+			FROM GJ_DS.CM_FKLIFT CM
+			INNER JOIN GJ_DS.SH_EQUIP SH
+			  ON CM.USER_ID = SH.USER_ID
+			  AND CM.EQUIP_ID  = SH.EQUIP_ID 
+			  AND SH.USE_YN = 'Y'
+			  AND SH.SH_USE_YN IN ('A', 'S')
+			WHERE CM.USE_YN IN ('Y', 'N')
+			UNION ALL
+			SELECT
+				CONCAT('[', CASE WHEN SH.SH_USE_YN = 'A' THEN '사용신청' ELSE '승인' END, ', 기자재]') AS CLMN1
+				, CM.AREA_NM1 AS CLMN2
+				, CM.EQUIP_NM AS CLMN3
+				, SH.CRE_DT
+			FROM GJ_DS.CM_KART CM
+			INNER JOIN GJ_DS.SH_EQUIP SH
+			  ON CM.USER_ID = SH.USER_ID
+			  AND CM.EQUIP_ID  = SH.EQUIP_ID 
+			  AND SH.USE_YN = 'Y'
+			  AND SH.SH_USE_YN IN ('A', 'S')
+			WHERE CM.USE_YN IN ('Y', 'N')
+			UNION ALL
+			SELECT
+				CONCAT('[', CASE WHEN SH.SH_USE_YN = 'A' THEN '사용신청' ELSE '승인' END, ', 기자재]') AS CLMN1
+				, CM.AREA_NM1 AS CLMN2
+				, CM.EQUIP_NM AS CLMN3
+				, SH.CRE_DT
+			FROM GJ_DS.CM_PLT CM
+			INNER JOIN GJ_DS.SH_EQUIP SH
+			  ON CM.USER_ID = SH.USER_ID
+			  AND CM.EQUIP_ID  = SH.EQUIP_ID 
+			  AND SH.USE_YN = 'Y'
+			  AND SH.SH_USE_YN IN ('A', 'S')
+			WHERE CM.USE_YN IN ('Y', 'N')
+			UNION ALL
+			SELECT
+				 CONCAT('[', CASE WHEN SH.SH_USE_YN = 'A' THEN '사용신청' ELSE '승인' END, ', 인력]') AS CLMN1
+				, CM.WRK_AREA AS CLMN2
+				, CM.MANPW_NM AS CLMN3
+				, SH.CRE_DT
+			FROM GJ_DS.CM_MANPW CM
+			INNER JOIN GJ_DS.SH_MANPW SH
+			  ON CM.USER_ID = SH.USER_ID
+			  AND CM.MANPW_NO = SH.MANPW_NO
+			  AND SH.USE_YN = 'Y'
+			  AND SH.SH_USE_YN IN ('A', 'S')
+			WHERE CM.USE_YN IN ('Y', 'N')
+		) T
+		ORDER BY CRE_DT DESC LIMIT 5;
+	</select>
+	
+	<select id="getSrList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			CONCAT('[', SH_USE_YN, ', ', SH_DIV, ']', ' ', SH_MAIN, ' ', SH_DETAIL) AS LI_TEXT
+		FROM (
+			SELECT 
+				 '등록'       AS SH_USE_YN
+			     , '창고'       AS SH_DIV
+			     , CW.AREA_NM1  AS SH_MAIN
+			     , CW.WH_NM     AS SH_DETAIL
+			     , TO_CHAR(SW.CRE_DT, 'YYYY-MM-DD') AS SH_DT   
+			  FROM GJ_DS.SH_WHOUSE SW
+			  JOIN GJ_DS.CM_WHOUSE CW
+			    ON CW.WH_ID = SW.WH_ID 
+			WHERE SW.SH_USE_YN = 'R'
+			UNION ALL
+			SELECT 
+				 '등록'       AS SH_USE_YN
+			     , '차량'            AS SH_DIV
+			     , CC.CAR_CP_NM    AS SH_MAIN   
+			     , CC.CAR_FULL_NO    AS SH_DETAIL 
+			     , TO_CHAR(SC.CRE_DT, 'YYYY-MM-DD') AS SH_DT     
+			  FROM GJ_DS.SH_CAR SC  
+			  JOIN GJ_DS.CM_CAR CC
+			    ON CC.CAR_ID = SC.CAR_ID 
+			WHERE SC.SH_USE_YN = 'R'
+			UNION ALL
+			SELECT 
+				 '등록'       AS SH_USE_YN
+			     , '기자재'         AS SH_DIV    
+			     , CF.AREA_NM1       AS SH_MAIN 
+			     , CF.EQUIP_NM      AS SH_DETAIL   
+			     , TO_CHAR(SE.CRE_DT, 'YYYY-MM-DD') AS SH_DT     
+			  FROM GJ_DS.SH_EQUIP SE
+			  JOIN GJ_DS.CM_FKLIFT CF
+			    ON CF.EQUIP_ID = SE.EQUIP_ID 
+			WHERE SE.SH_USE_YN = 'R'
+			UNION ALL
+			SELECT 
+				 '등록'       AS SH_USE_YN
+			     , '기자재'             AS SH_DIV    
+			     , CK.AREA_NM1        AS SH_MAIN 
+			     , CK.EQUIP_NM       AS SH_DETAIL   
+			     , TO_CHAR(SE.CRE_DT, 'YYYY-MM-DD') AS SH_DT     
+			  FROM GJ_DS.SH_EQUIP SE
+			  JOIN GJ_DS.CM_KART CK
+			    ON CK.EQUIP_ID = SE.EQUIP_ID 
+			WHERE SE.SH_USE_YN = 'R'
+			UNION ALL
+			SELECT 
+				 '등록'       AS SH_USE_YN
+			     , '기자재'          AS SH_DIV   
+			     , CP.AREA_NM1          AS SH_MAIN 
+			     , CP.EQUIP_NM        AS SH_DETAIL   
+			     , TO_CHAR(SE.CRE_DT, 'YYYY-MM-DD') AS SH_DT     
+			  FROM GJ_DS.SH_EQUIP SE
+			  JOIN GJ_DS.CM_PLT CP
+			    ON CP.EQUIP_ID = SE.EQUIP_ID 
+			WHERE SE.SH_USE_YN = 'R'
+			UNION ALL
+			SELECT 
+				 '등록'       AS SH_USE_YN
+			     , '인력'              AS SH_DIV    
+			     , CM.WRK_AREA           AS SH_MAIN 
+			     , CM.MANPW_NM        AS SH_DETAIL   
+			     , TO_CHAR(SM.CRE_DT, 'YYYY-MM-DD') AS SH_DT     
+			  FROM GJ_DS.SH_MANPW SM  
+			  JOIN GJ_DS.CM_MANPW CM
+			    ON CM.MANPW_NO  = SM.MANPW_NO 
+			WHERE SM.SH_USE_YN = 'R'
+		) RS_TB 
+		ORDER BY SH_DT DESC LIMIT 5
+	</select>
+</mapper>

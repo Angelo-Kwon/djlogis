@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcSafeDashOpenMapper">
+	
+	<!-- 전류랑 조회 조회 -->
+	<select id="selectSafeDashList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* mapper.mc.dcSafeDashMapper : selectSafeDashList */
+		<!-- SELECT SAFE_DT,	       
+			round( (PROBE1 - 32) * 5.0 / 9 , 2) as PROBE1,
+			(500-PROBE1) as PROBE11,
+			round(  (PROBE2 - 32) * 5.0 / 9 ,2) as PROBE2,
+			(500-PROBE2) as PROBE22,
+			round(  (PROBE3 - 32) * 5.0 / 9 ,2) as PROBE3,
+			(500-PROBE3) as PROBE33,
+			round(  (PROBE4 - 32) * 5.0 / 9 ,2) as PROBE4,
+			(500-PROBE4) as PROBE44
+		FROM GJ_DS.DC_SAFE_DASH -->
+		
+		SELECT SAFE_DT,	       
+			PROBE1,
+			(500-PROBE1) as PROBE11,
+			PROBE2,
+			(500-PROBE2) as PROBE22,
+			PROBE3,
+			(500-PROBE3) as PROBE33,
+			PROBE4,
+			(500-PROBE4) as PROBE44,
+			PROBE5,
+			PROBE6,
+			PROBE7,
+			PROBE8
+		FROM GJ_DS.DC_SAFE_DASH_TMP
+	</select>
+	
+</mapper>

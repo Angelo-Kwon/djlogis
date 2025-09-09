@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dc.mapper.DcDelStatusOpenMapper">
+   
+		   <!-- 납품차량 -->
+		      <select id="selectDelStatusList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		        	    
+		         SELECT 
+		            N.SHTRTNM,
+		            SUM(CASE WHEN S.PLNSTAT IN ('PLAN', 'LOADING') THEN S.TRANCNT ELSE 0 END) as "준비",
+		            SUM(CASE WHEN S.PLNSTAT IN ('START', 'UNLOADING') THEN S.TRANCNT ELSE 0 END) as DRIVING,
+		            SUM(CASE WHEN S.PLNSTAT = 'FINISH' THEN S.TRANCNT ELSE 0 END) as COMPLETE,
+		            SUM(S.TRANCNT),
+		            CONCAT(CAST(SUM(CASE WHEN S.PLNSTAT IN ('START', 'UNLOADING') THEN S.TRANCNT ELSE 0 END) AS CHAR), '/', 
+		            	   CAST(SUM(CASE WHEN S.PLNSTAT = 'FINISH' THEN S.TRANCNT ELSE 0 END) AS CHAR)) as RESULT
+		         FROM GJ_WM.VTRNST S 
+		         INNER JOIN GJ_WM.TSHRHD N ON S.COMPKEY = N.COMPKEY AND S.WAREKEY = N.WAREKEY AND S.SHTRTKY = N.SHTRTKY
+		         WHERE S.COMPKEY = '100' AND S.PLNSTAT NOT IN ('CANCLE')
+		         GROUP BY N.SHTRTNM
+		      
+			      <!-- 기존      
+			      SELECT 
+			      N.SHTRTNM 
+			      ,SUM(CASE WHEN S.PLNSTAT IN ('PLAN', 'LOADING') THEN S.TRANCNT ELSE 0 END) as "준비"
+			      ,SUM(CASE WHEN S.PLNSTAT IN ('START', 'UNLOADING') THEN S.TRANCNT ELSE 0 END) as "운행중"
+			      ,SUM(CASE WHEN S.PLNSTAT = 'FINISH' THEN S.TRANCNT ELSE 0 END) as "완료"
+			      ,SUM(S.TRANCNT) 
+			      FROM GJ_WM.VTRNST S 
+			      INNER JOIN TSHRHD N ON S.COMPKEY = N.COMPKEY 
+			      AND S.WAREKEY = N.WAREKEY 
+			      AND S.SHTRTKY = N.SHTRTKY
+			      WHERE 1=1
+			      AND S.COMPKEY = '100' 
+			      AND S.PLNSTAT NOT IN ('CANCLE')
+			      GROUP BY N.SHTRTNM
+			      -->
+			      
+			   </select>
+	
+	
+   <!-- 납품완료조회 -->
+      <select id="selectDelCompleteList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+            
+         SELECT 
+            N.SHTRTNM 
+            ,SUM(S.TRANCNT) as COMPLETE 
+         FROM GJ_WM.VTRNST S 
+         INNER JOIN GJ_WM.TSHRHD N ON S.COMPKEY = N.COMPKEY 
+         AND S.WAREKEY = N.WAREKEY 
+         AND S.SHTRTKY = N.SHTRTKY
+         WHERE 1=1
+         AND S.COMPKEY = '100' 
+         AND S.PLNSTAT IN ('FINISH')
+         GROUP BY N.SHTRTNM 
+      
+   </select>
+   
+</mapper>

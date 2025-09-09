@@ -1,0 +1,1960 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rs.mapper.EquipMapper">
+	<sql id="manCheck">
+		<if test="equipIdS != null and !equipIdS.equals('')">
+			AND CM.EQUIP_ID LIKE concat('%',#{equipIdS},'%')
+		</if>
+		<if test="equipComNumS != null and !equipComNumS.equals('')">
+			AND CM.BR_NO LIKE concat('%',#{equipComNumS},'%')
+		</if>
+		<if test="equipCpCodeS != null and !equipCpCodeS.equals('')">
+			AND CM.CP_CD LIKE concat('%',#{equipCpCodeS},'%')
+		</if>
+		<if test="shareYnS != null and !shareYnS.equals('')">
+			AND CM.SH_YN = #{shareYnS}
+		</if>
+	</sql>
+
+	<sql id="MobileManCheck">
+		<if test="equipComNumS != null and !equipComNumS.equals('')">
+			AND CM.BR_NO LIKE CONCAT('%', REPLACE(#{equipComNumS}, '-', ''), '%')
+		</if>
+		<if test="equipCpNmS != null and !equipCpNmS.equals('')">
+			AND C.CPNM LIKE CONCAT('%', #{equipCpNmS}, '%')
+		</if>
+		<if test="shareYnS != null and !shareYnS.equals('')">
+			AND CM.SH_YN = #{shareYnS}
+		</if>
+	</sql>
+
+	<select id="getEquipList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* com.rs.mapper.EquipMapper [selectEquipList] */
+		<choose>
+			<when test='cmEquipEquipCd != null and cmEquipEquipCd.equals("F")'>
+				SELECT '지게차' AS  equipCdNm
+					 <!--, CF.EQUIP_NM AS equipNm-->
+					 , CASE WHEN CF.USE_YN = 'Y' THEN '사용'
+					   		ELSE '미사용'
+					    END AS USE_YN_NM
+					 , CF.EQUIP_NM AS equipNm
+					 , FN_EQUIP_STATE(CF.EQUIP_ID) AS SH_USE_YN_NM
+					 , CF.EQUIP_ID AS equipId
+					 , CF.EQUIP_CD AS equipCd
+					 , CF.BR_NO AS brNo
+					 , CF.CP_CD AS cpCd
+					 , CF.MAKE_CP_NM AS makeCpNm
+					 , CF.MAKE_YEAR AS makeYear
+					 , CF.DT_ADDR AS dtAddr
+					 , CF.DT_ADDR2 AS dtAddr2
+					 , CF.AREA_NM1 AS areaNm1
+					 , CF.AREA_NM2 AS areaNm2
+					 , CF.LONGI_NO AS longiNo
+					 , CF.LATI_NO AS latiNo
+					 , CF.CM_PRICE AS cmPrice
+					 , CF.USE_YN AS useYn
+					 , CF.FKLIFT_CD AS fkliftCd
+					 , CF.FKLIFT_WGT AS fkliftWgt
+					 , CF.FKLIFT_MST AS fkliftMst
+					 , CF.FKLIFT_HGT AS fkliftHgt
+					 , CF.FKLIFT_MODEL AS fkliftModel
+					 , CF.FKLIFT_SERIAL_NO AS fkliftSerialNo
+					 , CF.CHGR_YN AS chgrYn
+					 , CF.DRIVER_YN AS driverYn
+					 , CF.SH_YN AS shYn
+					 , AD.PHOTO_FILE AS photoFile
+					 , AD.PHOTO_FILE2 AS photoFile2
+					 , AD.PHOTO_FILE3 AS photoFile3
+					 , SE.SH_USE_YN AS shUseYn
+				  FROM CM_FKLIFT CF
+				  LEFT JOIN (
+					SELECT SHE.USER_ID
+						 , SHE.EQUIP_ID
+						 , SHE.SH_USE_YN
+						 , SHE.USE_YN
+					  FROM SH_EQUIP SHE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SHE2
+						ON SHE.SH_NO = SHE2.SH_NO
+					   ) SE
+					ON CF.EQUIP_ID = SE.EQUIP_ID
+				   AND CF.USER_ID = SE.USER_ID
+				   AND SE.USE_YN = 'Y'
+				  LEFT JOIN AD_EQUIP AD
+					ON CF.EQUIP_ID = AD.EQUIP_ID
+				   AND CF.USER_ID = AD.USER_ID
+				 WHERE CF.USE_YN != 'D'
+				   AND CF.USER_ID = #{userId}
+				<if test='cmEquipCpcd != null and !cmEquipCpcd.equals("")'>
+					AND CF.CP_CD = #{cmEquipCpcd}
+				</if>
+				<if test='cmEquipUseYn != null and !cmEquipUseYn.equals("")'>
+					AND CF.USE_YN = #{cmEquipUseYn}
+				</if>
+				<choose>
+					<when test='cmEquipShUseYn != null and cmEquipShUseYn.equals("E")'>
+						AND (SE.SH_USE_YN = #{cmEquipShUseYn} OR SE.SH_USE_YN IS NULL)
+					</when>
+					<when test='cmEquipShUseYn != null and !cmEquipShUseYn.equals("")'>
+						AND SE.SH_USE_YN = #{cmEquipShUseYn}
+					</when>
+				</choose>
+				ORDER BY CF.USE_YN DESC, SE.SH_USE_YN ASC, CF.CRE_DT DESC
+			</when>
+			<when test='cmEquipEquipCd != null and cmEquipEquipCd.equals("K")'>
+				SELECT '대차' AS  equipCdNm
+					 , CK.EQUIP_NM AS equipNm
+					 , CASE WHEN CK.USE_YN = 'Y' THEN '사용'
+					   ELSE '미사용'
+					   END AS USE_YN_NM
+					 , FN_EQUIP_STATE(CK.EQUIP_ID) AS SH_USE_YN_NM
+					 , CK.EQUIP_ID AS equipId
+					 , CK.EQUIP_CD AS equipCd
+					 , CK.BR_NO AS brNo
+					 , CK.CP_CD AS cpCd
+					 , CK.MAKE_CP_NM AS makeCpNm
+					 , CK.MAKE_YEAR AS makeYear
+					 , CK.DT_ADDR AS dtAddr
+					 , CK.DT_ADDR2 AS dtAddr2
+					 , CK.AREA_NM1 AS areaNm1
+					 , CK.AREA_NM2 AS areaNm2
+					 , CK.LONGI_NO AS longiNo
+					 , CK.LATI_NO AS latiNo
+					 , CK.CM_PRICE AS cmPrice
+					 , CK.USE_YN AS useYn
+					 , CK.KART_CD AS kartCd
+					 , CK.KART_TYP AS kartTyp
+					 , CK.KART_WGT AS kartWgt
+					 , CK.KART_STD AS kartStd
+					 , CK.SH_YN AS shYn
+					 , AD.PHOTO_FILE AS photoFile
+					 , AD.PHOTO_FILE2 AS photoFile2
+					 , AD.PHOTO_FILE3 AS photoFile3
+					 , SE.SH_USE_YN AS shUseYn
+				  FROM CM_KART CK
+				  LEFT JOIN (
+					SELECT SHE.USER_ID
+						 , SHE.EQUIP_ID
+						 , SHE.SH_USE_YN
+						 , SHE.USE_YN
+					  FROM SH_EQUIP SHE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SHE2
+						ON SHE.SH_NO = SHE2.SH_NO
+					   ) SE
+					ON CK.EQUIP_ID = SE.EQUIP_ID
+				   AND CK.USER_ID = SE.USER_ID
+				   AND SE.USE_YN = 'Y'
+				  LEFT JOIN AD_EQUIP AD
+					ON CK.EQUIP_ID = AD.EQUIP_ID
+				   AND CK.USER_ID = AD.USER_ID
+				 WHERE CK.USE_YN != 'D'
+				   AND CK.USER_ID = #{userId}
+				<if test='cmEquipCpcd != null and !cmEquipCpcd.equals("")'>
+					AND CK.CP_CD = #{cmEquipCpcd}
+				</if>
+				<if test='cmEquipUseYn != null and !cmEquipUseYn.equals("")'>
+					AND CK.USE_YN = #{cmEquipUseYn}
+				</if>
+				<choose>
+					<when test='cmEquipShUseYn != null and cmEquipShUseYn.equals("E")'>
+						AND (SE.SH_USE_YN = #{cmEquipShUseYn} OR SE.SH_USE_YN IS NULL)
+					</when>
+					<when test='cmEquipShUseYn != null and !cmEquipShUseYn.equals("")'>
+						AND SE.SH_USE_YN = #{cmEquipShUseYn}
+					</when>
+				</choose>
+				ORDER BY CK.USE_YN DESC, SE.SH_USE_YN ASC, CK.CRE_DT DESC
+			</when>
+			<when test='cmEquipEquipCd != null and cmEquipEquipCd.equals("P")'>
+				SELECT '파렛트' AS  equipCdNm
+					 , CP.EQUIP_NM AS equipNm
+					 , CASE WHEN CP.USE_YN = 'Y' THEN '사용'
+					   ELSE '미사용'
+					   END AS USE_YN_NM
+					 , FN_EQUIP_STATE(CP.EQUIP_ID) AS SH_USE_YN_NM
+					 , CP.EQUIP_ID AS equipId
+					 , CP.EQUIP_CD AS equipCd
+					 , CP.BR_NO AS brNo
+					 , CP.CP_CD AS cpCd
+					 , CP.MAKE_CP_NM AS makeCpNm
+					 , CP.MAKE_YEAR AS makeYear
+					 , CP.DT_ADDR AS dtAddr
+					 , CP.DT_ADDR2 AS dtAddr2
+					 , CP.AREA_NM1 AS areaNm1
+					 , CP.AREA_NM2 AS areaNm2
+					 , CP.LONGI_NO AS longiNo
+					 , CP.LATI_NO AS latiNo
+					 , CP.CM_PRICE AS cmPrice
+					 , CP.USE_YN AS useYn
+					 , CP.PLT_CD AS pltCd
+					 , CP.PLT_TYP_CD AS pltTypCd
+					 , CP.PLT_WGT AS pltWgt
+					 , CP.PLT_STD AS pltStd
+					 , CP.SH_YN AS shYn
+					 , AD.PHOTO_FILE AS photoFile
+					 , AD.PHOTO_FILE2 AS photoFile2
+					 , AD.PHOTO_FILE3 AS photoFile3
+					 , SE.SH_USE_YN AS shUseYn
+				  FROM CM_PLT CP
+				  LEFT JOIN (
+					SELECT SHE.USER_ID
+						 , SHE.EQUIP_ID
+						 , SHE.SH_USE_YN
+						 , SHE.USE_YN
+					  FROM SH_EQUIP SHE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SHE2
+						ON SHE.SH_NO = SHE2.SH_NO
+					   ) SE
+					ON CP.EQUIP_ID = SE.EQUIP_ID
+				   AND CP.USER_ID = SE.USER_ID
+				   AND SE.USE_YN = 'Y'
+				  LEFT JOIN AD_EQUIP AD
+					ON CP.EQUIP_ID = AD.EQUIP_ID
+				   AND CP.USER_ID = AD.USER_ID
+				 WHERE CP.USE_YN != 'D'
+				   AND CP.USER_ID = #{userId}
+				<if test='cmEquipCpcd != null and !cmEquipCpcd.equals("")'>
+					AND CP.CP_CD = #{cmEquipCpcd}
+				</if>
+				<if test='cmEquipUseYn != null and !cmEquipUseYn.equals("")'>
+					AND CP.USE_YN = #{cmEquipUseYn}
+				</if>
+				<choose>
+					<when test='cmEquipShUseYn != null and cmEquipShUseYn.equals("E")'>
+						AND (SE.SH_USE_YN = #{cmEquipShUseYn} OR SE.SH_USE_YN IS NULL)
+					</when>
+					<when test='cmEquipShUseYn != null and !cmEquipShUseYn.equals("")'>
+						AND SE.SH_USE_YN = #{cmEquipShUseYn}
+					</when>
+				</choose>
+				ORDER BY CP.USE_YN DESC, SE.SH_USE_YN ASC, CP.CRE_DT DESC
+			</when>
+		</choose>
+	</select>
+
+	<select id="getAdEquipList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<choose>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				SELECT '지게차' AS EQUIP_TYPE_NM
+					 , CF.EQUIP_CD
+					 , CF.EQUIP_ID
+				     , CF.EQUIP_NM
+					 , CASE WHEN CF.USE_YN = 'Y' THEN '사용'
+							WHEN CF.USE_YN = 'N' THEN '미사용'
+						END AS USE_YN_NM
+					 , FN_EQUIP_STATE(AE.EQUIP_ID) SH_USE_YN_NM
+					 , AE.PHOTO_FILE
+					 , AE.PHOTO_FILE2
+					 , AE.PHOTO_FILE3
+					 , SE.SH_USE_YN
+				  FROM CM_FKLIFT CF
+				  LEFT JOIN AD_EQUIP AE
+					ON CF.EQUIP_ID = AE.EQUIP_ID
+				  LEFT JOIN (
+					SELECT SE.SH_USE_YN
+						 , SE.EQUIP_ID
+					  FROM SH_EQUIP SE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+						ON SE.SH_NO = SE2.SH_NO
+					   ) SE
+					ON AE.EQUIP_ID = SE.EQUIP_ID
+				 WHERE CF.CRE_USER_ID = #{userId}
+				   AND CF.USE_YN != 'D'
+				<if test='cpCd != null and !cpCd.equals("")'>
+				   AND CF.CP_CD = #{cpCd}
+				</if>
+				<if test='useYn != null and !useYn.equals("")'>
+				   AND CF.USE_YN = #{useYn}
+				</if>
+				<if test='shUseYn != null and !shUseYn.equals("")'>
+				   AND SE.SH_USE_YN = #{shUseYn}
+				</if>
+			</when>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				SELECT '대차' AS EQUIP_TYPE_NM
+					 , CF.EQUIP_CD
+					 , CK.EQUIP_ID
+				     , CK.EQUIP_NM
+					 , AE.PHOTO_FILE
+					 , AE.PHOTO_FILE2
+					 , AE.PHOTO_FILE3
+					 , CASE WHEN CK.USE_YN = 'Y' THEN '사용'
+							WHEN CK.USE_YN = 'N' THEN '미사용'
+						END AS USE_YN_NM
+					 , FN_EQUIP_STATE(AE.EQUIP_ID) SH_USE_YN_NM
+					 , SE.SH_USE_YN
+				  FROM CM_KART CK
+				  LEFT JOIN AD_EQUIP AE
+					ON CK.EQUIP_ID = AE.EQUIP_ID
+				  LEFT JOIN (
+					SELECT SE.SH_USE_YN
+						 , SE.EQUIP_ID
+					  FROM SH_EQUIP SE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+						ON SE.SH_NO = SE2.SH_NO
+					   ) SE
+					ON AE.EQUIP_ID = SE.EQUIP_ID
+				 WHERE CK.CRE_USER_ID = #{userId}
+				   AND CK.USE_YN != 'D'
+				<if test='cpCd != null and !cpCd.equals("")'>
+				   AND CK.CP_CD = #{cpCd}
+				</if>
+				<if test='useYn != null and !useYn.equals("")'>
+				   AND CK.USE_YN = #{useYn}
+				</if>
+				<if test='shUseYn != null and !shUseYn.equals("")'>
+				   AND SE.SH_USE_YN = #{shUseYn}
+				</if>
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				SELECT '파렛트' AS EQUIP_TYPE_NM
+					 , CF.EQUIP_CD
+					 , CP.EQUIP_ID
+				     , CP.EQUIP_NM
+					 , AE.PHOTO_FILE
+					 , AE.PHOTO_FILE2
+					 , AE.PHOTO_FILE3
+					 , CASE WHEN CP.USE_YN = 'Y' THEN '사용'
+							WHEN CP.USE_YN = 'N' THEN '미사용'
+						END AS USE_YN_NM
+					 , FN_EQUIP_STATE(AE.EQUIP_ID) SH_USE_YN_NM
+					 , SE.SH_USE_YN
+				  FROM CM_PLT CP
+				  LEFT JOIN AD_EQUIP AE
+					ON CP.EQUIP_ID = AE.EQUIP_ID
+				  LEFT JOIN (
+					SELECT SE.SH_USE_YN
+						 , SE.EQUIP_ID
+					  FROM SH_EQUIP SE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SE2
+						ON SE.SH_NO = SE2.SH_NO
+					   ) SE
+					ON AE.EQUIP_ID = SE.EQUIP_ID
+				 WHERE CP.CRE_USER_ID = #{userId}
+				   AND CP.USE_YN != 'D'
+				<if test='cpCd != null and !cpCd.equals("")'>
+				   AND CP.CP_CD = #{cpCd}
+				</if>
+				<if test='useYn != null and !useYn.equals("")'>
+				   AND CP.USE_YN = #{useYn}
+				</if>
+				<if test='shUseYn != null and !shUseYn.equals("")'>
+				   AND SE.SH_USE_YN = #{shUseYn}
+				</if>
+			</when>
+		</choose>
+	</select>
+
+	<select id="getShEquipList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* [equipMapper] getShEquipList */
+		<choose>
+			<when test='equipCdS != null and equipCdS.equals("F")'>
+				SELECT CF.EQUIP_ID
+					 , CF.EQUIP_CD
+					 , CF.EQUIP_NM
+					 , '지게차' AS EQUIP_CD_NM
+					 , COALESCE(FN_COMMCD_CMNM('SH_USE_YN', SHE.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+					 , SHE.SH_NO AS shNo
+					 , COALESCE(SHE.SH_PRD_CLS, '') AS shPrdCls
+					 , COALESCE(SHE.SH_PRD, '') AS shPrd
+					 , COALESCE(CF.CM_PRICE, '') AS shPrc
+					 , COALESCE(SHE.SH_QTY, '') AS shQty
+					 , COALESCE(SHE.SH_SQU, '') AS shSqu
+					 , COALESCE(SHE.SH_LK_CLS, '') AS shLkCls
+					 , COALESCE(SHE.SH_LT_DT, '') AS shLtDt
+					 , COALESCE(SHE.SH_USE_YN, '') AS shUseYn
+					 , COALESCE(SHE.SH_USE_YN, '') AS editShUseYn
+				  FROM CM_FKLIFT CF
+				  LEFT JOIN (
+			    SELECT SE.USER_ID
+					 , SE.EQUIP_ID
+					 , SE.SH_NO
+					 , SE.SH_PRD_CLS
+					 , SE.SH_PRD
+					 , SE.SH_QTY
+					 , SE.SH_SQU
+					 , SE.SH_LK_CLS
+					 , SE.SH_LT_DT
+					 , SE.SH_USE_YN
+					 , SE.USE_YN
+				  FROM SH_EQUIP SE
+				  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SEE
+					ON SE.SH_NO = SEE.SH_NO
+					   ) SHE
+					ON CF.USER_ID = SHE.USER_ID
+				   AND CF.EQUIP_ID = SHE.EQUIP_ID
+				   AND SHE.USE_YN = 'Y'
+				 WHERE CF.USER_ID = #{userId}
+				   AND CF.USE_YN = 'Y'
+				<if test="shareUseYnS != null and !shareUseYnS.equals('')">
+					AND SHE.SH_USE_YN = #{shareUseYnS}
+				</if>
+				<include refid="manCheck"></include>
+			</when>
+			<when test='equipCdS != null and equipCdS.equals("K")'>
+				SELECT CM.EQUIP_ID
+				, CM.EQUIP_NM
+				, CM.EQUIP_CD
+				, '대차' AS EQUIP_CD_NM
+				, COALESCE(FN_COMMCD_CMNM('SH_USE_YN', SHE.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+				, SHE.SH_NO AS shNo
+				, COALESCE(SHE.SH_PRD_CLS, '') AS shPrdCls
+				, COALESCE(SHE.SH_PRD, '') AS shPrd
+				, COALESCE(CM.CM_PRICE, '') AS shPrc
+				, COALESCE(SHE.SH_QTY, '') AS shQty
+				, COALESCE(SHE.SH_SQU, '') AS shSqu
+				, COALESCE(SHE.SH_LK_CLS, '') AS shLkCls
+				, COALESCE(SHE.SH_LT_DT, '') AS shLtDt
+				, COALESCE(SHE.SH_USE_YN, '') AS shUseYn
+				, COALESCE(SHE.SH_USE_YN, '') AS editShUseYn
+				FROM CM_KART CM
+				LEFT JOIN (
+				SELECT SE.USER_ID
+				, SE.EQUIP_ID
+				, SE.SH_NO
+				, SE.SH_PRD_CLS
+				, SE.SH_PRD
+				, SE.SH_QTY
+				, SE.SH_SQU
+				, SE.SH_LK_CLS
+				, SE.SH_LT_DT
+				, SE.SH_USE_YN
+				, SE.USE_YN
+				FROM SH_EQUIP SE
+				JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SEE
+				ON SE.SH_NO = SEE.SH_NO
+				) SHE
+				ON CM.USER_ID = SHE.USER_ID
+				AND CM.EQUIP_ID = SHE.EQUIP_ID
+				AND SHE.USE_YN = 'Y'
+				WHERE CM.USER_ID = #{userId}
+				AND CM.USE_YN = 'Y'
+				<if test="shareUseYnS != null and !shareUseYnS.equals('')">
+					AND SHE.SH_USE_YN = #{shareUseYnS}
+				</if>
+				<include refid="manCheck"></include>
+			</when>
+			<when test='equipCdS != null and equipCdS.equals("P")'>
+				SELECT CM.EQUIP_ID
+				, CM.EQUIP_NM
+				, CM.EQUIP_CD
+				, '파레트' AS EQUIP_CD_NM
+				, COALESCE(FN_COMMCD_CMNM('SH_USE_YN', SHE.SH_USE_YN), '미등록') AS SH_USE_YN_NM
+				, SHE.SH_NO AS shNo
+				, COALESCE(SHE.SH_PRD_CLS, '') AS shPrdCls
+				, COALESCE(SHE.SH_PRD, '') AS shPrd
+				, COALESCE(CM.CM_PRICE, '') AS shPrc
+				, COALESCE(SHE.SH_QTY, '') AS shQty
+				, COALESCE(SHE.SH_SQU, '') AS shSqu
+				, COALESCE(SHE.SH_LK_CLS, '') AS shLkCls
+				, COALESCE(SHE.SH_LT_DT, '') AS shLtDt
+				, COALESCE(SHE.SH_USE_YN, '') AS shUseYn
+				, COALESCE(SHE.SH_USE_YN, '') AS editShUseYn
+				FROM CM_PLT CM
+				LEFT JOIN (
+				SELECT SE.USER_ID
+				, SE.EQUIP_ID
+				, SE.SH_NO
+				, SE.SH_PRD_CLS
+				, SE.SH_PRD
+				, SE.SH_QTY
+				, SE.SH_SQU
+				, SE.SH_LK_CLS
+				, SE.SH_LT_DT
+				, SE.SH_USE_YN
+				, SE.USE_YN
+				FROM SH_EQUIP SE
+				JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP GROUP BY EQUIP_ID) SEE
+				ON SE.SH_NO = SEE.SH_NO
+				) SHE
+				ON CM.USER_ID = SHE.USER_ID
+				AND CM.EQUIP_ID = SHE.EQUIP_ID
+				AND SHE.USE_YN = 'Y'
+				WHERE CM.USER_ID = #{userId}
+				AND CM.USE_YN = 'Y'
+				<if test="shareUseYnS != null and !shareUseYnS.equals('')">
+					AND SHE.SH_USE_YN = #{shareUseYnS}
+				</if>
+				<include refid="manCheck"></include>
+			</when>
+		</choose>
+	</select>
+
+	<select id="selectShEndEquipInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<choose>
+			<when test="equipCdS == 'F'.toString()">
+				select CM.EQUIP_ID
+				,CM.EQUIP_CD
+				,CM.EQUIP_NM
+				,CM.CP_CD
+				,CM.FKLIFT_HGT
+				,SH.SH_PRD_CLS
+				,SH.SH_PRD
+				,SH.SH_QTY
+				,SH.SH_SQU
+				,SH.SH_LK_CLS
+				,SH.SH_PRC
+				,SH.SH_LT_DT
+				, CASE
+				WHEN SH.SH_USE_YN IS NULL OR SH.SH_USE_YN = '' THEN '미등록'
+				WHEN SH.SH_USE_YN = 'E' THEN '종료'
+				WHEN SH.SH_USE_YN = 'R' THEN '등록'
+				WHEN SH.SH_USE_YN = 'S' THEN '승인'
+				WHEN SH.SH_USE_YN = 'A' THEN '신청'
+				ELSE SH.SH_USE_YN
+				END AS SH_USE_YN
+				,CM.USE_YN
+				,CM.SH_YN
+				from CM_FKLIFT CM
+				,SH_EQUIP SH
+				WHERE 1=1
+				<!-- AND S.SH_USE_YN IN ('R','A') -->
+				<if test="shareUseYnS != null and !shareUseYnS.equals('')">
+					AND SH.SH_USE_YN = #{shareUseYnS}
+				</if>
+				AND SH.USE_YN= 'Y'
+				AND CM.EQUIP_ID =SH.EQUIP_ID
+				AND CM.USER_ID = #{userId}
+				<include refid="manCheck"></include>
+
+			</when>
+			<when test="equipCdS == 'K'.toString()">
+				select CM.EQUIP_ID
+				,CM.EQUIP_CD
+				,CM.EQUIP_NM
+				,CM.CP_CD
+				,SH.SH_PRD_CLS
+				,SH.SH_PRD
+				,SH.SH_QTY
+				,SH.SH_SQU
+				,SH.SH_LK_CLS
+				,SH.SH_PRC
+				,SH.SH_LT_DT
+				, CASE
+				WHEN SH.SH_USE_YN IS NULL OR SH.SH_USE_YN = '' THEN '미등록'
+				WHEN SH.SH_USE_YN = 'E' THEN '종료'
+				WHEN SH.SH_USE_YN = 'R' THEN '등록'
+				WHEN SH.SH_USE_YN = 'S' THEN '승인'
+				WHEN SH.SH_USE_YN = 'A' THEN '신청'
+				ELSE SH.SH_USE_YN
+				END AS SH_USE_YN
+				,CM.USE_YN
+				,CM.SH_YN
+				from CM_KART
+				CM
+				,
+				SH_EQUIP SH
+				WHERE 1=1
+				<!-- AND SH.SH_USE_YN IN ('R','A') -->
+				<if test="shareUseYnS != null and !shareUseYnS.equals('')">
+					AND SH.SH_USE_YN = #{shareUseYnS}
+				</if>
+
+				AND SH.USE_YN='Y'
+				AND CM.EQUIP_ID
+				=SH.EQUIP_ID
+				AND CM.USER_ID =
+				#{userId}
+				<include refid="manCheck"></include>
+			</when>
+			<when test="equipCdS == 'P'.toString()">
+				select CM.EQUIP_ID , CM.EQUIP_CD ,CM.EQUIP_NM , CM.CP_CD , SH.SH_PRD_CLS ,SH.SH_PRD
+				,SH.SH_QTY ,SH.SH_SQU
+				,SH.SH_LK_CLS
+				,SH.SH_PRC
+				,SH.SH_LT_DT
+				, CASE
+				WHEN
+				SH.SH_USE_YN = 'E' THEN '종료'
+				WHEN SH.SH_USE_YN = 'R' THEN '등록'
+				WHEN
+				SH.SH_USE_YN = 'S' THEN '승인'
+				WHEN SH.SH_USE_YN = 'A' THEN '신청'
+				ELSE
+				SH.SH_USE_YN
+				END AS SH_USE_YN
+				,CM.USE_YN
+				,CM.SH_YN
+				from CM_PLT CM,
+				SH_EQUIP SH
+				WHERE 1=1
+				<!-- AND SH.SH_USE_YN IN ('R','A') -->
+				<if test="shareUseYnS != null and !shareUseYnS.equals('')">
+					AND SH.SH_USE_YN = #{shareUseYnS}
+				</if>
+				AND SH.USE_YN='Y'
+				AND CM.EQUIP_ID
+				=SH.EQUIP_ID
+				AND CM.USER_ID =
+				#{userId}
+				<include refid="manCheck"></include>
+			</when>
+		</choose>
+	</select>
+
+	<!-- 기자재 기본정보 저장 -->
+	<insert id="insertCmEquip" parameterType="java.util.HashMap">
+		<selectKey order="BEFORE" keyProperty="equipId" resultType="String">
+			SELECT CONCAT(#{sequenceKey}, LPAD(CAST(NEXTVAL(cm_equip_seq) AS VARCHAR(8)), 8, '0'))
+		</selectKey>
+
+		<choose>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				INSERT INTO GJ_DS.CM_FKLIFT
+				(	  USER_ID
+					, EQUIP_ID
+					, EQUIP_CD
+					, EQUIP_NM
+					, CP_CD
+					, BR_NO
+					, MAKE_YEAR
+					, MAKE_CP_NM
+					, DT_ADDR
+					, DT_ADDR2
+					, AREA_NM1
+					, AREA_NM2
+					, LONGI_NO
+					, LATI_NO
+					, CM_PRICE
+					, FKLIFT_CD
+					, FKLIFT_WGT
+					, FKLIFT_MST
+					, FKLIFT_HGT
+					, FKLIFT_MODEL
+					, FKLIFT_SERIAL_NO
+					, CHGR_YN
+					, DRIVER_YN
+					, SH_YN
+					, USE_YN
+					, CRE_DT
+					, CRE_USER_ID
+					, MOD_DT
+					, MOD_USER_ID
+				)
+				VALUES
+				(	  #{userId}
+					, #{equipId}
+					, #{equipCd}
+					, #{equipNm}
+					, #{cpCd}
+					, #{brNo}
+					, #{makeYear}
+					, #{makeCpNm}
+					, #{dtAddr}
+					, #{dtAddr2}
+					, #{areaNm1}
+					, #{areaNm2}
+					, #{longiNo}
+					, #{latiNo}
+					, REPLACE(#{cmPrice}, ',', '')
+					, #{fkliftCd}
+					, #{fkliftWgt}
+					, #{fkliftMst}
+					, #{fkliftHgt}
+					, #{fkliftModel}
+					, #{fkliftSerialNo}
+					, #{chgrYn}
+					, #{driverYn}
+					, 'N'
+					, #{useYn}
+					, NOW()
+					, #{userId}
+					, NOW()
+					, #{userId}
+				)
+			</when>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				INSERT INTO GJ_DS.CM_KART
+				(	  USER_ID
+					, EQUIP_ID
+					, EQUIP_CD
+					, EQUIP_NM
+					, CP_CD
+					, BR_NO
+					, MAKE_YEAR
+					, MAKE_CP_NM
+					, DT_ADDR
+					, DT_ADDR2
+					, AREA_NM1
+					, AREA_NM2
+					, LONGI_NO
+					, LATI_NO
+					, CM_PRICE
+					, KART_CD
+					, KART_TYP
+					, KART_WGT
+					, KART_STD
+					, SH_YN
+					, USE_YN
+					, CRE_DT
+					, CRE_USER_ID
+					, MOD_DT
+					, MOD_USER_ID
+				)
+			    VALUES
+				(	  #{userId}
+					, #{equipId}
+					, #{equipCd}
+					, #{equipNm}
+					, #{cpCd}
+					, #{brNo}
+					, #{makeYear}
+					, #{makeCpNm}
+					, #{dtAddr}
+					, #{dtAddr2}
+					, #{areaNm1}
+					, #{areaNm2}
+					, #{longiNo}
+					, #{latiNo}
+					, REPLACE(#{cmPrice}, ',', '')
+					, #{kartCd}
+					, #{kartTyp}
+					, #{kartWgt}
+					, #{kartStd}
+					, 'N'
+					, #{useYn}
+					, NOW()
+					, #{userId}
+					, NOW()
+					, #{userId}
+				)
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				INSERT INTO GJ_DS.CM_PLT
+				(	  USER_ID
+					, EQUIP_ID
+					, EQUIP_CD
+					, EQUIP_NM
+					, CP_CD
+					, BR_NO
+					, MAKE_YEAR
+					, MAKE_CP_NM
+					, DT_ADDR
+					, DT_ADDR2
+					, AREA_NM1
+					, AREA_NM2
+					, LONGI_NO
+					, LATI_NO
+					, CM_PRICE
+					, PLT_CD
+					, PLT_TYP_CD
+					, PLT_WGT
+					, PLT_STD
+					, SH_YN
+					, USE_YN
+					, CRE_DT
+					, CRE_USER_ID
+					, MOD_DT
+					, MOD_USER_ID
+				)
+				VALUES
+				(	  #{userId}
+					, #{equipId}
+					, #{equipCd}
+					, #{equipNm}
+					, #{cpCd}
+					, #{brNo}
+					, #{makeYear}
+					, #{makeCpNm}
+					, #{dtAddr}
+					, #{dtAddr2}
+					, #{areaNm1}
+					, #{areaNm2}
+					, #{longiNo}
+					, #{latiNo}
+					, REPLACE(#{cmPrice}, ',', '')
+					, #{pltCd}
+					, #{pltTypCd}
+					, #{pltWgt}
+					, #{pltStd}
+					, 'N'
+					, #{useYn}
+					, NOW()
+					, #{userId}
+					, NOW()
+					, #{userId}
+				)
+			</when>
+		</choose>
+	</insert>
+
+	<update id="updateCmEquip" parameterType="java.util.HashMap">
+		<choose>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				UPDATE GJ_DS.CM_FKLIFT
+				   SET EQUIP_CD = #{equipCd}
+					 , EQUIP_NM = #{equipNm}
+					 , CP_CD = #{cpCd}
+					 , BR_NO = #{brNo}
+					 , MAKE_YEAR = #{makeYear}
+					 , MAKE_CP_NM = #{makeCpNm}
+					 , DT_ADDR = #{dtAddr}
+					 , DT_ADDR2 = #{dtAddr2}
+					 , AREA_NM1 = #{areaNm1}
+					 , AREA_NM2 = #{areaNm2}
+					 , LONGI_NO = #{longiNo}
+					 , LATI_NO = #{latiNo}
+					 , CM_PRICE = REPLACE(#{cmPrice}, ',', '')
+					 , FKLIFT_CD = #{fkliftCd}
+					 , FKLIFT_WGT = #{fkliftWgt}
+					 , FKLIFT_MST = #{fkliftMst}
+					 , FKLIFT_HGT = #{fkliftHgt}
+					 , FKLIFT_MODEL = #{fkliftModel}
+					 , FKLIFT_SERIAL_NO = #{fkliftSerialNo}
+					 , CHGR_YN = #{chgrYn}
+					 , DRIVER_YN = #{driverYn}
+					 , USE_YN = #{useYn}
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				UPDATE GJ_DS.CM_KART
+				   SET EQUIP_CD = #{equipCd}
+					 , EQUIP_NM = #{equipNm}
+					 , CP_CD = #{cpCd}
+					 , BR_NO = #{brNo}
+					 , MAKE_YEAR = #{makeYear}
+					 , MAKE_CP_NM = #{makeCpNm}
+					 , DT_ADDR = #{dtAddr}
+					 , DT_ADDR2 = #{dtAddr2}
+					 , AREA_NM1 = #{areaNm1}
+					 , AREA_NM2 = #{areaNm2}
+					 , LONGI_NO = #{longiNo}
+					 , LATI_NO = #{latiNo}
+					 , CM_PRICE = REPLACE(#{cmPrice}, ',', '')
+					 , KART_CD = #{kartCd}
+					 , KART_TYP = #{kartTyp}
+					 , KART_WGT = #{kartWgt}
+					 , KART_STD = #{kartStd}
+					 , USE_YN = #{useYn}
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				UPDATE GJ_DS.CM_PLT
+				   SET EQUIP_CD = #{equipCd}
+					 , EQUIP_NM = #{equipNm}
+					 , CP_CD = #{cpCd}
+					 , BR_NO = #{brNo}
+					 , MAKE_YEAR = #{makeYear}
+					 , MAKE_CP_NM = #{makeCpNm}
+					 , DT_ADDR = #{dtAddr}
+					 , DT_ADDR2 = #{dtAddr2}
+					 , AREA_NM1 = #{areaNm1}
+					 , AREA_NM2 = #{areaNm2}
+					 , LONGI_NO = #{longiNo}
+					 , LATI_NO = #{latiNo}
+					 , CM_PRICE = REPLACE(#{cmPrice}, ',', '')
+					 , PLT_CD = #{pltCd}
+					 , PLT_TYP_CD = #{pltTypCd}
+					 , PLT_WGT = #{pltWgt}
+					 , PLT_STD = #{pltStd}
+					 , USE_YN = #{useYn}
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE EQUIP_ID = #{equipId}
+			</when>
+		</choose>
+	</update>
+
+	<update id="insertAdEquip" parameterType="java.util.HashMap">
+		INSERT INTO GJ_DS.AD_EQUIP
+		( 	   USER_ID
+		 	 , EQUIP_ID
+		 	 , EQUIP_CD
+		 	 , PHOTO_FILE
+		 	 , PHOTO_FILE2
+		 	 , PHOTO_FILE3
+		 	 , CRE_DT
+		 	 , CRE_USER_ID
+		 	 , MOD_DT
+		 	 , MOD_USER_ID
+		)
+		VALUES
+		(	   #{userId}
+			 , #{equipId}
+			 , #{equipCd}
+			 , #{photoFile}
+			 , #{photoFile2}
+			 , #{photoFile3}
+			 , NOW()
+			 , #{userId}
+			 , NOW()
+			 , #{userId}
+		)
+	</update>
+
+	<update id="updateAdEquip" parameterType="java.util.HashMap">
+		UPDATE GJ_DS.AD_EQUIP
+		   SET PHOTO_FILE = #{photoFile}
+			 , PHOTO_FILE2 = #{photoFile2}
+			 , PHOTO_FILE3 = #{photoFile3}
+			 , MOD_DT = NOW()
+			 , MOD_USER_ID = #{userId}
+		 WHERE EQUIP_ID = #{equipId}
+	</update>
+
+	<update id="deleteCmEquip" parameterType="java.util.HashMap">
+		<choose>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				UPDATE GJ_DS.CM_FKLIFT
+				   SET USE_YN = 'D'
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				UPDATE GJ_DS.CM_KART
+				   SET USE_YN = 'D'
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				UPDATE GJ_DS.CM_PLT
+				   SET USE_YN = 'D'
+					 , MOD_USER_ID = #{userId}
+					 , MOD_DT = NOW()
+				 WHERE EQUIP_ID = #{equipId}
+			</when>
+		</choose>
+	</update>
+
+	<delete id="deleteShEquipBasicInfo" parameterType="java.util.HashMap">
+		UPDATE SH_EQUIP
+		SET USE_YN='D' , SH_USE_YN='D' WHERE SH_NO = #{shNo}
+		AND USER_ID = #{userId} ;
+
+		<choose>
+			<when test="equipCd == 'F'.toString()">
+				UPDATE CM_FKLIFT SET SH_YN='N' WHERE EQUIP_ID =
+				#{equipId} AND USER_ID = #{userId}
+			</when>
+			<when test="equipCd == 'K'.toString()">
+				UPDATE CM_KART SET SH_YN='N' WHERE EQUIP_ID =
+				#{equipId} AND USER_ID = #{userId}
+			</when>
+			<when test="equipCd == 'P'.toString()">
+				UPDATE CM_PLT SET SH_YN='N' WHERE EQUIP_ID =
+				#{equipId} AND USER_ID = #{userId}
+			</when>
+		</choose>
+	</delete>
+
+	<update id="deleteShEndEquipBasicInfo" parameterType="java.util.List">
+		<foreach item="item" index="index" collection="list">
+			UPDATE SH_EQUIP
+			SET SH_USE_YN = 'E'
+			WHERE EQUIP_ID = #{item.equipNo}
+			AND USER_ID = #{item.userId} ;
+
+			<choose>
+				<when test="item.equipCd == 'F'.toString()">
+					UPDATE CM_FKLIFT
+					  SET SH_YN = 'E'
+					WHERE EQUIP_ID = #{item.equipNo}
+					  AND USER_ID = #{item.userId}
+				</when>
+				<when test="item.equipCd == 'K'.toString()">
+					UPDATE CM_KART
+					SET SH_YN = 'E'
+					WHERE EQUIP_ID = #{item.equipNo}
+					  AND USER_ID = #{item.userId}
+				</when>
+				<when test="item.equipCd == 'P'.toString()">
+					UPDATE CM_PLT
+					SET SH_YN = 'E'
+					WHERE EQUIP_ID = #{item.equipNo}
+					  AND USER_ID = #{item.userId}
+				</when>
+			</choose>
+		</foreach>
+	</update>
+
+	<update id="updateEquipBasicInfo" parameterType="java.util.HashMap">
+		<choose>
+			<when test="equipCd == 'F'.toString()">
+				UPDATE GJ_DS.CM_FKLIFT
+				SET
+				EQUIP_CD = #{equipCd}
+				<if test="cpCdF != null">
+					,CP_CD = #{cpCdF}
+				</if>
+				<if test="brNoF != null">
+					,BR_NO = #{brNoF}
+				</if>
+				<if test="fkliftCdF != null">
+					,FKLIFT_CD = #{fkliftCdF}
+				</if>
+				<if test="makeCpNmF != null and fkliftModelF != null">
+					,EQUIP_NM = CONCAT(#{makeCpNmF}, '-', #{fkliftModelF})
+				</if>
+				<if test="makeCpNmF != null and fkliftModelF == null">
+					,EQUIP_NM = CONCAT(#{makeCpNmF}, '-', (SELECT
+					FKLIFT_MODEL as fkliftModelF FROM GJ_DS.CM_FKLIFT WHERE EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}))
+				</if>
+				<if test="makeCpNmF == null and fkliftModelF != null">
+					,EQUIP_NM = CONCAT((SELECT MAKE_CP_NM as makeCpNmF FROM
+					GJ_DS.CM_FKLIFT
+					WHERE EQUIP_ID = #{equipId} AND USER_ID =
+					#{userId}), '-',
+					#{fkliftModelF})
+				</if>
+				<if test="fkliftWgtF != null">
+					,FKLIFT_WGT =#{fkliftWgtF}
+				</if>
+				<if test="fkliftMstF != null">
+					,FKLIFT_MST = #{fkliftMstF}
+				</if>
+				<if test="fkliftHgtF != null">
+					,FKLIFT_HGT = #{fkliftHgtF}
+				</if>
+				<if test="makeYearF != null">
+					,MAKE_YEAR = #{makeYearF}
+				</if>
+				<if test="makeCpNmF != null">
+					,MAKE_CP_NM = #{makeCpNmF}
+				</if>
+				<if test="fkliftModelF != null">
+					,FKLIFT_MODEL=#{fkliftModelF}
+				</if>
+				<if test="fkliftSerialNoF != null">
+					,FKLIFT_SERIAL_NO = #{fkliftSerialNoF}
+				</if>
+				<if test="chgrYnF != null">
+					,CHGR_YN=#{chgrYnF}
+				</if>
+				<if test="driverYnF != null">
+					,DRIVER_YN = #{driverYnF}
+				</if>
+				<if test="useYnF != null">
+					,USE_YN =#{useYnF}
+				</if>
+				<if test="modUserId != null">
+					,MOD_DT = now()
+					,MOD_USER_ID = #{modUserId}
+				</if>
+				<if test="cmPriceF != null">
+					,CM_PRICE = REPLACE(#{cmPriceF}, ',', '')
+				</if>
+				WHERE EQUIP_ID=#{equipId}
+				AND USER_ID = #{userId}
+			</when>
+			<when test="equipCd == 'K'.toString()">
+				UPDATE GJ_DS.CM_KART
+				SET
+				EQUIP_CD = #{equipCd}
+				<if test="cpCdK != null">
+					,CP_CD = #{cpCdK}
+				</if>
+				<if test="brNoK != null">
+					,BR_NO = #{brNoK}
+				</if>
+				<if test="kartCdK != null">
+					,KART_CD = #{kartCdK}
+				</if>
+				<if test="kartTypK != null">
+					,KART_TYP = #{kartTypK}
+				</if>
+				<if test="kartWgtK != null">
+					,KART_WGT = #{kartWgtK}
+				</if>
+				<if test="kartStdK != null">
+					,KART_STD = #{kartStdK}
+				</if>
+				<if test="makeYearK != null">
+					,MAKE_YEAR = #{makeYearK}
+				</if>
+				<if test="makeCpNmK != null">
+					,MAKE_CP_NM = #{makeCpNmK}
+				</if>
+				<if test="useYnK != null">
+					,USE_YN = #{useYnK}
+				</if>
+				<if test="modUserId != null">
+					,MOD_DT =now()
+					,MOD_USER_ID = #{modUserId}
+				</if>
+				<if test="cmPriceK != null">
+					,CM_PRICE = REPLACE(#{cmPriceK}, ',', '')
+				</if>
+				<if test="kartCdK == null and kartTypK == null and kartWgtK == null">
+					,EQUIP_NM = CONCAT((SELECT KART_CD FROM GJ_DS.CM_KART WHERE
+					EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}), '-', (SELECT
+					KART_TYP FROM
+					GJ_DS.CM_KART WHERE EQUIP_ID = #{equipId} AND USER_ID
+					= #{userId}),
+					'-', (SELECT KART_WGT FROM GJ_DS.CM_KART WHERE
+					EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}))
+				</if>
+				<if test="kartCdK == null and kartTypK == null and kartWgtK != null">
+					,EQUIP_NM = CONCAT((SELECT KART_CD FROM GJ_DS.CM_KART WHERE
+					EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}), '-', (SELECT
+					KART_TYP FROM
+					GJ_DS.CM_KART WHERE EQUIP_ID = #{equipId} AND USER_ID
+					= #{userId}),
+					'-', #{kartWgtK})
+				</if>
+				<if test="kartCdK == null and kartTypK != null and kartWgtK == null">
+					,EQUIP_NM = CONCAT((SELECT KART_CD FROM GJ_DS.CM_KART WHERE
+					EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}), '-', #{kartTypK},
+					'-', (SELECT
+					KART_WGT FROM GJ_DS.CM_KART WHERE EQUIP_ID = #{equipId}
+					AND USER_ID
+					= #{userId}))
+				</if>
+				<if test="kartCdK == null and kartTypK != null and kartWgtK != null">
+					,EQUIP_NM = CONCAT((SELECT KART_CD FROM GJ_DS.CM_KART WHERE
+					EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}), '-', #{kartTypK},
+					'-',
+					#{kartWgtK})
+				</if>
+				<if test="kartCdK != null and kartTypK == null and kartWgtK == null">
+					,EQUIP_NM = CONCAT(#{kartCdK}, '-', (SELECT KART_TYP FROM
+					GJ_DS.CM_KART
+					WHERE EQUIP_ID = #{equipId} AND USER_ID = #{userId}),
+					'-', (SELECT
+					KART_WGT FROM GJ_DS.CM_KART WHERE EQUIP_ID = #{equipId}
+					AND USER_ID
+					= #{userId}))
+				</if>
+				<if test="kartCdK != null and kartTypK == null and kartWgtK != null">
+					,EQUIP_NM = CONCAT(#{kartCdK}, '-', (SELECT KART_TYP FROM
+					GJ_DS.CM_KART
+					WHERE EQUIP_ID = #{equipId} AND USER_ID = #{userId}),
+					'-',
+					#{kartWgtK})
+				</if>
+				<if test="kartCdK != null and kartTypK != null and kartWgtK == null">
+					,EQUIP_NM = CONCAT(#{kartCdK}, '-', #{kartTypK}, '-', (SELECT
+					KART_WGT FROM
+					GJ_DS.CM_KART WHERE EQUIP_ID = #{equipId} AND USER_ID
+					= #{userId}))
+				</if>
+				<if test="kartCdK != null and kartTypK != null and kartWgtK != null">
+					,EQUIP_NM = CONCAT(#{kartCdK}, '-', #{kartTypK}, '-',
+					#{kartWgtK})
+				</if>
+				WHERE EQUIP_ID = #{equipId}
+				AND USER_ID = #{userId}
+
+			</when>
+			<when test="equipCd == 'P'.toString()">
+				UPDATE GJ_DS.CM_PLT
+				SET
+				EQUIP_CD = #{equipCd}
+				<if test="pltCdP == null and pltTypCdP == null">
+					,EQUIP_NM = CONCAT((SELECT PLT_CD FROM GJ_DS.CM_KART
+					WHERE EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}), '-', (SELECT
+					PLT_TYP_CD FROM
+					GJ_DS.CM_PLT WHERE EQUIP_ID = #{equipId} AND USER_ID
+					= #{userId}))
+				</if>
+				<if test="pltCdP == null and pltTypCdP != null">
+					,EQUIP_NM = CONCAT((SELECT PLT_CD FROM GJ_DS.CM_PLT
+					WHERE EQUIP_ID =
+					#{equipId} AND USER_ID = #{userId}), '-',
+					#{pltTypCdP})
+				</if>
+				<if test="pltCdP != null and pltTypCdP == null">
+					,EQUIP_NM = CONCAT(#{pltCdP}, '-', (SELECT PLT_TYP_CD
+					FROM GJ_DS.CM_PLT
+					WHERE EQUIP_ID = #{equipId} AND USER_ID =
+					#{userId}))
+				</if>
+				<if test="pltCdP != null and pltTypCdP != null">
+					,EQUIP_NM = CONCAT(#{pltCdP}, '-', #{pltTypCdP})
+				</if>
+				<if test="cpCdP != null">
+					,CP_CD = #{cpCdP}
+				</if>
+				<if test="brNoP != null">
+					,BR_NO = #{brNoP}
+				</if>
+				<if test="pltCdP != null">
+					,PLT_CD = #{pltCdP}
+				</if>
+				<if test="pltTypCdP != null">
+					,PLT_TYP_CD = #{pltTypCdP}
+				</if>
+				<if test="pltWgtP != null">
+					,PLT_WGT = #{pltWgtP}
+				</if>
+				<if test="pltStdP != null">
+					,PLT_STD = #{pltStdP}
+				</if>
+				<if test="makeYearP != null">
+					,MAKE_YEAR = #{makeYearP}
+				</if>
+				<if test="makeCpNmP != null">
+					,MAKE_CP_NM = #{makeCpNmP}
+				</if>
+				<if test="useYnP != null">
+					,USE_YN = #{useYnP}
+				</if>
+				<if test="modUserId != null">
+					,MOD_DT = now()
+					,MOD_USER_ID = #{modUserId}
+				</if>
+				<if test="cmPriceP != null">
+					,CM_PRICE = REPLACE(#{cmPriceP}, ',', '')
+				</if>
+				WHERE EQUIP_ID = #{equipId}
+				AND USER_ID = #{userId}
+			</when>
+		</choose>
+	</update>
+
+	<update id="upAddateEquipBasicInfo" parameterType="java.util.HashMap">
+
+		UPDATE GJ_DS.AD_EQUIP
+		SET PHOTO_FILE = #{previewImage}
+		  , MOD_DT = now()
+		  , MOD_USER_ID = #{modUserId}
+		WHERE EQUIP_ID =#{equipId}
+		  AND USER_ID = #{userId}
+	</update>
+
+
+	<update id="upShdateEquipBasicInfo" parameterType="java.util.HashMap">
+
+		UPDATE GJ_DS.SH_EQUIP
+		SET SH_NO = #{SH_NO}
+		<if test="shPrdCls != null">
+			, SH_PRD_CLS = #{shPrdCls}
+		</if>
+		<if test="shPrd != null">
+			, SH_PRD = #{shPrd}
+		</if>
+		<if test="shSqu != null">
+			,SH_SQU = #{shSqu}
+		</if>
+		<if test="shLkCls != null">
+			,SH_LK_CLS = #{shLkCls}
+		</if>
+		<if test="shPrc != null">
+			,SH_PRC = REPLACE(#{shPrc}, ',', '')
+		</if>
+		<if test="shLtDt != null">
+			,SH_LT_DT = #{shLtDt}
+		</if>
+		<if test="modUserId != null">
+			,MOD_DT = now()
+			,MOD_USER_ID = #{modUserId}
+		</if>
+		<if test="shQty != null">
+			,SH_QTY = REPLACE(#{shQty}, ',', '')
+		</if>
+		WHERE SH_NO = #{shNo}
+		AND USER_ID = #{userId}
+	</update>
+
+	<select id="makeFileSeqName" resultType="java.lang.String">
+		SELECT CONCAT('C', DATE_FORMAT(NOW(), '%Y%m%d') , NEXTVAL(cm_equip_seq) ) FROM DUAL;
+	</select>
+
+	<select id="getEqUseYn" parameterType="java.util.HashMap" resultType="java.lang.String">
+		<choose>
+			<when test="equipCd == 'F'.toString()">
+				select cf.USE_YN as useYn from CM_FKLIFT cf where
+				cf.EQUIP_ID =#{equipId} AND cf.USER_ID = #{userId}
+			</when>
+			<when test="equipCd == 'K'.toString()">
+				select kt.USE_YN as useYn from CM_KART kt where
+				kt.EQUIP_ID =#{equipId} AND kt.USER_ID = #{userId}
+			</when>
+			<when test="equipCd == 'P'.toString()">
+				select pl.USE_YN as useYn from CM_PLT pl where
+				pl.EQUIP_ID =#{equipId} AND pl.USER_ID = #{userId}
+			</when>
+		</choose>
+	</select>
+
+	<!-- 기자재 부가정보 저장 -->
+	<insert id="insertAdEquipBasicInfo" parameterType="java.util.HashMap">
+		INSERT INTO GJ_DS.AD_EQUIP
+		(
+			USER_ID
+		,EQUIP_ID
+		,EQUIP_CD
+		,PHOTO_FILE
+		,CRE_DT
+		,CRE_USER_ID
+		,MOD_DT
+		,MOD_USER_ID
+		)values(
+				   #{userId}
+			   ,#{equipId}
+			   ,#{equipCd}
+			   ,#{previewImage}
+			   ,now()
+			   ,#{creUserId}
+			   ,now()
+			   ,#{modUserId}
+			   )
+	</insert>
+
+
+	<!-- 차량 기본정보 저장 -->
+	<insert id="insertShEquipBasicInfo" parameterType="java.util.HashMap">
+		<selectKey keyProperty="shNo" order="BEFORE" resultType="string">
+			SELECT CONCAT('SE', LPAD(CAST(NEXTVAL(sh_equip_seq) AS VARCHAR(8)), 8, '0'))
+		</selectKey>
+
+		INSERT INTO GJ_DS.SH_EQUIP
+		(
+		SH_NO
+		,SH_DT
+		,USER_ID
+		,EQUIP_ID
+		,SH_PRD_CLS
+		,SH_PRD
+		,SH_SQU
+		,SH_LK_CLS
+		,SH_PRC
+		,SH_LT_DT
+		,SH_USE_YN
+		,USE_YN
+		,CRE_DT
+		,CRE_USER_ID
+		,MOD_DT
+		,MOD_USER_ID
+		,SH_QTY
+		)values(
+		#{shNo}
+		,now()
+		,#{userId}
+		,#{equipId}
+		,#{shPrdCls}
+		,#{shPrd}
+		,#{shSqu}
+		,#{shLkCls}
+		,REPLACE(#{shPrc}, ',', '')
+		,#{shLtDt}
+		,#{shUseYn}
+		,#{useYn}
+		,now()
+		,#{creUserId}
+		,now()
+		,#{modUserId}
+		,REPLACE(#{shQty}, ',', '')
+		)
+	</insert>
+
+	<update id="updateEquipInfo" parameterType="java.util.HashMap">
+		<choose>
+			<when test="equipCd == 'F'.toString()">
+				UPDATE CM_FKLIFT SET SH_YN='R' WHERE EQUIP_ID =
+				#{equipId} AND USER_ID = #{userId};
+			</when>
+			<when test="equipCd == 'K'.toString()">
+				UPDATE CM_KART SET SH_YN='R' WHERE EQUIP_ID =
+				#{equipId} AND USER_ID = #{userId};
+			</when>
+			<when test="equipCd == 'P'.toString()">
+				UPDATE CM_PLT SET SH_YN='R' WHERE EQUIP_ID =
+				#{equipId} AND USER_ID = #{userId};
+			</when>
+		</choose>
+	</update>
+
+	<insert id="insertShEquip" parameterType="java.util.HashMap">
+		<selectKey keyProperty="shNo" order="BEFORE" resultType="string">
+			SELECT IFNULL(#{shNo}, CONCAT('SE', LPAD(CAST(NEXTVAL(sh_equip_seq) AS VARCHAR(8)), 8, '0'))) AS shNo
+		</selectKey>
+
+		INSERT
+		INTO GJ_DS.SH_EQUIP (
+		SH_NO
+		, SH_DT
+		, USER_ID
+		, EQUIP_ID
+		, SH_PRD_CLS
+		, SH_PRD
+		, SH_PRC
+		, SH_SQU
+		, SH_LK_CLS
+		, SH_LT_DT
+		, SH_QTY
+		, SH_USE_YN
+		, USE_YN
+		, CRE_DT
+		, CRE_USER_ID
+		, MOD_DT
+		, MOD_USER_ID
+		)
+		VALUES
+		(
+		#{shNo}
+		, NOW()
+		, #{userId}
+		, #{equipId}
+		, #{shPrdCls}
+		, #{shPrd}
+		, CAST(#{shPrc} AS INTEGER)
+		, #{shSqu}
+		, #{shLkCls}
+		, #{shLtDt}
+		, REPLACE(#{shQty}, ',', '')
+		, #{editShUseYn}
+		, 'Y'
+		, NOW()
+		, #{userId}
+		, NOW()
+		, #{userId}
+		)
+		ON DUPLICATE KEY UPDATE
+		SH_PRD_CLS = #{shPrdCls}
+		, SH_PRD = #{shPrd}
+		, SH_PRC = CAST(#{shPrc} AS INTEGER)
+		, SH_SQU = #{shSqu}
+		, SH_LK_CLS = #{shLkCls}
+		, SH_LT_DT = #{shLtDt}
+		, SH_QTY = REPLACE(#{shQty}, ',', '')
+		, SH_USE_YN = #{editShUseYn}
+		, USE_YN = 'Y'
+		, MOD_DT = NOW()
+		, MOD_USER_ID = #{userId}
+	</insert>
+
+	<update id="updateCmEquipShYn" parameterType="java.util.HashMap">
+		<choose>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				UPDATE CM_FKLIFT
+				SET SH_YN = 'Y'
+				WHERE EQUIP_ID = #{equipId}
+				AND USER_ID = #{userId}
+				AND MOD_USER_ID = #{userId}
+				AND MOD_DT = NOW()
+			</when>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				UPDATE CM_KART
+				SET SH_YN = 'Y'
+				WHERE EQUIP_ID = #{equipId}
+				AND USER_ID = #{userId}
+				AND MOD_USER_ID = #{userId}
+				AND MOD_DT = NOW()
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				UPDATE CM_PLT
+				SET SH_YN = 'Y'
+				WHERE EQUIP_ID = #{equipId}
+				AND USER_ID = #{userId}
+				AND MOD_USER_ID = #{userId}
+				AND MOD_DT = NOW()
+			</when>
+		</choose>
+	</update>
+
+
+	<select id="getAdEquipInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* [equipMapper] getAdEquipInfo */
+		<choose>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				SELECT '대차' AS EQUIP_CD_NM
+				, (SELECT MC.CPNM FROM MASTER.CORPMASTER MC WHERE MC.CPCD = CM.CP_CD) AS CP_CD_NM
+				, CM.BR_NO
+				, CM.CP_CD
+				, CM.EQUIP_NM
+				, COALESCE(FN_COMMCD_CMNM('KART_CD', CM.KART_CD), '') AS KART_CD_NM
+				, COALESCE(FN_COMMCD_CMNM('KART_TYP', CM.KART_TYP), '') AS KART_TYP_NM
+				, CM.KART_WGT
+				, CM.KART_STD
+				, CM.MAKE_YEAR
+				, CM.MAKE_CP_NM
+				, AE.PHOTO_FILE
+				FROM CM_KART CM
+				LEFT JOIN AD_EQUIP AE
+				ON CM.EQUIP_ID = AE.EQUIP_ID
+				WHERE CM.EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				SELECT '지게차' AS EQUIP_CD_NM
+				, CM.CP_CD
+				, CM.BR_NO
+				, CM.EQUIP_ID
+				, CM.EQUIP_NM
+				, CM.FKLIFT_HGT
+				, COALESCE(FN_COMMCD_CMNM('FKLIFT_CD', CM.FKLIFT_CD), '') AS FKLIFT_CD_NM
+				, CM.FKLIFT_WGT
+				, COALESCE(FN_COMMCD_CMNM('FKLIFT_MST', CM.FKLIFT_MST), '') AS FKLIFT_MST_NM
+				, CM.MAKE_YEAR
+				, CM.MAKE_CP_NM
+				, CM.FKLIFT_MODEL
+				, CM.FKLIFT_SERIAL_NO
+				, CASE WHEN CM.CHGR_YN = 'Y' THEN '포함'
+				ELSE '미포함'
+				END AS CHGR_YN_NM
+				, CASE WHEN CM.DRIVER_YN = 'Y' THEN '포함'
+				ELSE '미포함'
+				END AS DRIVER_YN_NM
+				, AE.PHOTO_FILE
+				FROM CM_FKLIFT CM
+				LEFT JOIN AD_EQUIP AE
+				ON CM.EQUIP_ID = AE.EQUIP_ID
+				WHERE CM.EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				SELECT CM.EQUIP_ID
+				, CM.EQUIP_CD
+				, '파레트' AS EQUIP_CD_NM
+				, CM.CP_CD
+				, CM.EQUIP_NM
+				, FN_EQUIP_CPNM(CM.CP_CD) AS CP_CD_NM
+				, CM.BR_NO
+				, COALESCE(FN_COMMCD_CMNM('PLT_CD', CM.PLT_CD), '') AS PLT_CD_NM
+				, COALESCE(FN_COMMCD_CMNM('PLT_TYP_CD', CM.PLT_TYP_CD), '') AS PLT_TYP_CD_NM
+				, CM.PLT_WGT
+				, CM.PLT_STD
+				, COALESCE(FN_COMMCD_CMNM('CM.PLT_STD', CM.PLT_STD), '') AS PLT_STD_NM
+				, CM.MAKE_YEAR
+				, CM.MAKE_CP_NM
+				, AE.PHOTO_FILE
+				FROM CM_PLT CM
+				LEFT JOIN AD_EQUIP AE
+				ON CM.EQUIP_ID = AE.EQUIP_ID
+				WHERE CM.EQUIP_ID = #{equipId}
+			</when>
+			<otherwise>
+				select #{equipId}, #{equipCd}
+			</otherwise>
+		</choose>
+	</select>
+
+
+	<select id="getShEquipInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT *
+		FROM SH_EQUIP se
+		WHERE se.EQUIP_ID =#{equipNo}
+		  AND se.use_yn='Y'
+		  AND se.sh_use_yn in('R','A','S')
+		  AND se.USER_ID = #{userId}
+	</select>
+
+
+	<select id="getShEquipSeq" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT CASE WHEN LEFT(sh_no, 8) = #{dateKey} THEN CONCAT(#{dateKey}, LPAD(RIGHT(sh_no, 5) + 1, 5, '0'))
+			ELSE CONCAT(#{dateKey}, '00001')
+		END AS SH_NO
+		  FROM SH_EQUIP
+		 ORDER BY SH_NO DESC LIMIT 1
+	</select>
+
+	<select id="selectMoEquipCnt" parameterType="java.util.HashMap" resultType="int">
+		<choose>
+			<when test="equipCdS == 'F'.toString()">
+				SELECT
+				COUNT(*)
+				FROM
+				CM_FKLIFT CM
+				LEFT OUTER JOIN SH_EQUIP SH
+				ON SH.USER_ID = CM.USER_ID
+				AND CM.EQUIP_ID=SH.EQUIP_ID
+				AND SH.USE_YN = 'Y'
+				AND SH.SH_USE_YN IN
+				('R','S','A')
+				LEFT OUTER JOIN AD_EQUIP AE
+				ON SH.EQUIP_ID = AE.EQUIP_ID
+				LEFT OUTER JOIN MASTER.CORPMASTER C
+				ON CM.CP_CD = C.CPCD
+				WHERE CM.USER_ID = #{userId}
+				AND CM.USE_YN IN('Y','N')
+				<include refid="MobileManCheck"></include>
+			</when>
+			<when test="equipCdS == 'K'.toString()">
+				SELECT
+				COUNT(*)
+				FROM
+				CM_KART CM
+				LEFT OUTER JOIN SH_EQUIP SH
+				ON SH.USER_ID = CM.USER_ID
+				AND CM.EQUIP_ID=SH.EQUIP_ID
+				AND SH.USE_YN = 'Y'
+				AND
+				SH.SH_USE_YN IN ('R','S','A')
+				LEFT OUTER JOIN AD_EQUIP AE
+				ON
+				SH.EQUIP_ID = AE.EQUIP_ID
+				LEFT OUTER JOIN MASTER.CORPMASTER C
+				ON
+				CM.CP_CD = C.CPCD
+				WHERE 1=1
+				AND CM.USE_YN IN('Y','N')
+				AND CM.USER_ID =
+				#{userId}
+				<include refid="MobileManCheck"></include>
+			</when>
+			<when test="equipCdS == 'P'.toString()">
+				SELECT
+				COUNT(*)
+				FROM
+				CM_PLT CM
+				LEFT OUTER JOIN SH_EQUIP SH
+				ON SH.USER_ID
+				= CM.USER_ID
+				AND CM.EQUIP_ID=SH.EQUIP_ID
+				AND SH.USE_YN = 'Y'
+				AND
+				SH.SH_USE_YN IN ('R','S','A')
+				LEFT OUTER JOIN AD_EQUIP AE
+				ON
+				SH.EQUIP_ID = AE.EQUIP_ID
+				LEFT OUTER JOIN MASTER.CORPMASTER C
+				ON
+				CM.CP_CD = C.CPCD
+				WHERE 1=1
+				AND CM.USE_YN IN('Y','N')
+				AND CM.USER_ID =
+				#{userId}
+				<include refid="MobileManCheck"></include>
+			</when>
+		</choose>
+	</select>
+
+	<select id="selectMoEquipList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* com.rs.mapper.EquipMapper [selectMoEquipList] */
+		<choose>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				SELECT CF.EQUIP_NM AS equipNm
+					 , CF.EQUIP_ID AS equipId
+					 , CF.EQUIP_CD AS equipCd
+					 , CF.CP_CD AS cpCd
+					 , CF.BR_NO AS brNo
+					 , CF.MAKE_CP_NM AS makeCpNm
+					 , CF.MAKE_YEAR AS makeYear
+					 , CF.DT_ADDR AS dtAddr
+					 , CF.DT_ADDR2 AS dtAddr2
+					 , CF.AREA_NM1 AS areaNm1
+					 , CF.AREA_NM2 AS areaNm2
+					 , CF.LONGI_NO AS longiNo
+					 , CF.LATI_NO AS latiNo
+					 , CF.CM_PRICE AS cmPrice
+					 , CF.USE_YN AS useYn
+					 , CF.FKLIFT_CD AS fkliftCd
+					 , CF.FKLIFT_WGT AS fkliftWgt
+					 , CF.FKLIFT_MST AS fkliftMst
+					 , CF.FKLIFT_HGT AS fkliftHgt
+					 , CF.FKLIFT_MODEL AS fkliftModel
+					 , CF.FKLIFT_SERIAL_NO AS fkliftSerialNo
+					 , CF.CHGR_YN AS chgrYn
+					 , CF.DRIVER_YN AS driverYn
+					 , AD.PHOTO_FILE AS photoFile
+					 , AD.PHOTO_FILE2 AS photoFile2
+					 , AD.PHOTO_FILE3 AS photoFile3
+					 , SE.SH_USE_YN AS shUseYn
+					 , FN_EQUIP_STATE(CF.EQUIP_ID) AS shUseYnNm
+					 , SE.CRE_USER_ID AS shUserId
+					 , SE.SH_NO AS shNo
+					 , SE.SH_PRD_CLS AS shPrdCls
+					 , SE.SH_PRD AS shPrd
+					 , SE.SH_QTY AS shQty
+					 , SE.SH_SQU AS shSqu
+					 , SE.SH_LK_CLS AS shLkCls
+					 , SE.SH_LT_DT AS shLtDt
+					 , SM.MAT_NO AS matNo
+					 , SM.CON_ID AS manConId
+					 , SB.COM_NO AS comNo
+					 , SB.REQ_MARK AS reqMark
+					 , SB.CON_ID AS comConId
+				  FROM CM_FKLIFT CF
+				  LEFT JOIN (
+					SELECT SHE.USER_ID
+						 , SHE.EQUIP_ID
+						 , SHE.SH_USE_YN
+						 , SHE.CRE_USER_ID
+						 , SHE.SH_NO
+						 , SHE.SH_PRD_CLS
+						 , SHE.SH_PRD
+						 , SHE.SH_QTY
+						 , SHE.SH_SQU
+						 , SHE.SH_LK_CLS
+						 , SHE.SH_LT_DT
+					  FROM SH_EQUIP SHE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP WHERE USE_YN = 'Y' GROUP BY EQUIP_ID) SHE2
+						ON SHE.SH_NO = SHE2.SH_NO
+					   ) SE
+					ON CF.EQUIP_ID = SE.EQUIP_ID
+				   AND CF.USER_ID = SE.USER_ID
+				  LEFT JOIN AD_EQUIP AD
+					ON CF.EQUIP_ID = AD.EQUIP_ID
+				   AND CF.USER_ID = AD.USER_ID
+				  LEFT JOIN SH_MATCH SM
+					ON SE.SH_NO = SM.SH_NO
+				   AND SM.MAT_CD = 'W'
+				   AND SM.MAT_YN = 'A'
+				  LEFT JOIN (
+					SELECT SB.COM_NO
+						 , SB.CON_ID
+						 , SB.SH_NO
+						 , SB.REQ_MARK
+					  FROM SH_BOARD SB
+					  JOIN (SELECT MAX(COM_NO) AS COM_NO FROM SH_BOARD WHERE RES_MARK IS NULL) SB2
+						ON SB.COM_NO = SB2.COM_NO) SB
+				    ON SE.SH_NO = SB.SH_NO
+				 WHERE CF.USE_YN != 'D'
+				   AND CF.USER_ID = #{userId}
+				<if test='useYn != null and !useYn.equals("")'>
+					AND CF.USE_YN = #{useYn}
+				</if>
+				ORDER BY CF.USE_YN DESC, SE.SH_USE_YN ASC, CF.CRE_DT DESC
+			</when>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				SELECT CK.EQUIP_NM AS equipNm
+					 , CK.EQUIP_ID AS equipId
+					 , CK.EQUIP_CD AS equipCd
+					 , CK.BR_NO AS brNo
+					 , CK.CP_CD AS cpCd
+					 , CK.MAKE_CP_NM AS makeCpNm
+					 , CK.MAKE_YEAR AS makeYear
+					 , CK.DT_ADDR AS dtAddr
+					 , CK.DT_ADDR2 AS dtAddr2
+					 , CK.AREA_NM1 AS areaNm1
+					 , CK.AREA_NM2 AS areaNm2
+					 , CK.LONGI_NO AS longiNo
+					 , CK.LATI_NO AS latiNo
+					 , CK.CM_PRICE AS cmPrice
+					 , CK.USE_YN AS useYn
+					 , CK.KART_CD AS kartCd
+					 , CK.KART_TYP AS kartTyp
+					 , CK.KART_WGT AS kartWgt
+					 , CK.KART_STD AS kartStd
+					 , AD.PHOTO_FILE AS photoFile
+					 , AD.PHOTO_FILE2 AS photoFile2
+					 , AD.PHOTO_FILE3 AS photoFile3
+					 , SE.SH_USE_YN AS shUseYn
+					 , FN_EQUIP_STATE(CK.EQUIP_ID) AS shUseYnNm
+					 , SE.CRE_USER_ID AS shUserId
+					 , SE.SH_NO AS shNo
+					 , SE.SH_PRD_CLS AS shPrdCls
+					 , SE.SH_PRD AS shPrd
+					 , SE.SH_QTY AS shQty
+					 , SE.SH_SQU AS shSqu
+					 , SE.SH_LK_CLS AS shLkCls
+					 , SE.SH_LT_DT AS shLtDt
+					 , SM.MAT_NO AS matNo
+					 , SB.COM_NO AS comNo
+					 , SB.REQ_MARK AS reqMark
+					 , SB.CON_ID AS conId
+				  FROM CM_KART CK
+				  LEFT JOIN (
+					SELECT SHE.USER_ID
+						 , SHE.EQUIP_ID
+						 , SHE.SH_USE_YN
+						 , SHE.CRE_USER_ID
+						 , SHE.SH_NO
+						 , SHE.SH_PRD_CLS
+						 , SHE.SH_PRD
+						 , SHE.SH_QTY
+						 , SHE.SH_SQU
+						 , SHE.SH_LK_CLS
+						 , SHE.SH_LT_DT
+					  FROM SH_EQUIP SHE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP WHERE USE_YN = 'Y' GROUP BY EQUIP_ID) SHE2
+						ON SHE.SH_NO = SHE2.SH_NO
+					   ) SE
+					ON CK.EQUIP_ID = SE.EQUIP_ID
+				   AND CK.USER_ID = SE.USER_ID
+				  LEFT JOIN AD_EQUIP AD
+					ON CK.EQUIP_ID = AD.EQUIP_ID
+				   AND CK.USER_ID = AD.USER_ID
+				  LEFT JOIN SH_MATCH SM
+					ON SE.SH_NO = SM.SH_NO
+				   AND SM.MAT_CD = 'W'
+				   AND SM.MAT_YN = 'A'
+				  LEFT JOIN (
+					SELECT SB.COM_NO
+						 , SB.CON_ID
+						 , SB.SH_NO
+						 , SB.REQ_MARK
+					  FROM SH_BOARD SB
+					  JOIN (SELECT MAX(COM_NO) AS COM_NO FROM SH_BOARD WHERE RES_MARK IS NULL) SB2
+						ON SB.COM_NO = SB2.COM_NO) SB
+				    ON SE.SH_NO = SB.SH_NO
+				 WHERE CK.USE_YN != 'D'
+				   AND CK.USER_ID = #{userId}
+				<if test='useYn != null and !useYn.equals("")'>
+					AND CK.USE_YN = #{useYn}
+				</if>
+				ORDER BY CK.USE_YN DESC, SE.SH_USE_YN ASC, CK.CRE_DT DESC
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				SELECT CP.EQUIP_NM AS equipNm
+					 , CP.EQUIP_ID AS equipId
+					 , CP.EQUIP_CD AS equipCd
+					 , CP.BR_NO AS brNo
+					 , CP.CP_CD AS cpCd
+					 , CP.MAKE_CP_NM AS makeCpNm
+					 , CP.MAKE_YEAR AS makeYear
+					 , CP.DT_ADDR AS dtAddr
+					 , CP.DT_ADDR2 AS dtAddr2
+					 , CP.AREA_NM1 AS areaNm1
+					 , CP.AREA_NM2 AS areaNm2
+					 , CP.LONGI_NO AS longiNo
+					 , CP.LATI_NO AS latiNo
+					 , CP.CM_PRICE AS cmPrice
+					 , CP.USE_YN AS useYn
+					 , CP.PLT_CD AS pltCd
+					 , CP.PLT_TYP_CD AS pltTypCd
+					 , CP.PLT_WGT AS pltWgt
+					 , CP.PLT_STD AS pltStd
+					 , AD.PHOTO_FILE AS photoFile
+					 , AD.PHOTO_FILE2 AS photoFile2
+					 , AD.PHOTO_FILE3 AS photoFile3
+					 , SE.SH_USE_YN AS shUseYn
+					 , FN_EQUIP_STATE(CP.EQUIP_ID) AS shUseYnNm
+					 , SE.CRE_USER_ID AS shUserId
+					 , SE.SH_NO AS shNo
+					 , SE.SH_PRD_CLS AS shPrdCls
+					 , SE.SH_PRD AS shPrd
+					 , SE.SH_QTY AS shQty
+					 , SE.SH_SQU AS shSqu
+					 , SE.SH_LK_CLS AS shLkCls
+					 , SE.SH_LT_DT AS shLtDt
+					 , SM.MAT_NO AS matNo
+					 , SB.COM_NO AS comNo
+					 , SB.REQ_MARK AS reqMark
+					 , SB.CON_ID AS conId
+				  FROM CM_PLT CP
+				  LEFT JOIN (
+					SELECT SHE.USER_ID
+						 , SHE.EQUIP_ID
+						 , SHE.SH_USE_YN
+						 , SHE.CRE_USER_ID
+						 , SHE.SH_NO
+						 , SHE.SH_PRD_CLS
+						 , SHE.SH_PRD
+						 , SHE.SH_QTY
+						 , SHE.SH_SQU
+						 , SHE.SH_LK_CLS
+						 , SHE.SH_LT_DT
+					  FROM SH_EQUIP SHE
+					  JOIN (SELECT MAX(SH_NO) AS SH_NO FROM SH_EQUIP WHERE USE_YN = 'Y' GROUP BY EQUIP_ID) SHE2
+						ON SHE.SH_NO = SHE2.SH_NO
+					   ) SE
+					ON CP.EQUIP_ID = SE.EQUIP_ID
+				   AND CP.USER_ID = SE.USER_ID
+				  LEFT JOIN AD_EQUIP AD
+					ON CP.EQUIP_ID = AD.EQUIP_ID
+				   AND CP.USER_ID = AD.USER_ID
+				  LEFT JOIN SH_MATCH SM
+					ON SE.SH_NO = SM.SH_NO
+				   AND SM.MAT_CD = 'W'
+				   AND SM.MAT_YN = 'A'
+				  LEFT JOIN (
+					SELECT SB.COM_NO
+						 , SB.CON_ID
+						 , SB.SH_NO
+						 , SB.REQ_MARK
+					  FROM SH_BOARD SB
+					  JOIN (SELECT MAX(COM_NO) AS COM_NO FROM SH_BOARD WHERE RES_MARK IS NULL) SB2
+						ON SB.COM_NO = SB2.COM_NO) SB
+				    ON SE.SH_NO = SB.SH_NO
+				 WHERE CP.USE_YN != 'D'
+				   AND CP.USER_ID = #{userId}
+				<if test='useYn != null and !useYn.equals("")'>
+					AND CP.USE_YN = #{useYn}
+				</if>
+				ORDER BY CP.USE_YN DESC, SE.SH_USE_YN ASC, CP.CRE_DT DESC
+			</when>
+		</choose>
+	</select>
+
+	<insert id="insertMoShEquip" parameterType="java.util.HashMap" >
+		/* mapper.rs.equipMapper : insertMoShEquip */
+		INSERT INTO GJ_DS.SH_CAR
+		(
+		  SH_NO
+		, SH_DT
+		, USER_ID
+		, CAR_ID
+		, SH_USE_YN
+		, SH_PRD_CLS
+		, SH_PRD
+		, SH_QTY
+		, SH_SQU
+		, SH_LK_CLS
+		, SH_LT_DT
+		, USE_YN
+		, CRE_DT
+		, CRE_USER_ID
+		, MOD_DT
+		, MOD_USER_ID
+		)
+		VALUES (
+				 CONCAT('EQ',LPAD(NEXTVAL(sh_equip_seq), 8, 0))
+			   , DATE_FORMAT(NOW(),'%Y%m%d')
+			   , #{userId}
+			   , #{equipId}
+			   , #{shUseYn}
+			   , #{shPrdCls}
+			   , REPLACE(#{shPrd}, ',', '')
+			   , REPLACE(#{shQty}, ',', '')
+			   , REPLACE(#{shSqu}, ',', '')
+			   , #{shLkCls}
+			   , #{shLtDt}
+			   , 'Y'
+			   , NOW()
+			   , #{userId}
+			   , NOW()
+			   , #{userId}
+			   )
+	</insert>
+
+	<update id="updateMoShEquip" parameterType="java.util.HashMap">
+		/*mapper.rs.equipMapper : updateMoShEquip */
+		UPDATE GJ_DS.SH_CAR
+		SET SH_USE_YN = #{shUseYn}
+		  , SH_PRD = REPLACE(#{shPrd}, ',', '')
+		  , SH_QTY = REPLACE(#{shQty}, ',', '')
+		  , SH_SQU = REPLACE(#{shSqu}, ',', '')
+		  , SH_LK_CLS = #{shLkCls}
+		  , SH_LT_DT = #{shLtDt}
+		  , SH_PRD_CLS = #{shPrdCls}
+		  , MOD_DT = NOW()
+		  , MOD_USER_ID = #{userId}
+		WHERE USER_ID = #{userId}
+		  AND SH_NO = #{shNo}
+	</update>
+
+	<update id="updateMoEquipShYn" parameterType="java.util.HashMap">
+		/*mapper.rs.equipMapper : updateMoEquipShYn */
+		<choose>
+			<when test='equipCd != null and equipCd.equals("F")'>
+				UPDATE GJ_DS.CM_FKLIFT
+				   SET SH_YN = 'Y'
+				     , MOD_USER_ID = #{userId}
+				     , MOD_DT = NOW()
+				 WHERE USER_ID = #{userId}
+				   AND EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("K")'>
+				UPDATE GJ_DS.CM_KART
+				   SET SH_YN = 'Y'
+				     , MOD_USER_ID = #{userId}
+				     , MOD_DT = NOW()
+				 WHERE USER_ID = #{userId}
+				   AND EQUIP_ID = #{equipId}
+			</when>
+			<when test='equipCd != null and equipCd.equals("P")'>
+				UPDATE GJ_DS.CM_PLT
+				   SET SH_YN = 'Y'
+				     , MOD_USER_ID = #{userId}
+				     , MOD_DT = NOW()
+				 WHERE USER_ID = #{userId}
+				   AND EQUIP_ID = #{equipId}
+			</when>
+		</choose>
+
+	</update>
+</mapper>
