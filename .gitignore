@@ -1,0 +1,37 @@
+bin
+*.component
+*.bin
+*.class
+.settings/org.eclipse.wst.common.component
+.gradle/
+
+/.idea/
+/.settings/
+
+# VCS/IDE
+.git
+.idea
+.vscode
+*.iml
+
+# 빌드/캐시/로그
+build/
+**/build/
+out/
+dist/
+target/
+logs/
+*.log
+
+# 프론트
+node_modules/
+
+# 대형 산출물
+*.jar
+*.war
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+*.mp4

@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  app:
+    container_name: gj-op
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # (맥 M1 → 리눅스 x86 서버 배포 시 아래 주석 해제)
+      # x-bake:
+      #   platforms:
+      #     - linux/amd64
+    image: gj-op:1.0.0
+    ports:
+      - "8080:8080"
+    environment:
+      # 스프링 프로필/포트
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8080
+      # JVM 옵션(메모리 자동 조절 등)
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom
+    restart: unless-stopped
